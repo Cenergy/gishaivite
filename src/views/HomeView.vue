@@ -3,11 +3,11 @@
     <header class="header">
       <nav class="nav">
         <router-link to="/" class="logo">及时嗨</router-link>
-        <button class="menu-btn" @click="isMenuOpen = !isMenuOpen" aria-label="菜单" :aria-expanded="isMenuOpen.toString()">
+        <el-button class="menu-btn" @click="isMenuOpen = !isMenuOpen" aria-label="菜单" :aria-expanded="isMenuOpen.toString()">
           <span class="menu-icon" :class="{ open: isMenuOpen }">
             <span></span><span></span><span></span>
           </span>
-        </button>
+        </el-button>
         <div class="nav-links" :class="{ open: isMenuOpen }">
           <router-link to="/home" class="nav-link" active-class="active-link">首页</router-link>
           <router-link to="/blog" class="nav-link" active-class="active-link">博客</router-link>
@@ -21,20 +21,26 @@
       <h1 class="fade-in">欢迎来到及时嗨</h1>
       <p class="fade-in delay-1">源于"Web Log(网络日志)"，后来缩写为Blog</p>
       
-      <div class="cards-container fade-in delay-2">
-        <div class="card">
-          <h3>项目展示</h3>
-          <p>浏览我的最新作品和项目案例</p>
-        </div>
-        <div class="card">
-          <h3>技术分享</h3>
-          <p>阅读我的技术博客和学习笔记</p>
-        </div>
-        <div class="card">
-          <h3>关于我</h3>
-          <p>了解我的背景和专业技能</p>
-        </div>
-      </div>
+      <el-row :gutter="20" class="cards-container fade-in delay-2">
+        <el-col :span="8">
+          <el-card class="card">
+            <h3>项目展示</h3>
+            <p>浏览我的最新作品和项目案例</p>
+          </el-card>
+        </el-col>
+        <el-col :span="8">
+          <el-card class="card">
+            <h3>技术分享</h3>
+            <p>阅读我的技术博客和学习笔记</p>
+          </el-card>
+        </el-col>
+        <el-col :span="8">
+          <el-card class="card">
+            <h3>关于我</h3>
+            <p>了解我的背景和专业技能</p>
+          </el-card>
+        </el-col>
+      </el-row>
       
       <!-- 工具区域 -->
       <div class="section-title scroll-animation">
@@ -47,28 +53,28 @@
           <div class="card-icon">🔍</div>
           <h3>GIS数据查询</h3>
           <p>快速查询和检索地理信息系统数据，支持多种格式和坐标系</p>
-          <button class="card-btn">立即使用</button>
+          <el-button type="primary" class="card-btn">立即使用</el-button>
         </div>
         
         <div class="card tool-card">
           <div class="card-icon">🗺️</div>
           <h3>地图可视化</h3>
           <p>将复杂的地理数据转化为直观的可视化地图，支持自定义样式</p>
-          <button class="card-btn">立即使用</button>
+          <el-button type="primary" class="card-btn">立即使用</el-button>
         </div>
         
         <div class="card tool-card">
           <div class="card-icon">📊</div>
           <h3>空间分析</h3>
           <p>强大的空间分析工具，支持缓冲区分析、叠加分析和网络分析</p>
-          <button class="card-btn">立即使用</button>
+          <el-button type="primary" class="card-btn">立即使用</el-button>
         </div>
         
         <div class="card tool-card">
           <div class="card-icon">📱</div>
           <h3>移动端采集</h3>
           <p>便捷的移动端数据采集工具，支持离线采集和实时同步</p>
-          <button class="card-btn">立即使用</button>
+          <el-button type="primary" class="card-btn">立即使用</el-button>
         </div>
       </div>
     </main>
