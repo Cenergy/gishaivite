@@ -1,6 +1,14 @@
 <template>
   <div class="home">
-    <header class="header">
+    <!-- 全屏背景图区域 -->
+    <div class="hero-section">
+      <div class="hero-content">
+        <h1 class="hero-title fade-in">及时嗨</h1>
+        <p class="hero-subtitle fade-in delay-1">分享技术，记录生活</p>
+      </div>
+    </div>
+    
+    <header class="header" :class="{ 'fixed-header': isHeaderFixed }">
       <nav class="nav">
         <router-link to="/" class="logo">及时嗨</router-link>
         <el-button class="menu-btn" @click="isMenuOpen = !isMenuOpen" aria-label="菜单" :aria-expanded="isMenuOpen.toString()">
@@ -86,9 +94,14 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, onUnmounted } from 'vue';
 
 const isMenuOpen = ref(false);
+const isHeaderFixed = ref(false);
+
+// 声明函数引用，以便在onUnmounted中移除事件监听
+let checkScroll;
+let handleScroll;
 
 onMounted(() => {
   // 平滑滚动效果
@@ -100,9 +113,10 @@ onMounted(() => {
       });
     });
   });
+  
   // 滚动动画效果
-  const scrollAnimations = document.querySelectorAll('.scroll-animation');
-  const checkScroll = () => {
+  checkScroll = () => {
+    const scrollAnimations = document.querySelectorAll('.scroll-animation');
     scrollAnimations.forEach(element => {
       const elementTop = element.getBoundingClientRect().top;
       const windowHeight = window.innerHeight;
@@ -111,10 +125,29 @@ onMounted(() => {
       }
     });
   };
+  
+  // 监听滚动固定header
+  handleScroll = () => {
+    const heroSection = document.querySelector('.hero-section');
+    if (heroSection) {
+      const heroHeight = heroSection.offsetHeight;
+      isHeaderFixed.value = window.scrollY > heroHeight - 80;
+    }
+  };
+  
   // 初始检查
   checkScroll();
-  // 滚动时检查
+  handleScroll();
+  
+  // 添加滚动事件监听
   window.addEventListener('scroll', checkScroll);
+  window.addEventListener('scroll', handleScroll);
+});
+
+onUnmounted(() => {
+  // 移除滚动监听
+  window.removeEventListener('scroll', checkScroll);
+  window.removeEventListener('scroll', handleScroll);
 });
 </script>
 
@@ -134,10 +167,55 @@ onMounted(() => {
   --animation-duration: 1s;
 }
 
+.hero-section {
+  height: 100vh;
+  width: 100%;
+  background-image: url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 2rem;
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.hero-content {
+  text-align: center;
+  color: white;
+  position: relative;
+  z-index: 1;
+  padding: 2rem;
+}
+
+.hero-title {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.hero-subtitle {
+  font-size: 1.5rem;
+  margin-bottom: 2rem;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
 .header {
   background-color: #ffffff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 1rem 2rem;
+  transition: all 0.3s ease;
 }
 
 .nav {
@@ -181,11 +259,21 @@ onMounted(() => {
   border-bottom: 2px solid #0066cc;
 }
 
+.fixed-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
 .main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   padding: 2rem;
   text-align: center;
