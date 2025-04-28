@@ -23,7 +23,7 @@
                 <span></span><span></span><span></span>
               </span>
             </el-button>
-            <div class="navbar-collapse" :class="{ 'show': isMenuOpen }">
+            <div class="navbar-collapse" :class="{ show: isMenuOpen }">
               <div class="navbar-nav">
                 <div class="nav-item">
                   <router-link to="/home" class="nav-link" active-class="active">首页</router-link>
@@ -32,10 +32,14 @@
                   <router-link to="/blog" class="nav-link" active-class="active">博客</router-link>
                 </div>
                 <div class="nav-item">
-                  <router-link to="/projects" class="nav-link" active-class="active">项目</router-link>
+                  <router-link to="/projects" class="nav-link" active-class="active"
+                    >项目</router-link
+                  >
                 </div>
                 <div class="nav-item">
-                  <router-link to="/contact" class="nav-link" active-class="active">联系</router-link>
+                  <router-link to="/contact" class="nav-link" active-class="active"
+                    >联系</router-link
+                  >
                 </div>
               </div>
             </div>
@@ -69,41 +73,7 @@
         </el-col>
       </el-row>
 
-      <!-- 工具区域 -->
-      <div class="section-title scroll-animation">
-        <h2>实用工具</h2>
-        <div class="underline"></div>
-      </div>
-
-      <div class="cards-container scroll-animation">
-        <div class="card tool-card">
-          <div class="card-icon">🔍</div>
-          <h3>GIS数据查询</h3>
-          <p>快速查询和检索地理信息系统数据，支持多种格式和坐标系</p>
-          <el-button type="primary" class="card-btn">立即使用</el-button>
-        </div>
-
-        <div class="card tool-card">
-          <div class="card-icon">🗺️</div>
-          <h3>地图可视化</h3>
-          <p>将复杂的地理数据转化为直观的可视化地图，支持自定义样式</p>
-          <el-button type="primary" class="card-btn">立即使用</el-button>
-        </div>
-
-        <div class="card tool-card">
-          <div class="card-icon">📊</div>
-          <h3>空间分析</h3>
-          <p>强大的空间分析工具，支持缓冲区分析、叠加分析和网络分析</p>
-          <el-button type="primary" class="card-btn">立即使用</el-button>
-        </div>
-
-        <div class="card tool-card">
-          <div class="card-icon">📱</div>
-          <h3>移动端采集</h3>
-          <p>便捷的移动端数据采集工具，支持离线采集和实时同步</p>
-          <el-button type="primary" class="card-btn">立即使用</el-button>
-        </div>
-      </div>
+      <ToolsSection />
     </main>
 
     <footer class="footer fade-in delay-3">
@@ -113,61 +83,62 @@
 </template>
 
 <script setup>
-import { onMounted, ref, onUnmounted } from "vue";
+import { onMounted, ref, onUnmounted } from 'vue'
+import ToolsSection from '@/components/ToolsSection.vue'
 
-const isMenuOpen = ref(false);
-const isHeaderFixed = ref(false);
+const isMenuOpen = ref(false)
+const isHeaderFixed = ref(false)
 
 // 声明函数引用，以便在onUnmounted中移除事件监听
-let checkScroll;
-let handleScroll;
+let checkScroll
+let handleScroll
 
 onMounted(() => {
   // 平滑滚动效果
   document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
-    anchor.addEventListener("click", function (e) {
-      e.preventDefault();
-      document.querySelector(this.getAttribute("href")).scrollIntoView({
-        behavior: "smooth",
-      });
-    });
-  });
+    anchor.addEventListener('click', function (e) {
+      e.preventDefault()
+      document.querySelector(this.getAttribute('href')).scrollIntoView({
+        behavior: 'smooth',
+      })
+    })
+  })
 
   // 滚动动画效果
   checkScroll = () => {
-    const scrollAnimations = document.querySelectorAll(".scroll-animation");
+    const scrollAnimations = document.querySelectorAll('.scroll-animation')
     scrollAnimations.forEach((element) => {
-      const elementTop = element.getBoundingClientRect().top;
-      const windowHeight = window.innerHeight;
+      const elementTop = element.getBoundingClientRect().top
+      const windowHeight = window.innerHeight
       if (elementTop < windowHeight * 0.8) {
-        element.classList.add("active");
+        element.classList.add('active')
       }
-    });
-  };
+    })
+  }
 
   // 监听滚动固定header
   handleScroll = () => {
-    const heroSection = document.querySelector(".hero-section");
+    const heroSection = document.querySelector('.hero-section')
     if (heroSection) {
-      const heroHeight = heroSection.offsetHeight;
-      isHeaderFixed.value = window.scrollY > heroHeight - 80;
+      const heroHeight = heroSection.offsetHeight
+      isHeaderFixed.value = window.scrollY > heroHeight - 80
     }
-  };
+  }
 
   // 初始检查
-  checkScroll();
-  handleScroll();
+  checkScroll()
+  handleScroll()
 
   // 添加滚动事件监听
-  window.addEventListener("scroll", checkScroll);
-  window.addEventListener("scroll", handleScroll);
-});
+  window.addEventListener('scroll', checkScroll)
+  window.addEventListener('scroll', handleScroll)
+})
 
 onUnmounted(() => {
   // 移除滚动监听
-  window.removeEventListener("scroll", checkScroll);
-  window.removeEventListener("scroll", handleScroll);
-});
+  window.removeEventListener('scroll', checkScroll)
+  window.removeEventListener('scroll', handleScroll)
+})
 </script>
 
 <style scoped>
@@ -189,7 +160,7 @@ onUnmounted(() => {
 .hero-section {
   height: 100vh;
   width: 100%;
-  background-image: url("https://images.unsplash.com/photo-1550745165-9bc0b252726f?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80");
+  background-image: url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -201,7 +172,7 @@ onUnmounted(() => {
 }
 
 .hero-section::before {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
@@ -465,16 +436,16 @@ onUnmounted(() => {
   .nav-link:last-child {
     border-bottom: none;
   }
-  
+
   /* 移除冗余样式 */
   .menu-btn {
     display: none;
   }
-  
+
   .nav-links {
     display: none;
   }
-  
+
   /* 修复卡片布局 */
   .cards-container {
     flex-direction: column;
@@ -487,13 +458,13 @@ onUnmounted(() => {
     max-width: 350px;
     margin-bottom: 1.5rem;
   }
-  
+
   /* 调整行列布局 */
   .el-row {
     margin-left: 0 !important;
     margin-right: 0 !important;
   }
-  
+
   .el-col {
     width: 100%;
     max-width: 100%;
@@ -507,11 +478,11 @@ onUnmounted(() => {
   .navbar-nav {
     gap: 1rem;
   }
-  
+
   .nav-link {
     padding: 0 0.75rem;
   }
-  
+
   .el-col {
     width: 50%;
     max-width: 50%;
