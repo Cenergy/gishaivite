@@ -157,50 +157,6 @@ onUnmounted(() => {
   --animation-duration: 1s;
 }
 
-.hero-section {
-  height: 100vh;
-  width: 100%;
-  background-image: url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80');
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  margin-bottom: 2rem;
-}
-
-.hero-section::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-}
-
-.hero-content {
-  text-align: center;
-  color: white;
-  position: relative;
-  z-index: 1;
-  padding: 2rem;
-}
-
-.hero-title {
-  font-size: 4rem;
-  margin-bottom: 1rem;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.hero-subtitle {
-  font-size: 1.5rem;
-  margin-bottom: 2rem;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-}
-
 /* 新的Bootstrap风格导航栏样式 */
 .header {
   background-color: #ffffff;
@@ -437,15 +393,6 @@ onUnmounted(() => {
     border-bottom: none;
   }
 
-  /* 移除冗余样式 */
-  .menu-btn {
-    display: none;
-  }
-
-  .nav-links {
-    display: none;
-  }
-
   /* 修复卡片布局 */
   .cards-container {
     flex-direction: column;
@@ -648,41 +595,7 @@ html {
   background-color: #f8f9fa;
   margin-top: auto;
 }
-.menu-btn {
-  display: none;
-  background: none;
-  border: none;
-  cursor: pointer;
-  margin-left: 1rem;
-  z-index: 1002;
-}
-.menu-icon {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  position: relative;
-  transition: all 0.3s;
-}
-.menu-icon span {
-  display: block;
-  height: 3px;
-  width: 100%;
-  background: #333;
-  margin: 4px 0;
-  border-radius: 2px;
-  transition: all 0.3s;
-}
-.menu-icon.open span:nth-child(1) {
-  transform: translateY(7px) rotate(45deg);
-}
-.menu-icon.open span:nth-child(2) {
-  opacity: 0;
-}
-.menu-icon.open span:nth-child(3) {
-  transform: translateY(-7px) rotate(-45deg);
-}
+
 @media (max-width: 768px) {
   .menu-btn {
     display: block;
