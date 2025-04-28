@@ -434,6 +434,7 @@ onUnmounted(() => {
     margin-left: 0;
     padding: 0 1rem;
     height: auto; /* 在移动端，高度由内容决定 */
+    align-items: flex-start; /* 确保左对齐 */
   }
 
   .nav-item {
@@ -463,6 +464,64 @@ onUnmounted(() => {
 
   .nav-link:last-child {
     border-bottom: none;
+  }
+  
+  /* 移除冗余样式 */
+  .menu-btn {
+    display: none;
+  }
+  
+  .nav-links {
+    display: none;
+  }
+  
+  /* 修复卡片布局 */
+  .cards-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .card,
+  .tool-card {
+    width: 90%;
+    max-width: 350px;
+    margin-bottom: 1.5rem;
+  }
+  
+  /* 调整行列布局 */
+  .el-row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  
+  .el-col {
+    width: 100%;
+    max-width: 100%;
+    flex: 0 0 100%;
+    margin-bottom: 1.5rem;
+  }
+}
+
+/* 添加更多断点以实现更好的响应式效果 */
+@media (min-width: 769px) and (max-width: 992px) {
+  .navbar-nav {
+    gap: 1rem;
+  }
+  
+  .nav-link {
+    padding: 0 0.75rem;
+  }
+  
+  .el-col {
+    width: 50%;
+    max-width: 50%;
+    flex: 0 0 50%;
+  }
+}
+
+@media (min-width: 993px) {
+  .navbar-nav {
+    gap: 1.5rem;
   }
 }
 
