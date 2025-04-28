@@ -1,34 +1,49 @@
 <template>
   <div class="home">
     <!-- 全屏背景图区域 -->
-    <div class="hero-section">
+    <!-- <div class="hero-section">
       <div class="hero-content">
         <h1 class="hero-title fade-in">及时嗨</h1>
         <p class="hero-subtitle fade-in delay-1">分享技术，记录生活</p>
       </div>
-    </div>
-    
-    <header class="header" :class="{ 'fixed-header': isHeaderFixed }">
-      <nav class="nav">
-        <router-link to="/" class="logo">及时嗨</router-link>
-        <el-button class="menu-btn" @click="isMenuOpen = !isMenuOpen" aria-label="菜单" :aria-expanded="isMenuOpen.toString()">
-          <span class="menu-icon" :class="{ open: isMenuOpen }">
-            <span></span><span></span><span></span>
-          </span>
-        </el-button>
-        <div class="nav-links" :class="{ open: isMenuOpen }">
-          <router-link to="/home" class="nav-link" active-class="active-link">首页</router-link>
-          <router-link to="/blog" class="nav-link" active-class="active-link">博客</router-link>
-          <router-link to="/projects" class="nav-link" active-class="active-link">项目</router-link>
-          <router-link to="/contact" class="nav-link" active-class="active-link">联系</router-link>
-        </div>
-      </nav>
-    </header>
-    
+    </div> -->
+
+    <el-affix :offset="0">
+      <header class="header" :class="{ 'fixed-header': isHeaderFixed }">
+        <nav class="nav">
+          <router-link to="/" class="logo">及时嗨</router-link>
+          <el-button
+            class="menu-btn"
+            @click="isMenuOpen = !isMenuOpen"
+            aria-label="菜单"
+            :aria-expanded="isMenuOpen.toString()"
+          >
+            <span class="menu-icon" :class="{ open: isMenuOpen }">
+              <span></span><span></span><span></span>
+            </span>
+          </el-button>
+          <div class="nav-links" :class="{ open: isMenuOpen }">
+            <router-link to="/home" class="nav-link" active-class="active-link"
+              >首页</router-link
+            >
+            <router-link to="/blog" class="nav-link" active-class="active-link"
+              >博客</router-link
+            >
+            <router-link to="/projects" class="nav-link" active-class="active-link"
+              >项目</router-link
+            >
+            <router-link to="/contact" class="nav-link" active-class="active-link"
+              >联系</router-link
+            >
+          </div>
+        </nav>
+      </header>
+    </el-affix>
+
     <main class="main-content">
       <h1 class="fade-in">欢迎来到及时嗨</h1>
       <p class="fade-in delay-1">源于"Web Log(网络日志)"，后来缩写为Blog</p>
-      
+
       <el-row :gutter="20" class="cards-container fade-in delay-2">
         <el-col :span="8">
           <el-card class="card">
@@ -49,13 +64,13 @@
           </el-card>
         </el-col>
       </el-row>
-      
+
       <!-- 工具区域 -->
       <div class="section-title scroll-animation">
         <h2>实用工具</h2>
         <div class="underline"></div>
       </div>
-      
+
       <div class="cards-container scroll-animation">
         <div class="card tool-card">
           <div class="card-icon">🔍</div>
@@ -63,21 +78,21 @@
           <p>快速查询和检索地理信息系统数据，支持多种格式和坐标系</p>
           <el-button type="primary" class="card-btn">立即使用</el-button>
         </div>
-        
+
         <div class="card tool-card">
           <div class="card-icon">🗺️</div>
           <h3>地图可视化</h3>
           <p>将复杂的地理数据转化为直观的可视化地图，支持自定义样式</p>
           <el-button type="primary" class="card-btn">立即使用</el-button>
         </div>
-        
+
         <div class="card tool-card">
           <div class="card-icon">📊</div>
           <h3>空间分析</h3>
           <p>强大的空间分析工具，支持缓冲区分析、叠加分析和网络分析</p>
           <el-button type="primary" class="card-btn">立即使用</el-button>
         </div>
-        
+
         <div class="card tool-card">
           <div class="card-icon">📱</div>
           <h3>移动端采集</h3>
@@ -86,7 +101,7 @@
         </div>
       </div>
     </main>
-    
+
     <footer class="footer fade-in delay-3">
       <p>© 2023 Gishai. All rights reserved.</p>
     </footer>
@@ -94,7 +109,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref, onUnmounted } from 'vue';
+import { onMounted, ref, onUnmounted } from "vue";
 
 const isMenuOpen = ref(false);
 const isHeaderFixed = ref(false);
@@ -105,49 +120,49 @@ let handleScroll;
 
 onMounted(() => {
   // 平滑滚动效果
-  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function(e) {
+  document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+    anchor.addEventListener("click", function (e) {
       e.preventDefault();
-      document.querySelector(this.getAttribute('href')).scrollIntoView({
-        behavior: 'smooth'
+      document.querySelector(this.getAttribute("href")).scrollIntoView({
+        behavior: "smooth",
       });
     });
   });
-  
+
   // 滚动动画效果
   checkScroll = () => {
-    const scrollAnimations = document.querySelectorAll('.scroll-animation');
-    scrollAnimations.forEach(element => {
+    const scrollAnimations = document.querySelectorAll(".scroll-animation");
+    scrollAnimations.forEach((element) => {
       const elementTop = element.getBoundingClientRect().top;
       const windowHeight = window.innerHeight;
       if (elementTop < windowHeight * 0.8) {
-        element.classList.add('active');
+        element.classList.add("active");
       }
     });
   };
-  
+
   // 监听滚动固定header
   handleScroll = () => {
-    const heroSection = document.querySelector('.hero-section');
+    const heroSection = document.querySelector(".hero-section");
     if (heroSection) {
       const heroHeight = heroSection.offsetHeight;
       isHeaderFixed.value = window.scrollY > heroHeight - 80;
     }
   };
-  
+
   // 初始检查
   checkScroll();
   handleScroll();
-  
+
   // 添加滚动事件监听
-  window.addEventListener('scroll', checkScroll);
-  window.addEventListener('scroll', handleScroll);
+  window.addEventListener("scroll", checkScroll);
+  window.addEventListener("scroll", handleScroll);
 });
 
 onUnmounted(() => {
   // 移除滚动监听
-  window.removeEventListener('scroll', checkScroll);
-  window.removeEventListener('scroll', handleScroll);
+  window.removeEventListener("scroll", checkScroll);
+  window.removeEventListener("scroll", handleScroll);
 });
 </script>
 
@@ -170,7 +185,7 @@ onUnmounted(() => {
 .hero-section {
   height: 100vh;
   width: 100%;
-  background-image: url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80');
+  background-image: url("https://images.unsplash.com/photo-1550745165-9bc0b252726f?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80");
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -182,7 +197,7 @@ onUnmounted(() => {
 }
 
 .hero-section::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -297,8 +312,14 @@ onUnmounted(() => {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* 平滑滚动样式 */
@@ -313,26 +334,27 @@ html {
     align-items: center;
     padding: 0.25rem 0.75rem;
   }
-  
+
   .nav-links {
     flex-direction: column;
     gap: 0.5rem;
     width: 100%;
     padding: 0.25rem 0;
   }
-  
+
   .nav-link {
     width: 100%;
     text-align: center;
     padding: 0.25rem 0.5rem;
   }
-  
+
   .cards-container {
     flex-direction: column;
     align-items: center;
   }
-  
-  .card, .tool-card {
+
+  .card,
+  .tool-card {
     width: 90%;
     max-width: 350px;
     margin-bottom: 1.5rem;
@@ -463,7 +485,7 @@ html {
     gap: 0.5rem;
     width: 100vw;
     padding: 0.5rem 0;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
     z-index: 1001;
     display: none;
     transition: all 0.3s;
