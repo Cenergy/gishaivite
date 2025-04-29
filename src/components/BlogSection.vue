@@ -183,7 +183,7 @@
 }
 
 .blog-btn {
-  align-self: flex-start;
+  align-self: center;
   margin-top: auto;
 }
 
