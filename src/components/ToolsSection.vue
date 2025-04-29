@@ -34,6 +34,18 @@
         <p>便捷的移动端数据采集工具，支持离线采集和实时同步</p>
         <el-button type="primary" class="card-btn">立即使用</el-button>
       </div>
+      <div class="card tool-card">
+        <div class="card-icon">📱</div>
+        <h3>移动端采集</h3>
+        <p>便捷的移动端数据采集工具，支持离线采集和实时同步</p>
+        <el-button type="primary" class="card-btn">立即使用</el-button>
+      </div>
+      <div class="card tool-card">
+        <div class="card-icon">📱</div>
+        <h3>移动端采集</h3>
+        <p>便捷的移动端数据采集工具，支持离线采集和实时同步</p>
+        <el-button type="primary" class="card-btn">立即使用</el-button>
+      </div>
     </div>
   </div>
 </template>

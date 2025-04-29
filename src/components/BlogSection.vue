@@ -9,7 +9,11 @@
     <div class="blog-container scroll-animation">
       <div class="blog-card">
         <div class="blog-image">
-          <img src="@/assets/blog-placeholder-1.jpg" alt="博客图片" onerror="this.src='https://via.placeholder.com/300x200?text=博客图片'" />
+          <img
+            src="@/assets/blog-placeholder-1.jpg"
+            alt="博客图片"
+            onerror="this.src='http://gips2.baidu.com/it/u=195724436,3554684702&fm=3028&app=3028&f=JPEG&fmt=auto?w=1280&h=960'"
+          />
         </div>
         <div class="blog-content">
           <div class="blog-meta">
@@ -20,14 +24,20 @@
             </div>
           </div>
           <h3 class="blog-title">Vue3 组合式API的最佳实践</h3>
-          <p class="blog-excerpt">探索Vue3组合式API的强大功能，了解如何使用setup、ref、reactive等特性构建更可维护的应用...</p>
+          <p class="blog-excerpt">
+            探索Vue3组合式API的强大功能，了解如何使用setup、ref、reactive等特性构建更可维护的应用...
+          </p>
           <el-button type="primary" class="blog-btn">阅读更多</el-button>
         </div>
       </div>
 
       <div class="blog-card">
         <div class="blog-image">
-          <img src="@/assets/blog-placeholder-2.jpg" alt="博客图片" onerror="this.src='https://via.placeholder.com/300x200?text=博客图片'" />
+          <img
+            src="@/assets/blog-placeholder-2.jpg"
+            alt="博客图片"
+            onerror="this.src='https://via.placeholder.com/300x200?text=博客图片'"
+          />
         </div>
         <div class="blog-content">
           <div class="blog-meta">
@@ -38,14 +48,20 @@
             </div>
           </div>
           <h3 class="blog-title">GIS数据可视化技术解析</h3>
-          <p class="blog-excerpt">深入了解地理信息系统(GIS)数据可视化的关键技术，包括地图投影、符号化和交互设计...</p>
+          <p class="blog-excerpt">
+            深入了解地理信息系统(GIS)数据可视化的关键技术，包括地图投影、符号化和交互设计...
+          </p>
           <el-button type="primary" class="blog-btn">阅读更多</el-button>
         </div>
       </div>
 
       <div class="blog-card">
         <div class="blog-image">
-          <img src="@/assets/blog-placeholder-3.jpg" alt="博客图片" onerror="this.src='https://via.placeholder.com/300x200?text=博客图片'" />
+          <img
+            src="@/assets/blog-placeholder-3.jpg"
+            alt="博客图片"
+            onerror="this.src='https://via.placeholder.com/300x200?text=博客图片'"
+          />
         </div>
         <div class="blog-content">
           <div class="blog-meta">
@@ -56,7 +72,9 @@
             </div>
           </div>
           <h3 class="blog-title">Element Plus在Vue项目中的应用</h3>
-          <p class="blog-excerpt">Element Plus作为一款流行的Vue3 UI框架，如何在实际项目中高效应用？本文分享实战经验...</p>
+          <p class="blog-excerpt">
+            Element Plus作为一款流行的Vue3 UI框架，如何在实际项目中高效应用？本文分享实战经验...
+          </p>
           <el-button type="primary" class="blog-btn">阅读更多</el-button>
         </div>
       </div>
@@ -244,12 +262,12 @@
   .section-title h2 {
     font-size: 2rem;
   }
-  
+
   .blog-meta {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .blog-tags {
     margin-top: 0.5rem;
   }

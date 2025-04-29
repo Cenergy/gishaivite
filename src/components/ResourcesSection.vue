@@ -39,9 +39,7 @@
         <div class="resource-icon">🎨</div>
         <div class="resource-content">
           <h3 class="resource-title">Element Plus UI模板</h3>
-          <p class="resource-description">
-            基于Element Plus的后台管理系统UI模板，包含多种常用组件
-          </p>
+          <p class="resource-description">基于Element Plus的后台管理系统UI模板，包含多种常用组件</p>
           <div class="resource-meta">
             <span class="resource-size">8.5MB</span>
             <span class="resource-format">ZIP</span>
@@ -53,9 +51,7 @@
         <div class="resource-icon">🎨</div>
         <div class="resource-content">
           <h3 class="resource-title">Element Plus UI模板</h3>
-          <p class="resource-description">
-            基于Element Plus的后台管理系统UI模板，包含多种常用组件
-          </p>
+          <p class="resource-description">基于Element Plus的后台管理系统UI模板，包含多种常用组件</p>
           <div class="resource-meta">
             <span class="resource-size">8.5MB</span>
             <span class="resource-format">ZIP</span>
@@ -169,12 +165,12 @@
 }
 
 .resource-size::before {
-  content: "📊";
+  content: '📊';
   margin-right: 0.25rem;
 }
 
 .resource-format::before {
-  content: "📄";
+  content: '📄';
   margin-right: 0.25rem;
 }
 
