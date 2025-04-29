@@ -74,6 +74,7 @@
       </el-row>
 
       <ToolsSection />
+      <BlogSection />
     </main>
 
     <footer class="footer fade-in delay-3">
@@ -85,6 +86,7 @@
 <script setup>
 import { onMounted, ref, onUnmounted } from 'vue'
 import ToolsSection from '@/components/ToolsSection.vue'
+import BlogSection from '@/components/BlogSection.vue'
 
 const isMenuOpen = ref(false)
 const isHeaderFixed = ref(false)
