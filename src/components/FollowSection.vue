@@ -56,7 +56,7 @@
           <div class="social-image">
             <img
               class="platform-image"
-              src="https://via.placeholder.com/200x120?text=GitHub仓库"
+              src="https://gishai.top/assets/img/small_applets.df610077.jpg"
               alt="GitHub仓库"
             />
           </div>

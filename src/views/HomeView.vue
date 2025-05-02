@@ -79,9 +79,7 @@
       <FollowSection />
     </main>
 
-    <footer class="footer fade-in delay-3">
-      <p>© 2023 Gishai. All rights reserved.</p>
-    </footer>
+    <FooterSection class="fade-in delay-3" />
   </div>
 </template>
 
@@ -91,6 +89,7 @@ import ToolsSection from '@/components/ToolsSection.vue'
 import BlogSection from '@/components/BlogSection.vue'
 import ResourcesSection from '@/components/ResourcesSection.vue'
 import FollowSection from '@/components/FollowSection.vue'
+import FooterSection from '@/components/FooterSection.vue'
 
 const isMenuOpen = ref(false)
 const isHeaderFixed = ref(false)
@@ -595,12 +594,7 @@ html {
   transform: scale(1.05);
 }
 
-.footer {
-  text-align: center;
-  padding: 2rem;
-  background-color: #f8f9fa;
-  margin-top: auto;
-}
+/* 移除旧的footer样式，使用FooterSection组件的样式 */
 
 @media (max-width: 768px) {
   .menu-btn {
