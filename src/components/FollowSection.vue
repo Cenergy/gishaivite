@@ -18,7 +18,7 @@
           <div class="qrcode-container">
             <img
               class="qrcode-image"
-              src="https://via.placeholder.com/200x200?text=微信公众号"
+              src="https://gishai.top/assets/img/qrcode_for_weixin.6e038798.jpg"
               alt="微信公众号二维码"
             />
           </div>
@@ -37,7 +37,7 @@
           <div class="social-image">
             <img
               class="platform-image"
-              src="https://via.placeholder.com/200x120?text=微博主页"
+              src="https://gishai.top/assets/img/small_applets.df610077.jpg"
               alt="微博主页"
             />
           </div>
@@ -61,25 +61,6 @@
             />
           </div>
           <a href="#" class="follow-link">访问GitHub</a>
-        </div>
-      </div>
-
-      <!-- 知乎卡片 -->
-      <div class="follow-card">
-        <div class="follow-content">
-          <div class="follow-icon">
-            <el-icon><User /></el-icon>
-          </div>
-          <h3 class="follow-title">知乎</h3>
-          <p class="follow-description">关注我们的知乎专栏，了解技术见解</p>
-          <div class="social-image">
-            <img
-              class="platform-image"
-              src="https://via.placeholder.com/200x120?text=知乎专栏"
-              alt="知乎专栏"
-            />
-          </div>
-          <a href="#" class="follow-link">前往知乎</a>
         </div>
       </div>
     </div>
