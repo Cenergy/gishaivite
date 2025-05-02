@@ -50,28 +50,6 @@
 
     <main class="main-content">
       <h1 class="fade-in">欢迎来到及时嗨</h1>
-      <p class="fade-in delay-1">源于"Web Log(网络日志)"，后来缩写为Blog</p>
-
-      <el-row :gutter="20" class="cards-container fade-in delay-2">
-        <el-col :span="8">
-          <el-card class="card">
-            <h3>项目展示</h3>
-            <p>浏览我的最新作品和项目案例</p>
-          </el-card>
-        </el-col>
-        <el-col :span="8">
-          <el-card class="card">
-            <h3>技术分享</h3>
-            <p>阅读我的技术博客和学习笔记</p>
-          </el-card>
-        </el-col>
-        <el-col :span="8">
-          <el-card class="card">
-            <h3>关于我</h3>
-            <p>了解我的背景和专业技能</p>
-          </el-card>
-        </el-col>
-      </el-row>
 
       <ToolsSection />
       <BlogSection />
