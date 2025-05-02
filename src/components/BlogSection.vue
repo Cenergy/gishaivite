@@ -125,6 +125,7 @@
 
 .blog-card {
   background: #ffffff;
+  padding-top: 1rem;
   border-radius: 12px;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
   overflow: hidden;
