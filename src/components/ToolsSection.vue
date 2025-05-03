@@ -11,47 +11,113 @@
         <div class="card-icon">🔍</div>
         <h3>GIS数据查询</h3>
         <p>快速查询和检索地理信息系统数据，支持多种格式和坐标系</p>
-        <el-button type="primary" class="card-btn">立即使用</el-button>
+        <el-button
+          type="primary"
+          class="card-btn"
+          @click="openToolDialog('gis-query', 'GIS数据查询')"
+          >立即使用</el-button
+        >
       </div>
 
       <div class="card tool-card">
         <div class="card-icon">🗺️</div>
         <h3>地图可视化</h3>
         <p>将复杂的地理数据转化为直观的可视化地图，支持自定义样式</p>
-        <el-button type="primary" class="card-btn">立即使用</el-button>
+        <el-button
+          type="primary"
+          class="card-btn"
+          @click="openToolDialog('map-visualization', '地图可视化')"
+          >立即使用</el-button
+        >
       </div>
 
       <div class="card tool-card">
         <div class="card-icon">📊</div>
         <h3>空间分析</h3>
         <p>强大的空间分析工具，支持缓冲区分析、叠加分析和网络分析</p>
-        <el-button type="primary" class="card-btn">立即使用</el-button>
+        <el-button
+          type="primary"
+          class="card-btn"
+          @click="openToolDialog('spatial-analysis', '空间分析')"
+          >立即使用</el-button
+        >
       </div>
 
       <div class="card tool-card">
         <div class="card-icon">📱</div>
         <h3>移动端采集</h3>
         <p>便捷的移动端数据采集工具，支持离线采集和实时同步</p>
-        <el-button type="primary" class="card-btn">立即使用</el-button>
+        <el-button
+          type="primary"
+          class="card-btn"
+          @click="openToolDialog('mobile-collection', '移动端采集')"
+          >立即使用</el-button
+        >
       </div>
       <div class="card tool-card">
         <div class="card-icon">📱</div>
         <h3>移动端采集</h3>
         <p>便捷的移动端数据采集工具，支持离线采集和实时同步</p>
-        <el-button type="primary" class="card-btn">立即使用</el-button>
+        <el-button
+          type="primary"
+          class="card-btn"
+          @click="openToolDialog('mobile-collection', '移动端采集')"
+          >立即使用</el-button
+        >
       </div>
       <div class="card tool-card">
         <div class="card-icon">📱</div>
         <h3>移动端采集</h3>
         <p>便捷的移动端数据采集工具，支持离线采集和实时同步</p>
-        <el-button type="primary" class="card-btn">立即使用</el-button>
+        <el-button
+          type="primary"
+          class="card-btn"
+          @click="openToolDialog('mobile-collection', '移动端采集')"
+          >立即使用</el-button
+        >
       </div>
     </div>
+
+    <!-- 通用弹窗组件 -->
+    <DialogComponent
+      v-if="showDialog"
+      :title="dialogTitle"
+      :content-component="ToolContent"
+      :content-props="{ toolType: currentToolType }"
+      @close="closeDialog"
+      @confirm="handleDialogConfirm"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-// 组件逻辑可以在这里添加
+import { ref } from 'vue'
+import DialogComponent from './Dialog/DialogComponent.vue'
+import ToolContent from './Dialog/ToolContent.vue'
+
+// 弹窗状态管理
+const showDialog = ref(false)
+const dialogTitle = ref('')
+const currentToolType = ref('')
+
+// 打开工具弹窗
+const openToolDialog = (toolType: string, title: string) => {
+  currentToolType.value = toolType
+  dialogTitle.value = title
+  showDialog.value = true
+}
+
+// 关闭弹窗
+const closeDialog = () => {
+  showDialog.value = false
+}
+
+// 处理弹窗确认
+const handleDialogConfirm = () => {
+  console.log('工具操作已确认:', currentToolType.value)
+  // 这里可以添加具体的工具操作逻辑
+  showDialog.value = false
+}
 </script>
 
 <style scoped>
