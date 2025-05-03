@@ -79,11 +79,10 @@
     </div>
 
     <!-- 通用弹窗组件 -->
-    <DialogComponent
+    <ToolDialog
       v-if="showDialog"
-      :title="dialogTitle"
-      :content-component="ToolContent"
-      :content-props="{ toolType: currentToolType }"
+      :dialog-title="dialogTitle"
+      :tool-type="currentToolType"
       @close="closeDialog"
       @confirm="handleDialogConfirm"
     />
@@ -92,8 +91,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import DialogComponent from './Dialog/DialogComponent.vue'
-import ToolContent from './Dialog/ToolContent.vue'
+import { ToolDialog } from './Dialog/index'
 
 // 弹窗状态管理
 const showDialog = ref(false)
