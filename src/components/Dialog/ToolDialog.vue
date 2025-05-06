@@ -3,6 +3,7 @@
     :title="dialogTitle"
     :content-component="currentToolComponent"
     :content-props="contentProps"
+    :width="'80%'"
     @close="$emit('close')"
     @confirm="$emit('confirm')"
   />

@@ -1,5 +1,11 @@
 <template>
-  <el-dialog v-model="dialogVisible" :title="title" width="50%" :before-close="handleClose">
+  <el-dialog
+    v-model="dialogVisible"
+    :title="title"
+    :width="width"
+    :before-close="handleClose"
+    :style="{ height: height }"
+  >
     <div class="dialog-content">
       <component :is="contentComponent" v-bind="contentProps"></component>
     </div>
@@ -28,6 +34,14 @@ const props = defineProps({
     type: Object,
     default: () => ({}),
   },
+  width: {
+    type: String,
+    default: '50%',
+  },
+  height: {
+    type: String,
+    default: '',
+  },
 })
 
 const emit = defineEmits<{
@@ -51,6 +65,9 @@ const handleConfirm = () => {
 <style scoped>
 .dialog-content {
   padding: 20px 0;
+  max-height: calc(100vh - 200px); /* 减去标题栏和底部按钮高度 */
+  overflow-y: auto;
+  box-sizing: border-box;
 }
 
 .dialog-footer {
