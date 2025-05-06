@@ -5,6 +5,8 @@
     :width="width"
     :before-close="handleClose"
     :style="{ height: height }"
+    center
+    append-to-body
   >
     <div class="dialog-content">
       <component :is="contentComponent" v-bind="contentProps"></component>
@@ -63,9 +65,21 @@ const handleConfirm = () => {
 </script>
 
 <style scoped>
+/* 添加全局样式，确保el-dialog垂直居中 */
+:deep(.el-dialog) {
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto !important;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-height: 80vh;
+  max-width: 90%;
+}
 .dialog-content {
   padding: 20px 0;
-  max-height: calc(100vh - 200px); /* 减去标题栏和底部按钮高度 */
+  max-height: calc(80vh - 180px); /* 减去标题栏和底部按钮高度，并留出上下边距 */
   overflow-y: auto;
   box-sizing: border-box;
 }
