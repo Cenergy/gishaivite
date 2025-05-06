@@ -10,11 +10,13 @@
 
 <script setup lang="ts">
 import { computed, defineProps, defineEmits } from 'vue'
-import BaseDialog from './base/BaseDialog.vue'
-import GISQueryTool from './tools/GISQueryTool.vue'
-import MapVisualizationTool from './tools/MapVisualizationTool.vue'
-import SpatialAnalysisTool from './tools/SpatialAnalysisTool.vue'
-import MobileCollectionTool from './tools/MobileCollectionTool.vue'
+import { BaseDialog } from './base'
+import {
+  GISQueryTool,
+  MapVisualizationTool,
+  SpatialAnalysisTool,
+  MobileCollectionTool,
+} from './tools'
 
 const props = defineProps({
   toolType: {

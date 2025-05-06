@@ -10,7 +10,4 @@ export { default as BaseDialog } from './base/BaseDialog.vue'
 export { default as ToolDialog } from './ToolDialog.vue'
 
 // 工具内容组件
-export { default as GISQueryTool } from './tools/GISQueryTool.vue'
-export { default as MapVisualizationTool } from './tools/MapVisualizationTool.vue'
-export { default as SpatialAnalysisTool } from './tools/SpatialAnalysisTool.vue'
-export { default as MobileCollectionTool } from './tools/MobileCollectionTool.vue'
+export * from './tools'
