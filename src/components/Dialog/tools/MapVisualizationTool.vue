@@ -29,4 +29,11 @@ import { ref } from 'vue'
 // 地图可视化工具的状态
 const mapType = ref('vector')
 const visualizationMethods = ref([])
+
+// 在打开弹窗时传递额外属性
+// openToolDialog('gis-query', 'GIS数据查询', {
+//   'close-on-click-modal': false,
+//   'close-on-press-escape': false,
+//   'top': '10vh'
+// })
 </script>

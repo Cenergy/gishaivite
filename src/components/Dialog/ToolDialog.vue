@@ -4,6 +4,8 @@
     :content-component="currentToolComponent"
     :content-props="contentProps"
     :width="'80%'"
+    :dialog-attrs="dialogAttrs"
+    v-on="$attrs"
     @close="$emit('close')"
     @confirm="$emit('confirm')"
   />
@@ -32,9 +34,19 @@ const props = defineProps({
     type: Object,
     default: () => ({}),
   },
+  // 接收额外的dialog属性
+  dialogAttrs: {
+    type: Object,
+    default: () => ({}),
+  },
 })
 
-defineEmits(['close', 'confirm'])
+// 定义组件可以触发的所有事件
+const emit = defineEmits<{
+  close: []
+  confirm: []
+  [key: string]: any // 允许传递任意事件
+}>()
 
 // 根据工具类型动态加载对应的组件
 const currentToolComponent = computed(() => {

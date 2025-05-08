@@ -83,6 +83,7 @@
       v-if="showDialog"
       :dialog-title="dialogTitle"
       :tool-type="currentToolType"
+      :dialog-attrs="dialogAttrs"
       @close="closeDialog"
       @confirm="handleDialogConfirm"
     />
@@ -97,11 +98,13 @@ import { ToolDialog } from './Dialog/index'
 const showDialog = ref(false)
 const dialogTitle = ref('')
 const currentToolType = ref('')
+const dialogAttrs = ref({}) // 存储额外的dialog属性
 
 // 打开工具弹窗
-const openToolDialog = (toolType: string, title: string) => {
+const openToolDialog = (toolType: string, title: string, attrs = {}) => {
   currentToolType.value = toolType
   dialogTitle.value = title
+  dialogAttrs.value = attrs
   showDialog.value = true
 }
 

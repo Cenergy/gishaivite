@@ -6,7 +6,9 @@
     :before-close="handleClose"
     :style="{ height: height }"
     class="centered-dialog"
-    align-center="true"
+    :align-center="true"
+    v-bind="dialogAttrs"
+    v-on="$attrs"
   >
     <div class="dialog-content">
       <component :is="contentComponent" v-bind="contentProps"></component>
@@ -44,23 +46,37 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  // 接收所有额外的el-dialog属性
+  dialogAttrs: {
+    type: Object,
+    default: () => ({}),
+  },
 })
 
+// 定义组件可以触发的所有事件
 const emit = defineEmits<{
   close: []
   confirm: []
+  [key: string]: any // 允许传递任意事件
 }>()
 
 const dialogVisible = ref(true)
 
+// 处理对话框关闭
 const handleClose = () => {
   dialogVisible.value = false
   emit('close')
 }
 
+// 处理确认按钮点击
 const handleConfirm = () => {
   emit('confirm')
   dialogVisible.value = false
+}
+
+// 转发所有其他事件
+const forwardEvent = (event: string, ...args: any[]) => {
+  emit(event, ...args)
 }
 </script>
 
