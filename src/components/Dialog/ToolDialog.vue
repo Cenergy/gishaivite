@@ -8,6 +8,7 @@
     v-on="$attrs"
     @close="$emit('close')"
     @confirm="$emit('confirm')"
+    @opened="handleDialogOpened"
   />
 </template>
 
@@ -45,8 +46,14 @@ const props = defineProps({
 const emit = defineEmits<{
   close: []
   confirm: []
+  opened: []
   [key: string]: any // 允许传递任意事件
 }>()
+
+// 处理弹窗打开事件
+const handleDialogOpened = () => {
+  console.log('工具对话框已打开:==========')
+}
 
 // 根据工具类型动态加载对应的组件
 const currentToolComponent = computed(() => {
@@ -60,7 +67,7 @@ const currentToolComponent = computed(() => {
     case 'mobile-collection':
       return MobileCollectionTool
     default:
-      return null
+      return GISQueryTool
   }
 })
 </script>

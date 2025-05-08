@@ -75,9 +75,9 @@ const handleConfirm = () => {
 }
 
 // 转发所有其他事件
-const forwardEvent = (event: string, ...args: any[]) => {
-  emit(event, ...args)
-}
+// const forwardEvent = (event: string, ...args: any[]) => {
+//   emit(event, ...args)
+// }
 </script>
 
 <style scoped>
