@@ -31,7 +31,17 @@
           </el-form-item>
 
           <el-form-item>
-            <el-button type="primary" @click="transformCoordinates">转换坐标</el-button>
+            <el-button
+              type="primary"
+              @click="transformCoordinates"
+              :disabled="sourceCrs === targetCrs"
+              >转换坐标</el-button
+            >
+            <div v-if="sourceCrs === targetCrs" class="error-message" style="margin-top: 10px">
+              <el-alert type="warning" size="small" :closable="false" show-icon>
+                源坐标系与目标坐标系不能相同
+              </el-alert>
+            </div>
           </el-form-item>
 
           <el-form-item label="结果" v-if="result">
@@ -83,11 +93,20 @@
         <el-button
           type="primary"
           @click="processExcel"
-          :disabled="!uploadFile"
+          :disabled="!uploadFile || excelSourceCrs === excelTargetCrs"
           style="margin-top: 20px"
         >
           处理Excel文件
         </el-button>
+        <div
+          v-if="excelSourceCrs === excelTargetCrs"
+          class="error-message"
+          style="margin-top: 10px"
+        >
+          <el-alert type="warning" size="small" :closable="false" show-icon>
+            源坐标系与目标坐标系不能相同
+          </el-alert>
+        </div>
       </el-tab-pane>
     </el-tabs>
   </div>
@@ -197,6 +216,15 @@ const transformCoordinates = () => {
 <style scoped>
 .coordinate-transform-tool {
   padding: 20px;
+}
+
+.error-message {
+  margin-bottom: 10px;
+}
+
+:deep(.el-alert) {
+  padding: 1px 12px;
+  font-size: 12px;
 }
 
 .excel-actions {
