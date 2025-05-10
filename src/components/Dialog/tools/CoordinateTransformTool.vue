@@ -69,43 +69,51 @@
               </el-select>
             </el-form-item>
           </div>
+
+          <div v-if="excelSourceCrs === excelTargetCrs" class="error-message">
+            <el-alert type="warning" size="small" :closable="false" show-icon>
+              源坐标系与目标坐标系不能相同
+            </el-alert>
+          </div>
         </el-form>
 
-        <div class="excel-actions">
-          <el-button type="primary" @click="downloadTemplate" style="margin-bottom: 20px">
-            下载Excel模板
-          </el-button>
-        </div>
+        <div class="excel-container">
+          <div class="excel-section">
+            <h4>第一步：下载模板</h4>
+            <el-button type="primary" @click="downloadTemplate" class="excel-button">
+              <i class="el-icon-download"></i> 下载Excel模板
+            </el-button>
+          </div>
 
-        <el-upload
-          class="upload-demo"
-          action=""
-          :auto-upload="false"
-          :on-change="handleFileChange"
-          accept=".xlsx,.xls"
-        >
-          <el-button type="primary">点击上传Excel文件</el-button>
-          <template #tip>
-            <div class="el-upload__tip">请上传包含经纬度数据的Excel文件</div>
-          </template>
-        </el-upload>
+          <div class="excel-section">
+            <h4>第二步：上传文件</h4>
+            <el-upload
+              class="excel-upload"
+              action=""
+              :auto-upload="false"
+              :on-change="handleFileChange"
+              accept=".xlsx,.xls"
+              drag
+            >
+              <i class="el-icon-upload"></i>
+              <div class="el-upload__text">拖拽文件到此处或 <em>点击上传</em></div>
+              <template #tip>
+                <div class="el-upload__tip">请上传包含经纬度数据的Excel文件</div>
+              </template>
+            </el-upload>
+          </div>
 
-        <el-button
-          type="primary"
-          @click="processExcel"
-          :disabled="!uploadFile || excelSourceCrs === excelTargetCrs"
-          style="margin-top: 20px"
-        >
-          处理Excel文件
-        </el-button>
-        <div
-          v-if="excelSourceCrs === excelTargetCrs"
-          class="error-message"
-          style="margin-top: 10px"
-        >
-          <el-alert type="warning" size="small" :closable="false" show-icon>
-            源坐标系与目标坐标系不能相同
-          </el-alert>
+          <div class="excel-section">
+            <h4>第三步：处理文件</h4>
+            <el-button
+              type="primary"
+              @click="processExcel"
+              :disabled="!uploadFile || excelSourceCrs === excelTargetCrs"
+              class="excel-button"
+            >
+              <i class="el-icon-refresh"></i> 处理Excel文件
+            </el-button>
+          </div>
         </div>
       </el-tab-pane>
     </el-tabs>
@@ -227,16 +235,11 @@ const transformCoordinates = () => {
   font-size: 12px;
 }
 
-.excel-actions {
-  display: flex;
-  justify-content: flex-start;
-  margin-bottom: 10px;
-}
-
 .coordinate-system-row {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+  margin-bottom: 10px;
 }
 
 .coordinate-system-item {
@@ -244,9 +247,75 @@ const transformCoordinates = () => {
   min-width: 250px;
 }
 
+/* 批量转换样式 */
+.excel-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.excel-section {
+  background-color: white;
+  border-radius: 6px;
+  padding: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.excel-section h4 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  color: #409eff;
+  font-weight: 500;
+  font-size: 16px;
+  border-bottom: 1px solid #ebeef5;
+  padding-bottom: 8px;
+}
+
+.excel-button {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.excel-upload {
+  width: 100%;
+}
+
+:deep(.excel-upload .el-upload) {
+  width: 100%;
+}
+
+:deep(.excel-upload .el-upload-dragger) {
+  width: 100%;
+  height: auto;
+  padding: 20px;
+}
+
+:deep(.el-upload__text) {
+  margin: 10px 0;
+}
+
+:deep(.el-upload__text em) {
+  color: #409eff;
+  font-style: normal;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 @media screen and (max-width: 768px) {
   .coordinate-system-item {
     min-width: 100%;
+  }
+
+  .excel-container {
+    gap: 15px;
+    padding: 15px;
+  }
+
+  .excel-section {
+    padding: 12px;
   }
 }
 </style>
