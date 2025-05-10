@@ -65,14 +65,15 @@
           >立即使用</el-button
         >
       </div>
+
       <div class="card tool-card">
-        <div class="card-icon">📱</div>
-        <h3>移动端采集</h3>
-        <p>便捷的移动端数据采集工具，支持离线采集和实时同步</p>
+        <div class="card-icon">🔄</div>
+        <h3>坐标转换</h3>
+        <p>支持WGS84、GCJ02、BD09等常用坐标系之间的转换</p>
         <el-button
           type="primary"
           class="card-btn"
-          @click="openToolDialog('mobile-collection', '移动端采集')"
+          @click="openToolDialog('coordinate-transform', '坐标转换')"
           >立即使用</el-button
         >
       </div>

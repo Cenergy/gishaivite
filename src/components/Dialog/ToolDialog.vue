@@ -20,6 +20,7 @@ import {
   MapVisualizationTool,
   SpatialAnalysisTool,
   MobileCollectionTool,
+  CoordinateTransformTool,
 } from './tools'
 
 const props = defineProps({
@@ -66,6 +67,8 @@ const currentToolComponent = computed(() => {
       return SpatialAnalysisTool
     case 'mobile-collection':
       return MobileCollectionTool
+    case 'coordinate-transform':
+      return CoordinateTransformTool
     default:
       return GISQueryTool
   }
