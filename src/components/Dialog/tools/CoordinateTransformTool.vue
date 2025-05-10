@@ -3,7 +3,7 @@
     <h3>坐标转换工具</h3>
     <el-tabs v-model="activeTab">
       <el-tab-pane label="单个转换" name="manual">
-        <el-form label-width="100px">
+        <el-form label-width="100px" style="margin-bottom: 20px">
           <div class="coordinate-system-row">
             <el-form-item label="源坐标系" class="coordinate-system-item">
               <el-select v-model="sourceCrs" placeholder="请选择源坐标系">
@@ -22,32 +22,43 @@
             </el-form-item>
           </div>
 
-          <el-form-item label="经度">
-            <el-input v-model="longitude" placeholder="请输入经度"></el-input>
-          </el-form-item>
-
-          <el-form-item label="纬度">
-            <el-input v-model="latitude" placeholder="请输入纬度"></el-input>
-          </el-form-item>
-
-          <el-form-item>
-            <el-button
-              type="primary"
-              @click="transformCoordinates"
-              :disabled="sourceCrs === targetCrs"
-              >转换坐标</el-button
-            >
-            <div v-if="sourceCrs === targetCrs" class="error-message" style="margin-top: 10px">
-              <el-alert type="warning" size="small" :closable="false" show-icon>
-                源坐标系与目标坐标系不能相同
-              </el-alert>
-            </div>
-          </el-form-item>
-
-          <el-form-item label="结果" v-if="result">
-            <el-input v-model="result" readonly></el-input>
-          </el-form-item>
+          <div v-if="sourceCrs === targetCrs" class="error-message">
+            <el-alert type="warning" size="small" :closable="false" show-icon>
+              源坐标系与目标坐标系不能相同
+            </el-alert>
+          </div>
         </el-form>
+
+        <div class="manual-container">
+          <div class="manual-section unified-section">
+            <el-form label-width="100px">
+              <div class="coordinate-input-row">
+                <el-form-item label="经度" class="coordinate-input-item">
+                  <el-input v-model="longitude" placeholder="请输入经度"></el-input>
+                </el-form-item>
+
+                <el-form-item label="纬度" class="coordinate-input-item">
+                  <el-input v-model="latitude" placeholder="请输入纬度"></el-input>
+                </el-form-item>
+              </div>
+
+              <el-form-item>
+                <el-button
+                  type="primary"
+                  @click="transformCoordinates"
+                  :disabled="sourceCrs === targetCrs || !longitude || !latitude"
+                  class="transform-button"
+                >
+                  <i class="el-icon-refresh"></i> 转换坐标
+                </el-button>
+              </el-form-item>
+
+              <el-form-item v-if="result" label="转换结果">
+                <el-input v-model="result" readonly></el-input>
+              </el-form-item>
+            </el-form>
+          </div>
+        </div>
       </el-tab-pane>
 
       <el-tab-pane label="批量转换" name="excel">
@@ -247,8 +258,22 @@ const transformCoordinates = () => {
   min-width: 250px;
 }
 
-/* 批量转换样式 */
-.excel-container {
+.coordinate-input-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+  align-items: flex-start;
+}
+
+.coordinate-input-item {
+  flex: 1;
+  min-width: 250px;
+}
+
+/* 共享卡片样式 */
+.excel-container,
+.manual-container {
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -257,14 +282,20 @@ const transformCoordinates = () => {
   padding: 20px;
 }
 
-.excel-section {
+.manual-container {
+  gap: 0;
+}
+
+.excel-section,
+.manual-section {
   background-color: white;
   border-radius: 6px;
   padding: 16px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
-.excel-section h4 {
+.excel-section h4,
+.manual-section h4 {
   margin-top: 0;
   margin-bottom: 16px;
   color: #409eff;
@@ -274,7 +305,22 @@ const transformCoordinates = () => {
   padding-bottom: 8px;
 }
 
-.excel-button {
+.unified-section {
+  padding: 20px 10px;
+}
+
+.unified-section .el-form-item {
+  margin-bottom: 15px;
+}
+
+.unified-section .el-form-item:last-child {
+  margin-bottom: 0;
+}
+
+/* 批量转换样式 */
+
+.excel-button,
+.transform-button {
   width: 100%;
   margin-top: 8px;
 }
@@ -305,7 +351,8 @@ const transformCoordinates = () => {
 }
 
 @media screen and (max-width: 768px) {
-  .coordinate-system-item {
+  .coordinate-system-item,
+  .coordinate-input-item {
     min-width: 100%;
   }
 
