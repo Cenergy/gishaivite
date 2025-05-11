@@ -133,6 +133,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import axios from 'axios'
+import { ElMessage } from 'element-plus'
 
 const sourceCrs = ref('WGS84')
 const targetCrs = ref('GCJ02')
@@ -149,29 +151,7 @@ const handleFileChange = (file: File) => {
 }
 
 const downloadTemplate = () => {
-  // 调用后端API下载Excel模板
-  console.log('准备下载Excel模板')
-  ElMessage.success('开始下载Excel模板')
-
-  // 实际项目中应该使用window.open或axios下载文件
-  // 例如:
-  // window.open('/api/coordinate/download-template', '_blank')
-  // 或者使用axios
-  // axios({
-  //   url: '/api/coordinate/download-template',
-  //   method: 'GET',
-  //   responseType: 'blob'
-  // }).then(response => {
-  //   const url = window.URL.createObjectURL(new Blob([response.data]))
-  //   const link = document.createElement('a')
-  //   link.href = url
-  //   link.setAttribute('download', '坐标转换模板.xlsx')
-  //   document.body.appendChild(link)
-  //   link.click()
-  //   document.body.removeChild(link)
-  // }).catch(error => {
-  //   ElMessage.error('模板下载失败')
-  // })
+  window.location.href = 'http://localhost:8000/api/v1/converters/coords/templates/gps'
 }
 
 const processExcel = () => {
@@ -204,31 +184,35 @@ const transformCoordinates = () => {
     return
   }
 
-  // 准备发送到后端API的数据
-  const params = {
-    sourceCrs: sourceCrs.value,
-    targetCrs: targetCrs.value,
-    longitude: longitude.value,
-    latitude: latitude.value,
-  }
-
   // 显示临时结果
   result.value = `正在转换: ${longitude.value}, ${latitude.value} (${sourceCrs.value} → ${targetCrs.value})`
 
-  // 实际项目中应该调用后端API进行坐标转换
-  console.log('准备发送坐标转换请求:', params)
-  ElMessage.success('坐标转换请求已发送')
+  // 准备API请求参数
+  const fromSys = sourceCrs.value.toLowerCase()
+  const toSys = targetCrs.value.toLowerCase()
+  const lng = longitude.value
+  const lat = latitude.value
 
-  // 实际项目中应该使用axios或fetch发送请求
-  // 例如:
-  // axios.post('/api/coordinate/transform', params)
-  //   .then(response => {
-  //     result.value = `转换结果: ${response.data.longitude}, ${response.data.latitude}`
-  //     ElMessage.success('坐标转换成功')
-  //   })
-  //   .catch(error => {
-  //     ElMessage.error('坐标转换失败')
-  //   })
+  // 调用API进行坐标转换（使用代理）
+  axios
+    .get(
+      `/api/v1/converters/coords/convert?lng=${lng}&lat=${lat}&from_sys=${fromSys}&to_sys=${toSys}`
+    )
+    .then((response) => {
+      const data = response.data
+      if (data && data.data) {
+        result.value = `转换结果: 经度=${data.data.lng}, 纬度=${data.data.lat}`
+        ElMessage.success('坐标转换成功')
+      } else {
+        result.value = '转换失败: 返回数据格式不正确'
+        ElMessage.error('坐标转换失败')
+      }
+    })
+    .catch((error) => {
+      console.error('坐标转换请求失败:', error)
+      result.value = '转换失败: ' + (error.response?.data?.message || error.message || '未知错误')
+      ElMessage.error('坐标转换失败')
+    })
 }
 </script>
 
