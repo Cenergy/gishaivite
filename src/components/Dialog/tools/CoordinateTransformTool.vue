@@ -160,22 +160,65 @@ const processExcel = () => {
   // 创建FormData对象，用于发送文件到后端API
   const formData = new FormData()
   formData.append('file', uploadFile.value)
-  formData.append('sourceCrs', excelSourceCrs.value)
-  formData.append('targetCrs', excelTargetCrs.value)
 
-  // 这里应该调用后端API处理Excel文件
-  console.log('准备发送文件到后端API:', uploadFile.value.name)
-  ElMessage.success('文件已上传，等待后端处理')
+  // 根据源坐标系和目标坐标系构建转换类型参数
+  let type = ''
+  if (excelSourceCrs.value === 'WGS84' && excelTargetCrs.value === 'GCJ02') {
+    type = 'wgs84_to_gcj02'
+  } else if (excelSourceCrs.value === 'GCJ02' && excelTargetCrs.value === 'WGS84') {
+    type = 'gcj02_to_wgs84'
+  } else if (excelSourceCrs.value === 'WGS84' && excelTargetCrs.value === 'BD09') {
+    type = 'wgs84_to_bd09'
+  } else if (excelSourceCrs.value === 'BD09' && excelTargetCrs.value === 'WGS84') {
+    type = 'bd09_to_wgs84'
+  } else if (excelSourceCrs.value === 'GCJ02' && excelTargetCrs.value === 'BD09') {
+    type = 'gcj02_to_bd09'
+  } else if (excelSourceCrs.value === 'BD09' && excelTargetCrs.value === 'GCJ02') {
+    type = 'bd09_to_gcj02'
+  }
 
-  // 实际项目中应该使用axios或fetch发送请求
-  // 例如:
-  // axios.post('/api/coordinate/transform-excel', formData)
-  //   .then(response => {
-  //     ElMessage.success('文件处理成功')
-  //   })
-  //   .catch(error => {
-  //     ElMessage.error('文件处理失败')
-  //   })
+  formData.append('type', type)
+
+  // 显示加载提示
+  ElMessage.info('正在处理文件，请稍候...')
+
+  // 调用API处理Excel文件
+  axios
+    .post('/api/v1/converters/coords/convert_from_excel', formData)
+    .then((response) => {
+      console.log(response, '转换结果')
+      // 创建Blob对象
+      const blob = new Blob([response.data], {
+        type:
+          response.headers['content-type'] ||
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      })
+
+      // 创建下载链接
+      const downloadLink = document.createElement('a')
+      const fileName = `转换结果_${new Date().getTime()}.xlsx`
+
+      // 创建URL对象
+      const url = window.URL.createObjectURL(blob)
+      downloadLink.href = url
+      downloadLink.download = fileName
+
+      // 添加到DOM并触发点击事件
+      document.body.appendChild(downloadLink)
+      downloadLink.click()
+
+      // 清理
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(downloadLink)
+
+      ElMessage.success('坐标转换成功，文件已下载')
+    })
+    .catch((error) => {
+      console.error('坐标转换请求失败:', error)
+      ElMessage.error(
+        '坐标转换失败: ' + (error.response?.data?.message || error.message || '未知错误')
+      )
+    })
 }
 
 const transformCoordinates = () => {
