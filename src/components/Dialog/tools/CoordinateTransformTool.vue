@@ -103,6 +103,10 @@
               action=""
               :auto-upload="false"
               :on-change="handleFileChange"
+              :on-exceed="handleExceed"
+              :on-remove="handleRemove"
+              :limit="1"
+              :file-list="fileList"
               accept=".xlsx,.xls"
               drag
             >
@@ -112,6 +116,12 @@
                 <div class="el-upload__tip">请上传包含经纬度数据的Excel文件</div>
               </template>
             </el-upload>
+            
+            <div v-if="fileList.length > 0" class="file-actions" style="margin-top: 10px;">
+              <el-button size="small" type="danger" @click="clearUploadFile">
+                <i class="el-icon-delete"></i> 清除文件
+              </el-button>
+            </div>
           </div>
 
           <div class="excel-section">
@@ -145,13 +155,36 @@ const activeTab = ref('manual')
 const uploadFile = ref<File | null>(null)
 const excelSourceCrs = ref('WGS84')
 const excelTargetCrs = ref('GCJ02')
+const fileList = ref<any[]>([])
 
-const handleFileChange = (file: File) => {
-  uploadFile.value = file
+const handleExceed = () => {
+  ElMessage.warning('只能上传一个文件，请先删除当前文件再上传新文件')
+}
+
+const handleRemove = () => {
+  uploadFile.value = null
+  fileList.value = []
+  ElMessage.info('已移除上传文件')
+}
+
+const handleFileChange = (file: any) => {
+  // 当文件状态为ready时才更新文件（避免重复处理）
+  if (file.status === 'ready') {
+    uploadFile.value = file.raw
+    fileList.value = [file]
+    ElMessage.success('文件已选择: ' + file.name)
+  }
 }
 
 const downloadTemplate = () => {
   window.location.href = 'http://localhost:8000/api/v1/converters/coords/templates/gps'
+}
+
+// 清除已上传的文件
+const clearUploadFile = () => {
+  uploadFile.value = null
+  fileList.value = []
+  ElMessage.info('已清除上传文件')
 }
 
 const processExcel = () => {
@@ -184,10 +217,13 @@ const processExcel = () => {
 
   // 调用API处理Excel文件
   axios
-    .post('/api/v1/converters/coords/convert_from_excel', formData)
+    .post('/api/v1/converters/coords/convert_from_excel', formData, {
+      responseType: 'blob' // 设置响应类型为blob，用于处理StreamingResponse
+    })
     .then((response) => {
+      console.log("🚀 ~ .then ~ response:", response);
       console.log(response, '转换结果')
-      // 创建Blob对象
+      // 直接使用响应数据作为Blob对象
       const blob = new Blob([response.data], {
         type:
           response.headers['content-type'] ||
