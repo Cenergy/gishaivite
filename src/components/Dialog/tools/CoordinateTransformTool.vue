@@ -129,7 +129,7 @@
             <el-button
               type="primary"
               @click="processExcel"
-              :disabled="!uploadFile || excelSourceCrs === excelTargetCrs"
+              :disabled="!uploadFile || excelSourceCrs === excelTargetCrs || isProcessing"
               class="excel-button"
             >
               <i class="el-icon-refresh"></i> 处理Excel文件
@@ -168,6 +168,7 @@ const uploadFile = ref<File | null>(null)
 const excelSourceCrs = ref('WGS84')
 const excelTargetCrs = ref('GCJ02')
 const fileList = ref<any[]>([])
+const isProcessing = ref(false) // 添加处理状态变量，用于控制处理按钮的禁用状态
 
 const handleExceed = () => {
   ElMessage.warning('只能上传一个文件，请先删除当前文件再上传新文件')
@@ -184,6 +185,8 @@ const handleFileChange = (file: any) => {
   if (file.status === 'ready') {
     uploadFile.value = file.raw
     fileList.value = [file]
+    // 重置处理状态，允许用户处理新上传的文件
+    isProcessing.value = false
     ElMessage.success('文件已选择: ' + file.name)
   }
 }
@@ -196,6 +199,8 @@ const downloadTemplate = () => {
 const clearUploadFile = () => {
   uploadFile.value = null
   fileList.value = []
+  // 重置处理状态
+  isProcessing.value = false
   ElMessage.info('已清除上传文件')
 }
 
@@ -205,6 +210,9 @@ const convertedFileName = ref('')
 
 const processExcel = () => {
   if (!uploadFile.value) return
+  
+  // 设置处理状态为true，禁用处理按钮
+  isProcessing.value = true
 
   // 重置之前的转换结果
   convertedFileBlob.value = null
@@ -254,10 +262,16 @@ const processExcel = () => {
       convertedFileBlob.value = blob
       convertedFileName.value = `转换结果_${new Date().getTime()}.xlsx`
 
+      // 不重置处理状态，保持处理按钮禁用状态直到用户上传新文件
+      // isProcessing.value = false
+
       ElMessage.success('坐标转换成功，请点击下载按钮获取结果文件')
     })
     .catch((error) => {
       console.error('坐标转换请求失败:', error)
+      // 重置处理状态，允许用户重新尝试处理文件
+      isProcessing.value = false
+
       ElMessage.error(
         '坐标转换失败: ' + (error.response?.data?.message || error.message || '未知错误')
       )
