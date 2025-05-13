@@ -135,6 +135,18 @@
               <i class="el-icon-refresh"></i> 处理Excel文件
             </el-button>
           </div>
+
+          <div class="excel-section">
+            <h4>第四步：下载结果</h4>
+            <el-button
+              type="success"
+              @click="downloadConvertedFile"
+              :disabled="!convertedFileBlob"
+              class="excel-button"
+            >
+              <i class="el-icon-download"></i> 下载转换结果
+            </el-button>
+          </div>
         </div>
       </el-tab-pane>
     </el-tabs>
@@ -187,8 +199,16 @@ const clearUploadFile = () => {
   ElMessage.info('已清除上传文件')
 }
 
+// 存储转换后的文件数据
+const convertedFileBlob = ref<Blob | null>(null)
+const convertedFileName = ref('')
+
 const processExcel = () => {
   if (!uploadFile.value) return
+
+  // 重置之前的转换结果
+  convertedFileBlob.value = null
+  convertedFileName.value = ''
 
   // 创建FormData对象，用于发送文件到后端API
   const formData = new FormData()
@@ -230,24 +250,11 @@ const processExcel = () => {
           'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       })
 
-      // 创建下载链接
-      const downloadLink = document.createElement('a')
-      const fileName = `转换结果_${new Date().getTime()}.xlsx`
+      // 保存转换结果
+      convertedFileBlob.value = blob
+      convertedFileName.value = `转换结果_${new Date().getTime()}.xlsx`
 
-      // 创建URL对象
-      const url = window.URL.createObjectURL(blob)
-      downloadLink.href = url
-      downloadLink.download = fileName
-
-      // 添加到DOM并触发点击事件
-      document.body.appendChild(downloadLink)
-      downloadLink.click()
-
-      // 清理
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(downloadLink)
-
-      ElMessage.success('坐标转换成功，文件已下载')
+      ElMessage.success('坐标转换成功，请点击下载按钮获取结果文件')
     })
     .catch((error) => {
       console.error('坐标转换请求失败:', error)
@@ -255,6 +262,31 @@ const processExcel = () => {
         '坐标转换失败: ' + (error.response?.data?.message || error.message || '未知错误')
       )
     })
+}
+
+const downloadConvertedFile = () => {
+  if (!convertedFileBlob.value) {
+    ElMessage.warning('没有可下载的文件，请先处理Excel文件')
+    return
+  }
+
+  // 创建下载链接
+  const downloadLink = document.createElement('a')
+  
+  // 创建URL对象
+  const url = window.URL.createObjectURL(convertedFileBlob.value)
+  downloadLink.href = url
+  downloadLink.download = convertedFileName.value
+
+  // 添加到DOM并触发点击事件
+  document.body.appendChild(downloadLink)
+  downloadLink.click()
+
+  // 清理
+  window.URL.revokeObjectURL(url)
+  document.body.removeChild(downloadLink)
+
+  ElMessage.success('文件已下载')
 }
 
 const transformCoordinates = () => {
