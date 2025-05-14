@@ -1,5 +1,7 @@
 <template>
   <div class="home">
+    <UnoTest />
+    <UnoAdvanced />
     <!-- 全屏背景图区域 -->
     <!-- <div class="hero-section">
       <div class="hero-content">
@@ -62,6 +64,8 @@
 </template>
 
 <script setup>
+import UnoTest from '../components/UnoTest.vue'
+import UnoAdvanced from '../components/UnoAdvanced.vue'
 import { onMounted, ref, onUnmounted } from 'vue'
 import ToolsSection from '@/components/ToolsSection.vue'
 import BlogSection from '@/components/BlogSection.vue'
