@@ -1,8 +1,9 @@
-import { defineConfig, presetAttributify, presetWind } from 'unocss'
+import { defineConfig, presetAttributify } from 'unocss';
+import presetWind3 from '@unocss/preset-wind3';
 
 export default defineConfig({
   presets: [
-    presetWind(), // 启用Tailwind预设
+    presetWind3(), // 启用Tailwind预设
     presetAttributify(), // 启用属性模式
   ],
   // 自定义主题配置
