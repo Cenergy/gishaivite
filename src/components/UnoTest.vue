@@ -4,6 +4,8 @@
     <p class="opacity-80">这个组件使用了UnoCSS的Tailwind预设样式</p>
     <div class="mt-4 flex gap-2">
       <button class="px-4 py-2 bg-green-500 hover:bg-green-600 rounded transition-colors duration-300">
+        <i class="i-custom:circle" />
+        <i class="i-logo:logo text-#1E80FF" />
         按钮1
       </button>
       <button class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded transition-colors duration-300">

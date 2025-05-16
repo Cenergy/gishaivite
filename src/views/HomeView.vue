@@ -11,7 +11,7 @@
     </div> -->
 
     <el-affix :offset="0">
-      <header class="header" :class="{ 'fixed-header': isHeaderFixed }">
+      <header class="header " :class="{ 'fixed-header': isHeaderFixed }">
         <nav class="navbar">
           <div class="navbar-container">
             <router-link to="/" class="navbar-brand">及时嗨</router-link>
