@@ -89,6 +89,10 @@ export default defineConfig({
           triangle:
             '<svg viewBox="0 0 120 120"><polygon points="60,10 110,110 10,110"></polygon></svg>',
         },
+        // 现有collections...
+        // mdi: () => import('@iconify-json/mdi/icons.json').then((i) => i.default),
+        // carbon: () => import('@iconify-json/carbon/icons.json').then((i) => i.default),
+        tabler: () => import('@iconify-json/tabler/icons.json').then((i) => i.default),
         // 集成更多图标集
         ...collections2,
       },
