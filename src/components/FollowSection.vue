@@ -2,65 +2,71 @@
   <div>
     <!-- 关注区域 -->
     <div class="section-title scroll-animation">
-      <h2>关注我们</h2>
+      <h2 class="dark:text-gray-100">关注我们</h2>
       <div class="underline"></div>
     </div>
 
     <div class="follow-container scroll-animation">
       <!-- 微信卡片 -->
-      <div class="follow-card">
-        <div class="follow-content">
-          <div class="follow-icon">
+      <div class="follow-card bg-white dark:bg-dark shadow-md dark:shadow-gray-800">
+        <div class="follow-content dark:text-gray-200">
+          <div class="follow-icon dark:text-gray-100">
             <el-icon><ChatDotSquare /></el-icon>
           </div>
-          <h3 class="follow-title">微信公众号</h3>
-          <p class="follow-description">获取最新技术文章和资源更新</p>
-          <div class="qrcode-container">
+          <h3 class="follow-title dark:text-white">微信公众号</h3>
+          <p class="follow-description dark:text-gray-300">获取最新技术文章和资源更新</p>
+          <div class="qrcode-container dark:border-gray-700">
             <img
               class="qrcode-image"
               src="https://gishai.top/assets/img/qrcode_for_weixin.6e038798.jpg"
               alt="微信公众号二维码"
             />
           </div>
-          <a href="#" class="follow-link">关注公众号</a>
+          <a href="#" class="follow-link dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white"
+            >关注公众号</a
+          >
         </div>
       </div>
 
       <!-- 微博卡片 -->
-      <div class="follow-card">
-        <div class="follow-content">
-          <div class="follow-icon">
+      <div class="follow-card bg-white dark:bg-dark shadow-md dark:shadow-gray-800">
+        <div class="follow-content dark:text-gray-200">
+          <div class="follow-icon dark:text-gray-100">
             <el-icon><Promotion /></el-icon>
           </div>
-          <h3 class="follow-title">微博</h3>
-          <p class="follow-description">关注我们的微博，获取实时动态</p>
-          <div class="social-image">
+          <h3 class="follow-title dark:text-white">微博</h3>
+          <p class="follow-description dark:text-gray-300">关注我们的微博，获取实时动态</p>
+          <div class="social-image dark:border-gray-700">
             <img
               class="platform-image"
               src="https://gishai.top/assets/img/small_applets.df610077.jpg"
               alt="微博主页"
             />
           </div>
-          <a href="#" class="follow-link">前往微博</a>
+          <a href="#" class="follow-link dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white"
+            >前往微博</a
+          >
         </div>
       </div>
 
       <!-- GitHub卡片 -->
-      <div class="follow-card">
-        <div class="follow-content">
-          <div class="follow-icon">
+      <div class="follow-card bg-white dark:bg-dark shadow-md dark:shadow-gray-800">
+        <div class="follow-content dark:text-gray-200">
+          <div class="follow-icon dark:text-gray-100">
             <el-icon><Platform /></el-icon>
           </div>
-          <h3 class="follow-title">GitHub</h3>
-          <p class="follow-description">查看我们的开源项目和代码仓库</p>
-          <div class="social-image">
+          <h3 class="follow-title dark:text-white">GitHub</h3>
+          <p class="follow-description dark:text-gray-300">查看我们的开源项目和代码仓库</p>
+          <div class="social-image dark:border-gray-700">
             <img
               class="platform-image"
               src="https://gishai.top/assets/img/small_applets.df610077.jpg"
               alt="GitHub仓库"
             />
           </div>
-          <a href="#" class="follow-link">访问GitHub</a>
+          <a href="#" class="follow-link dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white"
+            >访问GitHub</a
+          >
         </div>
       </div>
     </div>

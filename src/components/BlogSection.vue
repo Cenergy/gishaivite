@@ -2,12 +2,12 @@
   <div>
     <!-- 博客区域 -->
     <div class="section-title scroll-animation">
-      <h2>最新博客</h2>
+      <h2 class="dark:text-gray-100">最新博客</h2>
       <div class="underline"></div>
     </div>
 
     <div class="blog-container scroll-animation">
-      <div class="blog-card">
+      <div class="blog-card bg-white dark:bg-dark shadow-md dark:shadow-gray-800">
         <div class="blog-image">
           <img
             src="@/assets/blog-placeholder-1.jpg"
@@ -15,23 +15,23 @@
             onerror="this.src='https://gishai.top/assets/img/qrcode_for_weixin.6e038798.jpg'"
           />
         </div>
-        <div class="blog-content">
+        <div class="blog-content dark:text-gray-200">
           <div class="blog-meta">
-            <div class="blog-date">2023-12-15</div>
+            <div class="blog-date dark:text-gray-300">2023-12-15</div>
             <div class="blog-tags">
               <el-tag size="small" type="success">Vue3</el-tag>
               <el-tag size="small" type="info">前端</el-tag>
             </div>
           </div>
-          <h3 class="blog-title">Vue3 组合式API的最佳实践</h3>
-          <p class="blog-excerpt">
+          <h3 class="blog-title dark:text-white">Vue3 组合式API的最佳实践</h3>
+          <p class="blog-excerpt dark:text-gray-300">
             探索Vue3组合式API的强大功能，了解如何使用setup、ref、reactive等特性构建更可维护的应用...
           </p>
           <el-button type="primary" class="blog-btn">阅读更多</el-button>
         </div>
       </div>
 
-      <div class="blog-card">
+      <div class="blog-card bg-white dark:bg-dark shadow-md dark:shadow-gray-800">
         <div class="blog-image">
           <img
             src="@/assets/blog-placeholder-2.jpg"
@@ -39,23 +39,23 @@
             onerror="this.src='https://gishai.top/assets/img/qrcode_for_weixin.6e038798.jpg'"
           />
         </div>
-        <div class="blog-content">
+        <div class="blog-content dark:text-gray-200">
           <div class="blog-meta">
-            <div class="blog-date">2023-11-28</div>
+            <div class="blog-date dark:text-gray-300">2023-11-28</div>
             <div class="blog-tags">
               <el-tag size="small" type="danger">GIS</el-tag>
               <el-tag size="small" type="warning">可视化</el-tag>
             </div>
           </div>
-          <h3 class="blog-title">GIS数据可视化技术解析</h3>
-          <p class="blog-excerpt">
+          <h3 class="blog-title dark:text-white">GIS数据可视化技术解析</h3>
+          <p class="blog-excerpt dark:text-gray-300">
             深入了解地理信息系统(GIS)数据可视化的关键技术，包括地图投影、符号化和交互设计...
           </p>
           <el-button type="primary" class="blog-btn">阅读更多</el-button>
         </div>
       </div>
 
-      <div class="blog-card">
+      <div class="blog-card bg-white dark:bg-dark shadow-md dark:shadow-gray-800">
         <div class="blog-image">
           <img
             src="@/assets/blog-placeholder-3.jpg"
@@ -63,16 +63,16 @@
             onerror="this.src='https://gishai.top/assets/img/qrcode_for_weixin.6e038798.jpg'"
           />
         </div>
-        <div class="blog-content">
+        <div class="blog-content dark:text-gray-200">
           <div class="blog-meta">
-            <div class="blog-date">2023-10-15</div>
+            <div class="blog-date dark:text-gray-300">2023-10-15</div>
             <div class="blog-tags">
               <el-tag size="small" type="primary">Element Plus</el-tag>
               <el-tag size="small" type="info">UI框架</el-tag>
             </div>
           </div>
-          <h3 class="blog-title">Element Plus在Vue项目中的应用</h3>
-          <p class="blog-excerpt">
+          <h3 class="blog-title dark:text-white">Element Plus在Vue项目中的应用</h3>
+          <p class="blog-excerpt dark:text-gray-300">
             Element Plus作为一款流行的Vue3 UI框架，如何在实际项目中高效应用？本文分享实战经验...
           </p>
           <el-button type="primary" class="blog-btn">阅读更多</el-button>

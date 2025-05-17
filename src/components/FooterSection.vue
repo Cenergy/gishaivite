@@ -1,10 +1,11 @@
 <template>
-  <footer class="footer-section">
+  <footer class="footer-section dark:bg-gray-900 dark:text-gray-200">
     <div class="footer-wave">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 100" preserveAspectRatio="none">
         <path
           fill="#e9f0f7"
           fill-opacity="0.5"
+          class="dark:fill-gray-800"
           d="M0,32L60,42.7C120,53,240,75,360,74.7C480,75,600,53,720,42.7C840,32,960,32,1080,37.3C1200,43,1320,53,1380,58.7L1440,64L1440,0L1380,0C1320,0,1200,0,1080,0C960,0,840,0,720,0C600,0,480,0,360,0C240,0,120,0,60,0L0,0Z"
         ></path>
       </svg>
@@ -13,30 +14,35 @@
       <div class="footer-row">
         <!-- 网站信息 -->
         <div class="footer-col">
-          <h3 class="footer-title">及时嗨</h3>
-          <p class="footer-desc">分享技术，记录生活</p>
+          <h3 class="footer-title dark:text-white">及时嗨</h3>
+          <p class="footer-desc dark:text-gray-300">分享技术，记录生活</p>
         </div>
 
         <!-- 快速链接 -->
         <div class="footer-col">
-          <h3 class="footer-title">快速链接</h3>
-          <ul class="footer-links">
-            <li><router-link to="/home">友情链接</router-link></li>
+          <h3 class="footer-title dark:text-white">快速链接</h3>
+          <ul class="footer-links dark:text-gray-300">
+            <li>
+              <router-link to="/home" class="dark:text-gray-300 dark:hover:text-white"
+                >友情链接</router-link
+              >
+            </li>
           </ul>
         </div>
 
         <!-- 联系方式 -->
         <div class="footer-col">
-          <h3 class="footer-title">联系我们</h3>
-          <p class="contact-item">
-            <el-icon><Message /></el-icon> <span>contact@gishai.top</span>
+          <h3 class="footer-title dark:text-white">联系我们</h3>
+          <p class="contact-item dark:text-gray-300">
+            <el-icon class="dark:text-gray-300"><Message /></el-icon>
+            <span>contact@gishai.top</span>
           </p>
         </div>
       </div>
     </div>
-    <div class="footer-bottom">
+    <div class="footer-bottom dark:bg-gray-800 dark:border-gray-700">
       <div class="copyright">
-        <p>© {{ currentYear }} 及时嗨. All rights reserved.</p>
+        <p class="dark:text-gray-400">© {{ currentYear }} 及时嗨. All rights reserved.</p>
       </div>
     </div>
   </footer>
@@ -73,6 +79,14 @@ onMounted(() => {
   box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.03);
   position: relative;
   overflow: hidden;
+  transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+}
+
+.dark .footer-section {
+  background: linear-gradient(to bottom, #1a1a1a, #111827);
+  color: #e5e7eb;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.1);
 }
 
 .footer-wave {
