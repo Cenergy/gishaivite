@@ -38,18 +38,21 @@ onMounted(() => {
 </script>
 
 <template>
-  <button
-    @click="toggleTheme"
-    class="p-2 transition-colors duration-300 focus:outline-none border-none bg-transparent"
-    aria-label="切换主题模式"
-  >
-    <!-- 太阳图标 (亮色模式) -->
-    <div
-      v-if="currentTheme === 'light'"
-      class="i-tabler:sun text-xl text-yellow-500 border-none outline-none"
-    ></div>
+  <!-- 按钮居中 -->
+  <div class="flex justify-center items-center h-full w-full">
+    <button
+      @click="toggleTheme"
+      class="p-2 transition-colors duration-300 focus:outline-none border-none bg-transparent"
+      aria-label="切换主题模式"
+    >
+      <!-- 太阳图标 (亮色模式) -->
+      <div
+        v-if="currentTheme === 'light'"
+        class="i-tabler:sun text-xl text-yellow-500 border-none outline-none"
+      ></div>
 
-    <!-- 月亮图标 (暗色模式) -->
-    <div v-else class="i-tabler:moon text-xl text-blue-300 border-none outline-none"></div>
-  </button>
+      <!-- 月亮图标 (暗色模式) -->
+      <div v-else class="i-tabler:moon text-xl text-blue-300 border-none outline-none"></div>
+    </button>
+  </div>
 </template>
