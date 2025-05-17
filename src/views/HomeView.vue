@@ -11,7 +11,7 @@
     </div> -->
 
     <el-affix :offset="0">
-      <header class="header " :class="{ 'fixed-header': isHeaderFixed }">
+      <header class="header" :class="{ 'fixed-header': isHeaderFixed }">
         <nav class="navbar">
           <div class="navbar-container">
             <router-link to="/" class="navbar-brand">及时嗨</router-link>
@@ -43,6 +43,9 @@
                     >联系</router-link
                   >
                 </div>
+                <div class="nav-item">
+                  <ThemeToggle class="nav-theme-toggle" />
+                </div>
               </div>
             </div>
           </div>
@@ -72,6 +75,7 @@ import BlogSection from '@/components/BlogSection.vue'
 import ResourcesSection from '@/components/ResourcesSection.vue'
 import FollowSection from '@/components/FollowSection.vue'
 import FooterSection from '@/components/FooterSection.vue'
+import ThemeToggle from '@/components/ThemeToggle.vue'
 
 const isMenuOpen = ref(false)
 const isHeaderFixed = ref(false)
@@ -284,6 +288,12 @@ onUnmounted(() => {
   color: #0066cc;
   font-weight: bold;
   border-bottom: none; /* 移除边框，改用伪元素 */
+}
+
+.nav-theme-toggle {
+  display: flex;
+  align-items: center;
+  margin-left: 10px;
 }
 
 .nav-link.active::after {
