@@ -114,12 +114,16 @@
   overflow: hidden;
   transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
   border: 1px solid rgba(0, 102, 204, 0.1);
+  /* 添加暗黑模式样式 */
+  @apply dark:bg-gradient-to-br dark:from-gray-800 dark:to-gray-900 dark:text-gray-200 dark:border-gray-700 dark:shadow-gray-900/30;
 }
 
 .resource-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
   background: linear-gradient(135deg, #ffffff 0%, #f0f6ff 100%);
+  /* 添加暗黑模式悬停样式 */
+  @apply dark:bg-gradient-to-br dark:from-gray-700 dark:to-gray-800 dark:shadow-gray-900/40;
 }
 
 .resource-icon {
@@ -131,6 +135,8 @@
   background-color: rgba(0, 102, 204, 0.05);
   color: #0066cc;
   min-width: 100px;
+  /* 添加暗黑模式样式 */
+  @apply dark:bg-gray-700 dark:text-blue-400;
 }
 
 .resource-content {
@@ -142,12 +148,16 @@
   font-size: 1.25rem;
   margin-bottom: 0.75rem;
   color: #333;
+  /* 添加暗黑模式文字颜色 */
+  @apply dark:text-white;
 }
 
 .resource-description {
   color: #666;
   margin-bottom: 1rem;
   line-height: 1.5;
+  /* 添加暗黑模式文字颜色 */
+  @apply dark:text-gray-300;
 }
 
 .resource-meta {
@@ -156,6 +166,8 @@
   margin-bottom: 1rem;
   font-size: 0.875rem;
   color: #888;
+  /* 添加暗黑模式文字颜色 */
+  @apply dark:text-gray-400;
 }
 
 .resource-size,

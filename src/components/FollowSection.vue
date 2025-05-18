@@ -88,6 +88,8 @@ import { ChatDotSquare, Promotion, Platform, User } from '@element-plus/icons-vu
   font-size: 2.5rem;
   color: #333;
   margin-bottom: 0.5rem;
+  /* 添加暗黑模式文字颜色 */
+  @apply dark:text-white;
 }
 
 .underline {
@@ -96,6 +98,8 @@ import { ChatDotSquare, Promotion, Platform, User } from '@element-plus/icons-vu
   background: linear-gradient(90deg, #0066cc, #66b3ff);
   margin: 0 auto;
   border-radius: 2px;
+  /* 添加暗黑模式样式 */
+  @apply dark:bg-gradient-to-r dark:from-blue-600 dark:to-blue-400;
 }
 
 .follow-container {
@@ -118,11 +122,15 @@ import { ChatDotSquare, Promotion, Platform, User } from '@element-plus/icons-vu
   height: 100%;
   display: flex;
   flex-direction: column;
+  /* 添加暗黑模式样式 */
+  @apply dark:bg-gradient-to-br dark:from-gray-800 dark:to-gray-900 dark:text-gray-200 dark:border-gray-700 dark:shadow-gray-900/30;
 }
 
 .follow-card:hover {
   transform: translateY(-8px);
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+  /* 添加暗黑模式悬停样式 */
+  @apply dark:bg-gradient-to-br dark:from-gray-700 dark:to-gray-800 dark:shadow-gray-900/40;
 }
 
 .follow-content {
@@ -144,6 +152,8 @@ import { ChatDotSquare, Promotion, Platform, User } from '@element-plus/icons-vu
   font-size: 1.8rem;
   margin: 0 auto 1.5rem;
   transition: all 0.3s ease;
+  /* 添加暗黑模式样式 */
+  @apply dark:bg-gray-700 dark:text-blue-400;
 }
 
 .follow-card:hover .follow-icon {
@@ -157,12 +167,16 @@ import { ChatDotSquare, Promotion, Platform, User } from '@element-plus/icons-vu
   font-size: 1.6rem;
   margin-bottom: 0.8rem;
   color: #333;
+  /* 添加暗黑模式文字颜色 */
+  @apply dark:text-white;
 }
 
 .follow-description {
   color: #666;
   margin-bottom: 1.5rem;
   font-size: 1rem;
+  /* 添加暗黑模式文字颜色 */
+  @apply dark:text-gray-300;
 }
 
 .qrcode-container,
@@ -195,6 +209,8 @@ import { ChatDotSquare, Promotion, Platform, User } from '@element-plus/icons-vu
   text-decoration: none;
   font-weight: 500;
   transition: all 0.3s ease;
+  /* 添加暗黑模式样式 */
+  @apply dark:bg-blue-600 dark:text-white dark:hover:bg-blue-700;
 }
 
 .follow-link:hover {

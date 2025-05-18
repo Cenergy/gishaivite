@@ -129,6 +129,19 @@ const handleDialogOpened = () => {
 </script>
 
 <style scoped>
+/* 添加暗黑模式下的标题和描述文本样式 */
+.tool-card h3 {
+  color: #333;
+  /* 添加暗黑模式文字颜色 */
+  @apply dark:text-white;
+}
+
+.tool-card p {
+  color: #666;
+  /* 添加暗黑模式文字颜色 */
+  @apply dark:text-gray-300;
+}
+
 /* 响应式样式 */
 @media (max-width: 768px) {
   .navbar-toggler {
@@ -319,12 +332,16 @@ const handleDialogOpened = () => {
   position: relative;
   overflow: hidden;
   border: 1px solid rgba(0, 102, 204, 0.1);
+  /* 添加暗黑模式样式 */
+  @apply dark:bg-gradient-to-br dark:from-gray-800 dark:to-gray-900 dark:text-gray-200 dark:border-gray-700 dark:shadow-gray-900/30;
 }
 
 .card:hover {
   transform: translateY(-8px) scale(1.02);
   box-shadow: 0 16px 32px rgba(0, 0, 0, 0.12);
   background: linear-gradient(135deg, #ffffff 0%, #f0f6ff 100%);
+  /* 添加暗黑模式悬停样式 */
+  @apply dark:bg-gradient-to-br dark:from-gray-700 dark:to-gray-800 dark:shadow-gray-900/40;
 }
 
 .tool-card {
@@ -334,18 +351,24 @@ const handleDialogOpened = () => {
   padding: 2.5rem;
   transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
   margin: 0.5rem;
+  /* 添加暗黑模式样式 */
+  @apply dark:bg-gradient-to-br dark:from-gray-800 dark:to-gray-900 dark:text-gray-200 dark:border-gray-700 dark:shadow-gray-900/30;
 }
 
 .tool-card:hover {
   transform: translateY(-12px);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
   background: linear-gradient(135deg, #f5f9ff 0%, #e6f0ff 100%);
+  /* 添加暗黑模式悬停样式 */
+  @apply dark:bg-gradient-to-br dark:from-gray-700 dark:to-gray-800 dark:shadow-gray-900/40;
 }
 
 .card-icon {
   font-size: 3rem;
   margin-bottom: 1rem;
   color: var(--primary-color, #0066cc);
+  /* 添加暗黑模式样式 */
+  @apply dark:text-blue-400;
 }
 
 .card-btn {

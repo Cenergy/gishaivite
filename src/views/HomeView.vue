@@ -156,6 +156,8 @@ onUnmounted(() => {
   transition: all 0.3s ease;
   width: 100%;
   height: 60px; /* 固定导航栏高度 */
+  /* 添加暗黑模式样式 */
+  @apply dark:bg-gray-900/80 dark:backdrop-blur-md;
 }
 
 .navbar {
@@ -166,6 +168,8 @@ onUnmounted(() => {
   justify-content: space-between;
   padding: 0 1rem;
   height: 100%; /* 使navbar填充整个header高度 */
+  /* 添加暗黑模式样式 */
+  @apply dark:text-gray-100;
 }
 
 .navbar-container {
@@ -193,6 +197,8 @@ onUnmounted(() => {
   font-weight: bold;
   color: #333;
   text-decoration: none;
+  /* 添加暗黑模式样式 */
+  @apply dark:text-blue-400;
 }
 
 .navbar-toggler {
@@ -257,6 +263,8 @@ onUnmounted(() => {
   height: 100%; /* 确保nav区域也是100%高度 */
   align-items: center; /* 确保垂直居中 */
   justify-content: flex-end; /* 确保靠右对齐 */
+  /* 添加暗黑模式样式 */
+  @apply dark:text-gray-200;
 }
 
 .nav-item {
@@ -277,11 +285,15 @@ onUnmounted(() => {
   transition: all 0.3s;
   border-radius: 0; /* 移除圆角 */
   position: relative; /* 为下划线定位做准备 */
+  /* 添加暗黑模式样式 */
+  @apply dark:text-gray-300 dark:hover:text-white;
 }
 
 .nav-link:hover {
   color: #0066cc;
   background-color: rgba(0, 102, 204, 0.05);
+  /* 添加暗黑模式样式 */
+  @apply dark:text-blue-400;
 }
 
 .nav-link.active {
@@ -314,6 +326,8 @@ onUnmounted(() => {
   z-index: 1000;
   background-color: rgba(255, 255, 255, 0.95);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  /* 添加暗黑模式样式 */
+  @apply dark:bg-gray-900/90 dark:backdrop-blur-md dark:border-b dark:border-gray-800 dark:shadow-gray-900/50;
 }
 
 /* 响应式样式 */
@@ -342,6 +356,8 @@ onUnmounted(() => {
     visibility: hidden;
     opacity: 0;
     height: auto; /* 在移动端，高度由内容决定 */
+    /* 添加暗黑模式样式 */
+    @apply dark:bg-gray-800 dark:shadow-gray-900/50;
   }
 
   .navbar-collapse.show {
@@ -374,6 +390,8 @@ onUnmounted(() => {
     text-align: left;
     height: auto; /* 在移动端，高度由内容决定 */
     display: block;
+    /* 添加暗黑模式样式 */
+    @apply dark:border-gray-700;
   }
 
   .nav-link.active::after {
@@ -384,6 +402,8 @@ onUnmounted(() => {
     border-left: 3px solid #0066cc; /* 在移动端使用左边框代替下划线 */
     padding-left: calc(1rem - 3px); /* 调整内边距以保持对齐 */
     background-color: rgba(0, 102, 204, 0.05);
+    /* 添加暗黑模式样式 */
+    @apply dark:border-blue-400 dark:bg-blue-900/20;
   }
 
   .nav-link:last-child {
@@ -540,12 +560,16 @@ html {
   position: relative;
   overflow: hidden;
   border: 1px solid rgba(0, 102, 204, 0.1);
+  /* 添加暗黑模式样式 */
+  @apply dark:bg-gradient-to-br dark:from-gray-800 dark:to-gray-900 dark:text-gray-200 dark:border-gray-700 dark:shadow-gray-900/30;
 }
 
 .card:hover {
   transform: translateY(-8px) scale(1.02);
   box-shadow: 0 16px 32px rgba(0, 0, 0, 0.12);
   background: linear-gradient(135deg, #ffffff 0%, #f0f6ff 100%);
+  /* 添加暗黑模式悬停样式 */
+  @apply dark:bg-gradient-to-br dark:from-gray-700 dark:to-gray-800 dark:shadow-gray-900/40;
 }
 
 .tool-card {
@@ -555,18 +579,24 @@ html {
   padding: 2.5rem;
   transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
   margin: 0.5rem;
+  /* 添加暗黑模式样式 */
+  @apply dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700 dark:shadow-gray-900/30;
 }
 
 .tool-card:hover {
   transform: translateY(-12px);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
   background: linear-gradient(135deg, #f5f9ff 0%, #e6f0ff 100%);
+  /* 添加暗黑模式悬停样式 */
+  @apply dark:bg-gradient-to-br dark:from-gray-700 dark:to-gray-800 dark:shadow-gray-900/40;
 }
 
 .card-icon {
   font-size: 3rem;
   margin-bottom: 1rem;
   color: var(--primary-color, #0066cc);
+  /* 添加暗黑模式图标颜色 */
+  @apply dark:text-blue-400;
 }
 
 .card-btn {

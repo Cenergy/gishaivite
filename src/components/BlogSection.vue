@@ -104,6 +104,8 @@
   font-size: 2.5rem;
   color: #333;
   margin-bottom: 1rem;
+  /* 添加暗黑模式文字颜色 */
+  @apply dark:text-white;
 }
 
 .underline {
@@ -112,6 +114,8 @@
   background: linear-gradient(90deg, #0066cc, #66a3ff);
   margin: 0 auto;
   border-radius: 2px;
+  /* 添加暗黑模式样式 */
+  @apply dark:bg-gradient-to-r dark:from-blue-600 dark:to-blue-400;
 }
 
 .blog-container {
@@ -134,11 +138,15 @@
   display: flex;
   flex-direction: column;
   border: 1px solid rgba(0, 102, 204, 0.1);
+  /* 添加暗黑模式样式 */
+  @apply dark:bg-gradient-to-br dark:from-gray-800 dark:to-gray-900 dark:text-gray-200 dark:border-gray-700 dark:shadow-gray-900/30;
 }
 
 .blog-card:hover {
   transform: translateY(-10px);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+  /* 添加暗黑模式悬停样式 */
+  @apply dark:bg-gradient-to-br dark:from-gray-700 dark:to-gray-800 dark:shadow-gray-900/40;
 }
 
 .blog-image {
@@ -174,6 +182,8 @@
 .blog-date {
   font-size: 0.85rem;
   color: #666;
+  /* 添加暗黑模式文字颜色 */
+  @apply dark:text-gray-400;
 }
 
 .blog-tags {
@@ -192,6 +202,8 @@
   color: #333;
   font-weight: 600;
   line-height: 1.4;
+  /* 添加暗黑模式文字颜色 */
+  @apply dark:text-white;
 }
 
 .blog-excerpt {
@@ -199,6 +211,8 @@
   margin-bottom: 1.5rem;
   line-height: 1.6;
   flex-grow: 1;
+  /* 添加暗黑模式文字颜色 */
+  @apply dark:text-gray-300;
 }
 
 .blog-btn {
@@ -220,11 +234,15 @@
   padding: 0.5rem 1rem;
   border-radius: 4px;
   transition: all 0.3s ease;
+  /* 添加暗黑模式样式 */
+  @apply dark:text-blue-400 dark:hover:text-blue-300;
 }
 
 .view-more-btn:hover {
   background-color: rgba(0, 102, 204, 0.1);
   transform: translateX(5px);
+  /* 添加暗黑模式悬停样式 */
+  @apply dark:bg-blue-900/20;
 }
 
 .view-more-btn i {
