@@ -346,6 +346,11 @@ const transformCoordinates = () => {
   padding: 20px;
 }
 
+.dark .coordinate-transform-tool {
+  color: var(--el-text-color-primary);
+  background-color: var(--el-bg-color);
+}
+
 .error-message {
   margin-bottom: 10px;
 }
@@ -391,6 +396,11 @@ const transformCoordinates = () => {
   padding: 20px;
 }
 
+.dark .excel-container,
+.dark .manual-container {
+  background-color: var(--el-bg-color-page);
+}
+
 .manual-container {
   gap: 0;
 }
@@ -403,6 +413,12 @@ const transformCoordinates = () => {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
+.dark .excel-section,
+.dark .manual-section {
+  background-color: var(--el-bg-color);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
 .excel-section h4,
 .manual-section h4 {
   margin-top: 0;
@@ -411,6 +427,12 @@ const transformCoordinates = () => {
   font-weight: 500;
   font-size: 16px;
   border-bottom: 1px solid #ebeef5;
+}
+
+.dark .excel-section h4,
+.dark .manual-section h4 {
+  color: var(--el-color-primary);
+  border-bottom-color: var(--el-border-color-dark);
   padding-bottom: 8px;
 }
 
