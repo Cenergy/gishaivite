@@ -1,31 +1,30 @@
 <template>
-  <div class="gallery-container">
-    <h1 class="gallery-title fade-in">我的相册</h1>
-    
-    <div class="gallery-view-mode fade-in">
-      <el-radio-group v-model="viewMode" size="large">
-        <el-radio-button label="list">
-          <el-icon><Grid /></el-icon> 列表模式
-        </el-radio-button>
-        <el-radio-button label="map">
-          <el-icon><MapLocation /></el-icon> 地图模式
-        </el-radio-button>
-      </el-radio-group>
-    </div>
-    
-    <div class="gallery-categories fade-in delay-1" v-if="viewMode === 'list'">
-      <el-radio-group v-model="activeCategory" size="large">
-        <el-radio-button v-for="category in categories" :key="category.id" :label="category.id">
-          {{ category.name }}
-        </el-radio-button>
-      </el-radio-group>
+  <div class="gallery-container container-fluid">
+    <div class="container-fluid flex flex-row items-center gap-4 m-t-2">
+      <div class="gallery-categories fade-in delay-1">
+        <el-radio-group v-model="activeCategory" size="large">
+          <el-radio-button v-for="category in categories" :key="category.id" :label="category.id">
+            {{ category.name }}
+          </el-radio-button>
+        </el-radio-group>
+      </div>
+      <div class="gallery-view-mode fade-in">
+        <el-radio-group v-model="viewMode" size="large">
+          <el-radio-button label="list">
+            <el-icon><Grid /></el-icon> 列表模式
+          </el-radio-button>
+          <el-radio-button label="map">
+            <el-icon><MapLocation /></el-icon> 地图模式
+          </el-radio-button>
+        </el-radio-group>
+      </div>
     </div>
 
     <!-- 列表模式 -->
     <div v-if="viewMode === 'list'" class="gallery-grid fade-in delay-2">
       <div v-for="(photo, index) in filteredPhotos" :key="index" class="gallery-item">
-        <el-image 
-          :src="photo.url" 
+        <el-image
+          :src="photo.url"
           :alt="photo.title"
           fit="cover"
           loading="lazy"
@@ -43,8 +42,12 @@
           <h3>{{ photo.title }}</h3>
           <p>{{ photo.description }}</p>
           <div class="gallery-item-meta">
-            <span><el-icon><Calendar /></el-icon> {{ photo.date }}</span>
-            <span><el-icon><Location /></el-icon> {{ photo.location }}</span>
+            <span
+              ><el-icon><Calendar /></el-icon> {{ photo.date }}</span
+            >
+            <span
+              ><el-icon><Location /></el-icon> {{ photo.location }}</span
+            >
           </div>
         </div>
       </div>
@@ -53,7 +56,10 @@
     <!-- 地图模式 -->
     <GalleryMapView v-if="viewMode === 'map'" :photos="filteredPhotos" />
 
-    <div v-if="viewMode === 'list' && filteredPhotos.length === 0" class="no-photos fade-in delay-2">
+    <div
+      v-if="viewMode === 'list' && filteredPhotos.length === 0"
+      class="no-photos fade-in delay-2"
+    >
       <el-empty description="暂无照片" />
     </div>
   </div>
@@ -70,7 +76,7 @@ const categories = [
   { id: 'nature', name: '自然风光' },
   { id: 'city', name: '城市风貌' },
   { id: 'travel', name: '旅行记忆' },
-  { id: 'food', name: '美食记录' }
+  { id: 'food', name: '美食记录' },
 ]
 
 // 当前选中的分类
@@ -89,7 +95,7 @@ const photos = [
     category: 'nature',
     date: '2023-05-15',
     location: '黄山',
-    coordinates: [118.1555, 30.1312] // 经度,纬度
+    coordinates: [118.1555, 30.1312], // 经度,纬度
   },
   {
     id: 2,
@@ -99,7 +105,7 @@ const photos = [
     category: 'city',
     date: '2023-06-20',
     location: '上海',
-    coordinates: [121.4737, 31.2304]
+    coordinates: [121.4737, 31.2304],
   },
   {
     id: 3,
@@ -109,7 +115,7 @@ const photos = [
     category: 'nature',
     date: '2023-07-05',
     location: '三亚',
-    coordinates: [109.5082, 18.2478]
+    coordinates: [109.5082, 18.2478],
   },
   {
     id: 4,
@@ -119,7 +125,7 @@ const photos = [
     category: 'travel',
     date: '2023-08-12',
     location: '乌镇',
-    coordinates: [120.4942, 30.7457]
+    coordinates: [120.4942, 30.7457],
   },
   {
     id: 5,
@@ -129,7 +135,7 @@ const photos = [
     category: 'food',
     date: '2023-09-03',
     location: '家里',
-    coordinates: [116.4074, 39.9042] // 默认北京坐标
+    coordinates: [116.4074, 39.9042], // 默认北京坐标
   },
   {
     id: 6,
@@ -139,7 +145,7 @@ const photos = [
     category: 'nature',
     date: '2023-10-18',
     location: '四川',
-    coordinates: [103.9526, 30.7617]
+    coordinates: [103.9526, 30.7617],
   },
   {
     id: 7,
@@ -149,7 +155,7 @@ const photos = [
     category: 'city',
     date: '2023-11-22',
     location: '北京',
-    coordinates: [116.4074, 39.9042]
+    coordinates: [116.4074, 39.9042],
   },
   {
     id: 8,
@@ -159,8 +165,8 @@ const photos = [
     category: 'food',
     date: '2023-12-05',
     location: '西安',
-    coordinates: [108.9402, 34.3416]
-  }
+    coordinates: [108.9402, 34.3416],
+  },
 ]
 
 // 根据分类筛选照片
@@ -168,20 +174,13 @@ const filteredPhotos = computed(() => {
   if (activeCategory.value === 'all') {
     return photos
   } else {
-    return photos.filter(photo => photo.category === activeCategory.value)
+    return photos.filter((photo) => photo.category === activeCategory.value)
   }
 })
-
-
-
-
 </script>
 
 <style scoped>
 .gallery-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
   /* 添加暗黑模式样式 */
   @apply dark:text-gray-200;
 }
@@ -197,100 +196,55 @@ const filteredPhotos = computed(() => {
 }
 
 .gallery-view-mode {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 1.5rem;
+  @apply flex justify-center;
 }
 
 .gallery-categories {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 2rem;
+  @apply flex justify-center ml-6;
 }
 
 .gallery-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 2rem;
-  margin-top: 2rem;
+  @apply grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-8 mt-8;
 }
 
 .gallery-item {
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  background-color: #fff;
-  /* 添加暗黑模式样式 */
-  @apply dark:bg-gray-800 dark:shadow-gray-900/30;
+  @apply rounded-xl overflow-hidden shadow-md transition-all duration-300 bg-white dark:bg-gray-800 dark:shadow-gray-900/30;
 }
 
 .gallery-item:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+  @apply -translate-y-2 shadow-lg;
 }
 
 .gallery-image {
-  width: 100%;
-  height: 220px;
-  object-fit: cover;
-  display: block;
+  @apply w-full h-[220px] object-cover block;
 }
 
 .gallery-item-info {
-  padding: 1.5rem;
+  @apply p-6;
 }
 
 .gallery-item-info h3 {
-  margin-top: 0;
-  margin-bottom: 0.5rem;
-  font-size: 1.25rem;
-  font-weight: bold;
-  color: #333;
-  /* 添加暗黑模式样式 */
-  @apply dark:text-gray-100;
+  @apply mt-0 mb-2 text-xl font-bold text-gray-800 dark:text-gray-100;
 }
 
 .gallery-item-info p {
-  margin-bottom: 1rem;
-  color: #666;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  /* 添加暗黑模式样式 */
-  @apply dark:text-gray-300;
+  @apply mb-4 text-gray-600 text-sm leading-relaxed dark:text-gray-300;
 }
 
 .gallery-item-meta {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.8rem;
-  color: #888;
-  /* 添加暗黑模式样式 */
-  @apply dark:text-gray-400;
+  @apply flex justify-between text-xs text-gray-500 dark:text-gray-400;
 }
 
 .gallery-item-meta span {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
+  @apply flex items-center gap-1;
 }
 
 .image-placeholder {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-  background-color: #f5f7fa;
-  color: #909399;
-  font-size: 2rem;
-  /* 添加暗黑模式样式 */
-  @apply dark:bg-gray-700 dark:text-gray-500;
+  @apply flex justify-center items-center w-full h-full bg-gray-100 text-gray-400 text-3xl dark:bg-gray-700 dark:text-gray-500;
 }
 
 .no-photos {
-  text-align: center;
-  margin-top: 3rem;
+  @apply text-center mt-12;
 }
 
 /* 动画效果 */
@@ -321,26 +275,22 @@ const filteredPhotos = computed(() => {
 /* 响应式调整 */
 @media (max-width: 768px) {
   .gallery-grid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 1.5rem;
+    @apply grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-6;
   }
-  
+
+  .gallery-view-mode,
   .gallery-categories {
-    overflow-x: auto;
-    padding-bottom: 1rem;
-    justify-content: flex-start;
+    @apply flex overflow-x-auto pb-4 justify-start;
   }
 }
 
 @media (max-width: 480px) {
   .gallery-grid {
-    grid-template-columns: 1fr;
+    @apply grid-cols-1;
   }
-  
+
   .gallery-container {
-    padding: 1rem;
+    @apply p-4;
   }
 }
-
-
 </style>
