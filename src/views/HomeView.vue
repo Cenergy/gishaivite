@@ -44,6 +44,9 @@
                   >
                 </div>
                 <div class="nav-item">
+                  <router-link to="/gallery" class="nav-link" active-class="active">相册</router-link>
+                </div>
+                <div class="nav-item">
                   <ThemeToggle class="nav-theme-toggle" />
                 </div>
               </div>
@@ -57,6 +60,7 @@
       <h1 class="fade-in">欢迎来到及时嗨</h1>
 
       <ToolsSection />
+      <GallerySection />
       <BlogSection />
       <ResourcesSection />
       <FollowSection />
@@ -76,6 +80,7 @@ import ResourcesSection from '@/components/ResourcesSection.vue'
 import FollowSection from '@/components/FollowSection.vue'
 import FooterSection from '@/components/FooterSection.vue'
 import ThemeToggle from '@/components/ThemeToggle.vue'
+import GallerySection from '@/components/GallerySection.vue'
 
 const isMenuOpen = ref(false)
 const isHeaderFixed = ref(false)

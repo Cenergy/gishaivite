@@ -23,6 +23,11 @@ const router = createRouter({
       name: 'theme-demo',
       component: ThemeDemo,
     },
+    {
+      path: '/gallery',
+      name: 'gallery',
+      component: () => import('../views/GalleryView.vue'),
+    },
   ],
 })
 
