@@ -196,7 +196,10 @@ const filteredPhotos = computed(() => {
 }
 
 .gallery-grid {
-  @apply grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-8 p-l-4 p-r-4;
+  @apply grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-8 p-l-4 p-r-4;
+  
+  /* 更平滑的过渡效果 */
+  transition: grid-template-columns 0.3s ease;
 }
 
 .gallery-item {
@@ -267,7 +270,7 @@ const filteredPhotos = computed(() => {
 /* 响应式调整 */
 @media (max-width: 768px) {
   .gallery-grid {
-    @apply grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-6;
+    @apply grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-4;
   }
 
   .gallery-view-mode,
@@ -278,7 +281,13 @@ const filteredPhotos = computed(() => {
 
 @media (max-width: 480px) {
   .gallery-grid {
-    @apply grid-cols-1;
+    @apply grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3;
+  }
+
+  @media (max-width: 360px) {
+    .gallery-grid {
+      @apply grid-cols-1 gap-2;
+    }
   }
 
   .gallery-container {
