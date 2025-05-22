@@ -1,6 +1,6 @@
 <template>
   <div class="gallery-container h-screen w-full flex flex-col">
-    <div class="container-fluid flex flex-row justify-between gap-4 m-t-2">
+    <div class="container-fluid flex flex-row justify-between gap-4 m-t-2 m-b-2">
       <div class="gallery-categories fade-in delay-1">
         <el-radio-group v-model="activeCategory" size="large">
           <el-radio-button
@@ -44,7 +44,7 @@
       </div>
 
       <!-- 地图模式 -->
-      <GalleryMapView v-if="viewMode === 'map'" :photos="filteredPhotos" class="w-full h-full" />
+      <GalleryMapView v-if="viewMode === 'map'" :photos="filteredPhotos" class="w-full h-full flex-1" />
     </div>
   </div>
 </template>
@@ -174,6 +174,7 @@ const filteredPhotos = computed(() => {
 .gallery-content {
   /* 确保内容区域占满剩余高度 */
   @apply flex flex-col h-full w-full overflow-auto;
+  flex: 1 1 0%;
 }
 
 .gallery-title {
@@ -195,7 +196,7 @@ const filteredPhotos = computed(() => {
 }
 
 .gallery-grid {
-  @apply grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-8 mt-8;
+  @apply grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-8 p-l-4 p-r-4;
 }
 
 .gallery-item {
