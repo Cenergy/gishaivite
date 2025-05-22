@@ -144,12 +144,15 @@ onUnmounted(() => {
 /* 地图相关样式 */
 .gallery-map-container {
   width: 100%;
-  margin-top: 2rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .map-container {
   width: 100%;
-  height: 600px;
+  flex: 1;
+  min-height: 400px;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -162,13 +165,13 @@ onUnmounted(() => {
 
 @media (max-width: 768px) {
   .map-container {
-    height: 450px;
+    min-height: 450px;
   }
 }
 
 @media (max-width: 480px) {
   .map-container {
-    height: 350px;
+    min-height: 350px;
   }
 }
 
