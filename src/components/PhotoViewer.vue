@@ -2,7 +2,10 @@
   <div class="photo-viewer-container" v-if="visible" @click.self="closeViewer">
     <div class="photo-viewer-content">
       <div class="photo-viewer-header">
-        <h3>{{ currentPhoto.title }}</h3>
+        <div class="photo-viewer-title">
+          <h4 v-if="props.albumTitle" class="album-title">{{ props.albumTitle }}</h4>
+          <h3>{{ currentPhoto.title }}</h3>
+        </div>
         <el-button type="text" @click="closeViewer" class="close-btn">
           <el-icon><Close /></el-icon>
         </el-button>
@@ -71,6 +74,10 @@ const props = defineProps({
   initialIndex: {
     type: Number,
     default: 0
+  },
+  albumTitle: {
+    type: String,
+    default: ''
   }
 });
 
@@ -251,6 +258,18 @@ const stopDrag = () => {
   padding: 12px 20px;
   background-color: rgba(0, 0, 0, 0.5);
   color: white;
+}
+
+.photo-viewer-title {
+  display: flex;
+  flex-direction: column;
+}
+
+.photo-viewer-title .album-title {
+  margin: 0 0 4px 0;
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: #bbb;
 }
 
 .photo-viewer-header h3 {
