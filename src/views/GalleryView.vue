@@ -27,7 +27,7 @@
     <div class="gallery-content flex-1 w-full h-full">
       <!-- 列表模式 -->
       <div v-if="viewMode === 'list'" class="gallery-grid fade-in delay-2">
-        <div v-for="photo in filteredPhotos" :key="photo.id" class="gallery-item">
+        <div v-for="photo in filteredPhotos" :key="photo.id" class="gallery-item" @click="openPhotoViewer(photo)">
           <img :src="photo.url" :alt="photo.title" class="gallery-image" />
           <div class="gallery-item-info">
             <h3>{{ photo.title }}</h3>
@@ -45,6 +45,14 @@
 
       <!-- 地图模式 -->
       <GalleryMapView v-if="viewMode === 'map'" :photos="filteredPhotos" class="w-full h-full flex-1" />
+      
+      <!-- 照片查看器 -->
+      <PhotoViewer 
+        v-model:visible="photoViewerVisible" 
+        :photos="filteredPhotos" 
+        :initial-index="selectedPhotoIndex" 
+        @close="photoViewerVisible = false"
+      />
     </div>
   </div>
 </template>
@@ -53,6 +61,7 @@
 import { ref, computed, watch } from "vue";
 import { Picture, Calendar, Location, Grid, MapLocation } from "@element-plus/icons-vue";
 import GalleryMapView from "../components/GalleryMapView.vue";
+import PhotoViewer from "../components/PhotoViewer.vue";
 
 // 相册分类
 const categories = [
@@ -161,6 +170,16 @@ const filteredPhotos = computed(() => {
     return photos.filter((photo) => photo.category === activeCategory.value);
   }
 });
+
+// 照片查看器相关
+const photoViewerVisible = ref(false);
+const selectedPhotoIndex = ref(0);
+
+// 打开照片查看器
+const openPhotoViewer = (photo) => {
+  selectedPhotoIndex.value = filteredPhotos.value.findIndex(p => p.id === photo.id);
+  photoViewerVisible.value = true;
+};
 </script>
 
 <style scoped>
