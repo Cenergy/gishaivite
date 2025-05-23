@@ -22,13 +22,23 @@ import {
 
 import 'maptalks-gl/dist/maptalks-gl.css'
 
-// 接收照片数据作为props
+// 接收照片数据和相册数据作为props
 const props = defineProps({
   photos: {
     type: Array,
     required: true
+  },
+  albumMode: {
+    type: Boolean,
+    default: false
+  },
+  albums: {
+    type: Array,
+    default: () => []
   }
 })
+
+const emit = defineEmits(['select-album'])
 
 // 地图相关
 const mapContainer = ref(null)
@@ -39,25 +49,22 @@ let markerLayer = null
 const initMap = () => {
   if (!mapContainer.value) return;
   
+  map = new Map('map-container', {
+    center: [116.4074, 39.9042], // 默认中心点（北京）
+    zoom: 5,
+  });
   
+  const vtLayer = new VectorTileLayer('vt', {
+    urlTemplate: 'http://tile.maptalks.com/test/planet-single/{z}/{x}/{y}.mvt'
+  });
 
+  const groupLayer = new GroupGLLayer('group', [vtLayer]).addTo(map);
 
-    map = new Map('map-container', {
-          center: [116.4074, 39.9042], // 默认中心点（北京）
-          zoom: 5,
-    });
-    const vtLayer = new VectorTileLayer('vt', {
-        urlTemplate: 'http://tile.maptalks.com/test/planet-single/{z}/{x}/{y}.mvt'
-    });
+  const gltfLayer = new GLTFLayer('gltflayer');
+  groupLayer.addLayer(gltfLayer);
 
-    const groupLayer = new GroupGLLayer('group', [vtLayer]).addTo(map);
-
-    const gltfLayer = new GLTFLayer('gltflayer');
-    groupLayer.addLayer(gltfLayer);
-
-    const polygonLayer = new PolygonLayer('polygonlayer');
-    groupLayer.addLayer(polygonLayer);
-
+  const polygonLayer = new PolygonLayer('polygonlayer');
+  groupLayer.addLayer(polygonLayer);
   
   // 创建标记图层
   markerLayer = new VectorLayer('markers').addTo(map)
@@ -66,58 +73,117 @@ const initMap = () => {
   addPhotoMarkers()
 }
 
-// 添加照片标记到地图
+// 添加标记到地图
 const addPhotoMarkers = () => {
   if (!markerLayer) return
   
   // 清除现有标记
   markerLayer.clear()
   
-  // 添加标记
-  props.photos.forEach(photo => {
-    if (!photo.coordinates) return
-    
-    // 创建标记
-    const marker = new Marker(
-      photo.coordinates,
-      {
-        symbol: {
-          markerType: 'pin',
-          markerFill: '#1890ff',
-          markerLineColor: '#fff',
-          markerLineWidth: 2,
-          markerWidth: 30,
-          markerHeight: 40
+  if (props.albumMode) {
+    // 相册模式：添加相册标记
+    props.albums.forEach(album => {
+      // 使用第一张照片的坐标作为相册坐标
+      if (!album.photos || album.photos.length === 0 || !album.photos[0].coordinates) return
+      
+      const coordinates = album.photos[0].coordinates
+      
+      // 创建标记
+      const marker = new Marker(
+        coordinates,
+        {
+          symbol: {
+            markerType: 'pin',
+            markerFill: '#ff6b6b', // 相册使用不同颜色
+            markerLineColor: '#fff',
+            markerLineWidth: 2,
+            markerWidth: 35,
+            markerHeight: 45
+          }
         }
-      }
-    )
-    
-    // 创建信息窗口
-    const infoWindow = new ui.InfoWindow({
-      title: photo.title,
-      content: `
-        <div class="map-popup-content">
-          <img src="${photo.url}" alt="${photo.title}" style="width:100%;max-height:150px;object-fit:cover;" />
-          <p>${photo.description}</p>
-          <p><small>${photo.date} · ${photo.location}</small></p>
-        </div>
-      `,
-      width: 300,
-      height: 'auto',
-      autoCloseOn: 'click',
-      autoOpenOn: 'click'
+      )
+      
+      // 创建信息窗口
+      const infoWindow = new ui.InfoWindow({
+        title: album.title,
+        content: `
+          <div class="map-popup-content">
+            <img src="${album.coverUrl}" alt="${album.title}" style="width:100%;max-height:150px;object-fit:cover;" />
+            <div class="popup-info">
+              <p>${album.description}</p>
+              <p><small>照片数量: ${album.photos.length}</small></p>
+              <button class="popup-view-btn">查看相册</button>
+            </div>
+          </div>
+        `
+      })
+      
+      // 点击标记显示信息窗口
+      marker.on('click', e => {
+        infoWindow.addTo(map).show(coordinates)
+        
+        // 为查看按钮添加点击事件
+        setTimeout(() => {
+          const viewBtn = document.querySelector('.popup-view-btn')
+          if (viewBtn) {
+            viewBtn.addEventListener('click', () => {
+              emit('select-album', album)
+              infoWindow.remove()
+            })
+          }
+        }, 100)
+      })
+      
+      // 添加到图层
+      marker.addTo(markerLayer)
     })
-    
-    // 将信息窗口添加到标记
-    marker.setInfoWindow(infoWindow)
-    
-    // 将标记添加到图层
-    markerLayer.addGeometry(marker)
-  })
+  } else {
+    // 照片模式：添加照片标记
+    props.photos.forEach(photo => {
+      if (!photo.coordinates) return
+      
+      // 创建标记
+      const marker = new Marker(
+        photo.coordinates,
+        {
+          symbol: {
+            markerType: 'pin',
+            markerFill: '#1890ff',
+            markerLineColor: '#fff',
+            markerLineWidth: 2,
+            markerWidth: 30,
+            markerHeight: 40
+          }
+        }
+      )
+      
+      // 创建信息窗口
+      const infoWindow = new ui.InfoWindow({
+        title: photo.title,
+        content: `
+          <div class="map-popup-content">
+            <img src="${photo.url}" alt="${photo.title}" style="width:100%;max-height:150px;object-fit:cover;" />
+            <p>${photo.description}</p>
+            <p><small>${photo.date} · ${photo.location}</small></p>
+          </div>
+        `,
+        width: 300,
+        height: 'auto',
+        autoCloseOn: 'click',
+        autoOpenOn: 'click'
+      })
+      
+      // 将信息窗口添加到标记
+      marker.setInfoWindow(infoWindow)
+      
+      // 将标记添加到图层
+      markerLayer.addGeometry(marker)
+    })
+  }
 }
 
-// 监听照片数据变化，更新地图标记
-watch(() => props.photos, () => {
+// 监听数据变化，更新地图标记
+watch([() => props.photos, () => props.albumMode, () => props.albums], () => {
   if (map && markerLayer) {
     addPhotoMarkers()
   }
