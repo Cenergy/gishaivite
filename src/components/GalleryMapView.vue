@@ -8,17 +8,17 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 
 import {
-    Map,
-    GroupGLLayer,
-    VectorTileLayer,
-    GLTFMarker,
-    Marker,
-    GLTFLayer,
-    VectorLayer,
-    PolygonLayer,
-    ui
-} from 'maptalks-gl';
-
+  Map,
+  GroupGLLayer,
+  VectorTileLayer,
+  TileLayer,
+  GLTFMarker,
+  Marker,
+  GLTFLayer,
+  VectorLayer,
+  PolygonLayer,
+  ui,
+} from 'maptalks-gl'
 
 import 'maptalks-gl/dist/maptalks-gl.css'
 
@@ -26,16 +26,16 @@ import 'maptalks-gl/dist/maptalks-gl.css'
 const props = defineProps({
   photos: {
     type: Array,
-    required: true
+    required: true,
   },
   albumMode: {
     type: Boolean,
-    default: false
+    default: false,
   },
   albums: {
     type: Array,
-    default: () => []
-  }
+    default: () => [],
+  },
 })
 
 const emit = defineEmits(['select-album'])
@@ -47,28 +47,34 @@ let markerLayer = null
 
 // 初始化地图
 const initMap = () => {
-  if (!mapContainer.value) return;
-  
+  if (!mapContainer.value) return
+
   map = new Map('map-container', {
     center: [116.4074, 39.9042], // 默认中心点（北京）
     zoom: 5,
-  });
-  
+    baseLayer: new TileLayer('base', {
+      urlTemplate:
+        'https://webrd01.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
+      subdomains: ['a', 'b', 'c', 'd'],
+      // attribution: "&copy; <a href='http://osm.org'>OpenStreetMap</a> contributors, &copy; <a href='https://carto.com/'>CARTO</a>",
+    }),
+  })
+
   const vtLayer = new VectorTileLayer('vt', {
-    urlTemplate: 'http://tile.maptalks.com/test/planet-single/{z}/{x}/{y}.mvt'
-  });
+    urlTemplate: 'http://tile.maptalks.com/test/planet-single/{z}/{x}/{y}.mvt',
+  })
 
-  const groupLayer = new GroupGLLayer('group', [vtLayer]).addTo(map);
+  const groupLayer = new GroupGLLayer('group', [vtLayer]).addTo(map)
 
-  const gltfLayer = new GLTFLayer('gltflayer');
-  groupLayer.addLayer(gltfLayer);
+  const gltfLayer = new GLTFLayer('gltflayer')
+  groupLayer.addLayer(gltfLayer)
 
-  const polygonLayer = new PolygonLayer('polygonlayer');
-  groupLayer.addLayer(polygonLayer);
-  
+  const polygonLayer = new PolygonLayer('polygonlayer')
+  groupLayer.addLayer(polygonLayer)
+
   // 创建标记图层
   markerLayer = new VectorLayer('markers').addTo(map)
-  
+
   // 添加照片标记
   addPhotoMarkers()
 }
@@ -76,33 +82,30 @@ const initMap = () => {
 // 添加标记到地图
 const addPhotoMarkers = () => {
   if (!markerLayer) return
-  
+
   // 清除现有标记
   markerLayer.clear()
-  
+
   if (props.albumMode) {
     // 相册模式：添加相册标记
-    props.albums.forEach(album => {
+    props.albums.forEach((album) => {
       // 使用第一张照片的坐标作为相册坐标
       if (!album.photos || album.photos.length === 0 || !album.photos[0].coordinates) return
-      
+
       const coordinates = album.photos[0].coordinates
-      
+
       // 创建标记
-      const marker = new Marker(
-        coordinates,
-        {
-          symbol: {
-            markerType: 'pin',
-            markerFill: '#ff6b6b', // 相册使用不同颜色
-            markerLineColor: '#fff',
-            markerLineWidth: 2,
-            markerWidth: 35,
-            markerHeight: 45
-          }
-        }
-      )
-      
+      const marker = new Marker(coordinates, {
+        symbol: {
+          markerType: 'pin',
+          markerFill: '#ff6b6b', // 相册使用不同颜色
+          markerLineColor: '#fff',
+          markerLineWidth: 2,
+          markerWidth: 35,
+          markerHeight: 45,
+        },
+      })
+
       // 创建信息窗口
       const infoWindow = new ui.InfoWindow({
         title: album.title,
@@ -115,13 +118,13 @@ const addPhotoMarkers = () => {
               <button class="popup-view-btn">查看相册</button>
             </div>
           </div>
-        `
+        `,
       })
-      
+
       // 点击标记显示信息窗口
-      marker.on('click', e => {
+      marker.on('click', (e) => {
         infoWindow.addTo(map).show(coordinates)
-        
+
         // 为查看按钮添加点击事件
         setTimeout(() => {
           const viewBtn = document.querySelector('.popup-view-btn')
@@ -133,30 +136,27 @@ const addPhotoMarkers = () => {
           }
         }, 100)
       })
-      
+
       // 添加到图层
       marker.addTo(markerLayer)
     })
   } else {
     // 照片模式：添加照片标记
-    props.photos.forEach(photo => {
+    props.photos.forEach((photo) => {
       if (!photo.coordinates) return
-      
+
       // 创建标记
-      const marker = new Marker(
-        photo.coordinates,
-        {
-          symbol: {
-            markerType: 'pin',
-            markerFill: '#1890ff',
-            markerLineColor: '#fff',
-            markerLineWidth: 2,
-            markerWidth: 30,
-            markerHeight: 40
-          }
-        }
-      )
-      
+      const marker = new Marker(photo.coordinates, {
+        symbol: {
+          markerType: 'pin',
+          markerFill: '#1890ff',
+          markerLineColor: '#fff',
+          markerLineWidth: 2,
+          markerWidth: 30,
+          markerHeight: 40,
+        },
+      })
+
       // 创建信息窗口
       const infoWindow = new ui.InfoWindow({
         title: photo.title,
@@ -170,12 +170,12 @@ const addPhotoMarkers = () => {
         width: 300,
         height: 'auto',
         autoCloseOn: 'click',
-        autoOpenOn: 'click'
+        autoOpenOn: 'click',
       })
-      
+
       // 将信息窗口添加到标记
       marker.setInfoWindow(infoWindow)
-      
+
       // 将标记添加到图层
       markerLayer.addGeometry(marker)
     })
@@ -183,11 +183,17 @@ const addPhotoMarkers = () => {
 }
 
 // 监听数据变化，更新地图标记
-watch([() => props.photos, () => props.albumMode, () => props.albums], () => {
-  if (map && markerLayer) {
-    addPhotoMarkers()
-  }
-}, { deep: true })
+watch(
+  [() => props.photos, () => props.albumMode, () => props.albums],
+  () => {
+    if (map && markerLayer) {
+      // 清除现有标记并重新添加
+      markerLayer.clear()
+      addPhotoMarkers()
+    }
+  },
+  { deep: true, immediate: true }
+)
 
 // 组件挂载时初始化地图
 onMounted(() => {
@@ -238,27 +244,6 @@ onUnmounted(() => {
 @media (max-width: 480px) {
   .map-container {
     min-height: 350px;
-  }
-}
-
-/* 动画效果 */
-.fade-in {
-  opacity: 0;
-  animation: fadeIn 1s ease-in forwards;
-}
-
-.delay-2 {
-  animation-delay: 0.6s;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
   }
 }
 </style>
