@@ -93,7 +93,7 @@
         v-if="viewMode === 'map'"
         :photos="selectedAlbum ? selectedAlbum.photos : allPhotos"
         :album-mode="!selectedAlbum"
-        :albums="albums"
+        :albums="filteredAlbums"
         @select-album="openAlbum"
         class="w-full h-full flex-1"
       />
