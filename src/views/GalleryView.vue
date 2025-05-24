@@ -232,7 +232,7 @@ const albums = [
     title: '美食记录',
     description: '记录生活中的美食瞬间',
     coverUrl: 'https://picsum.photos/id/50/800/600',
-    category: 'food',
+    category: 'nature',
     date: '2023-09-03',
     location: '各地美食',
     photos: [
