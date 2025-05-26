@@ -45,6 +45,36 @@ http.interceptors.response.use(
   },
   (error) => {
     // 统一错误处理
+    if (error.response) {
+      // 服务器返回了错误状态码
+      const status = error.response.status;
+      
+      switch (status) {
+        case 401:
+          console.error('未授权，请重新登录');
+          // 可以在这里处理登出逻辑
+          // store.dispatch('user/logout');
+          break;
+        case 403:
+          console.error('拒绝访问');
+          break;
+        case 404:
+          console.error('请求的资源不存在');
+          break;
+        case 500:
+          console.error('服务器错误');
+          break;
+        default:
+          console.error(`请求错误: ${status}`);
+      }
+    } else if (error.request) {
+      // 请求已发出但没有收到响应
+      console.error('网络错误，请检查您的网络连接');
+    } else {
+      // 请求配置出错
+      console.error('请求配置错误:', error.message);
+    }
+    
     return Promise.reject(error);
   }
 );
