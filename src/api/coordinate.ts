@@ -1,5 +1,4 @@
 import http from '../services/http';
-import axios from 'axios';
 
 /**
  * 坐标转换API
@@ -15,7 +14,8 @@ export const convertCoordinates = async (params: {
     return response;
   } catch (error) {
     console.error('坐标转换请求失败:', error);
-    throw error;
+    // throw error;
+    return {error};
   }
 };
 
@@ -26,13 +26,13 @@ export const convertCoordinates = async (params: {
  */
 export const convertCoordinatesFromExcel = async (formData: FormData) => {
   try {
-    // 这里使用axios而不是http实例，因为需要特殊的responseType
-    const response = await axios.post('/api/v1/converters/coords/convert_from_excel', formData, {
+    // 使用http实例发送请求，设置responseType为blob
+    const response = await http.post('/api/v1/converters/coords/convert_from_excel', formData, {
       responseType: 'blob' // 设置响应类型为blob，用于处理StreamingResponse
     });
     return response;
   } catch (error) {
     console.error('Excel文件坐标转换请求失败:', error);
-    throw error;
+    return {error};
   }
 };

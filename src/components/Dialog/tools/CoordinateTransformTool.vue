@@ -243,15 +243,22 @@ const processExcel = async () => {
   // 显示加载提示
   ElMessage.info("正在处理文件，请稍候...");
 
-  try {
     // 调用封装的API处理Excel文件
-    const response = await convertCoordinatesFromExcel(formData);
-    console.log(response, "转换结果");
-    
+    const { data, error, headers } = await convertCoordinatesFromExcel(formData);
+    if (!data || error) {
+      console.error("坐标转换请求失败:", error);
+      // 重置处理状态，允许用户重新尝试处理文件
+      isProcessing.value = false;
+      ElMessage.error(
+        "坐标转换失败: " + (error.response?.data?.message || error.message || "未知错误")
+      );
+      return;
+    }
+
     // 直接使用响应数据作为Blob对象
-    const blob = new Blob([response.data], {
+    const blob = new Blob([data], {
       type:
-        response.headers["content-type"] ||
+      headers["content-type"] ||
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
 
@@ -263,15 +270,6 @@ const processExcel = async () => {
     // isProcessing.value = false
 
     ElMessage.success("坐标转换成功，请点击下载按钮获取结果文件");
-  } catch (error: any) {
-    console.error("坐标转换请求失败:", error);
-    // 重置处理状态，允许用户重新尝试处理文件
-    isProcessing.value = false;
-
-    ElMessage.error(
-      "坐标转换失败: " + (error.response?.data?.message || error.message || "未知错误")
-    );
-  }
 };
 
 const downloadConvertedFile = () => {
