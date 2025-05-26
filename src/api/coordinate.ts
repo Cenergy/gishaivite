@@ -1,23 +1,23 @@
-import http from '../services/http';
+import http from '../services/httpService'
 
 /**
  * 坐标转换API
  */
 export const convertCoordinates = async (params: {
-  lng: number;
-  lat: number;
-  from_sys: string;
-  to_sys: string;
+  lng: number
+  lat: number
+  from_sys: string
+  to_sys: string
 }) => {
   try {
-    const response = await http.get('/api/v1/converters/coords/convert', { params });
-    return response;
+    const response = await http.get('/api/v1/converters/coords/convert', { params })
+    return response
   } catch (error) {
-    console.error('坐标转换请求失败:', error);
+    console.error('坐标转换请求失败:', error)
     // throw error;
-    return {error};
+    return { error }
   }
-};
+}
 
 /**
  * Excel文件坐标批量转换API
@@ -28,11 +28,11 @@ export const convertCoordinatesFromExcel = async (formData: FormData) => {
   try {
     // 使用http实例发送请求，设置responseType为blob
     const response = await http.post('/api/v1/converters/coords/convert_from_excel', formData, {
-      responseType: 'blob' // 设置响应类型为blob，用于处理StreamingResponse
-    });
-    return response;
+      responseType: 'blob', // 设置响应类型为blob，用于处理StreamingResponse
+    })
+    return response
   } catch (error) {
-    console.error('Excel文件坐标转换请求失败:', error);
-    return {error};
+    console.error('Excel文件坐标转换请求失败:', error)
+    return { error }
   }
-};
+}
