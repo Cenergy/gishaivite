@@ -115,6 +115,7 @@ import { ref, computed, watch } from 'vue'
 import { Picture, Calendar, Location, Grid, MapLocation, Back } from '@element-plus/icons-vue'
 import GalleryMapView from '../components/GalleryMapView.vue'
 import PhotoViewer from '../components/PhotoViewer.vue'
+import albumsAPI from "@/api/albums";
 
 // 相册分类
 const categories = [
@@ -137,6 +138,10 @@ const selectedAlbum = ref(null)
 // 照片查看器状态
 const photoViewerVisible = ref(false)
 const selectedPhotoIndex = ref(0)
+
+albumsAPI.getAlbums().then((res) => {
+  console.log("🚀 ~ albums.getAlbums ~ res:", res);
+})
 
 // 模拟相册数据
 const albums = [

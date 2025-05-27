@@ -1,13 +1,20 @@
 import http from '../services/httpService'
 
 /**
+ * API基础路径
+ */
+const BASE_PATH = '/api/v1/albums/';
+const PHOTOS_PATH = `${BASE_PATH}photos/`;
+const GEO_PATH = `${BASE_PATH}geo/`;
+
+/**
  * 相册相关API
  */
 export default {
   // 获取相册列表
   getAlbums: async () => {
     try {
-      const response = await http.get('/api/v1/albums/')
+      const response = await http.get(`${BASE_PATH}`)
       return response
     } catch (error) {
       console.error('获取相册列表失败:', error)
@@ -18,7 +25,7 @@ export default {
   // 创建相册
   createAlbum: async (data: { name: string; description?: string; cover_photo?: string }) => {
     try {
-      const response = await http.post('/api/v1/albums/', data)
+      const response = await http.post(`${BASE_PATH}`, data)
       return response
     } catch (error) {
       console.error('创建相册失败:', error)
@@ -29,7 +36,7 @@ export default {
   // 获取单个相册
   getAlbum: async (albumId: string) => {
     try {
-      const response = await http.get(`/api/v1/albums/${albumId}`)
+      const response = await http.get(`${BASE_PATH}${albumId}`)
       return response
     } catch (error) {
       console.error('获取相册失败:', error)
@@ -43,7 +50,7 @@ export default {
     data: { name?: string; description?: string; cover_photo?: string },
   ) => {
     try {
-      const response = await http.put(`/api/v1/albums/${albumId}`, data)
+      const response = await http.put(`${BASE_PATH}${albumId}`, data)
       return response
     } catch (error) {
       console.error('更新相册失败:', error)
@@ -54,7 +61,7 @@ export default {
   // 删除相册
   deleteAlbum: async (albumId: string) => {
     try {
-      const response = await http.delete(`/api/v1/albums/${albumId}`)
+      const response = await http.delete(`${BASE_PATH}${albumId}`)
       return response
     } catch (error) {
       console.error('删除相册失败:', error)
@@ -65,7 +72,7 @@ export default {
   // 获取照片列表
   getPhotos: async () => {
     try {
-      const response = await http.get('/api/v1/albums/photos/')
+      const response = await http.get(`${PHOTOS_PATH}`)
       return response
     } catch (error) {
       console.error('获取照片列表失败:', error)
@@ -83,7 +90,7 @@ export default {
     lat: number
   }) => {
     try {
-      const response = await http.post('/api/v1/albums/photos/', data)
+      const response = await http.post(`${PHOTOS_PATH}`, data)
       return response
     } catch (error) {
       console.error('创建照片失败:', error)
@@ -94,7 +101,7 @@ export default {
   // 获取单个照片
   getPhoto: async (photoId: string) => {
     try {
-      const response = await http.get(`/api/v1/albums/photos/${photoId}`)
+      const response = await http.get(`${PHOTOS_PATH}${photoId}`)
       return response
     } catch (error) {
       console.error('获取照片失败:', error)
@@ -108,7 +115,7 @@ export default {
     data: { title?: string; description?: string; lng?: number; lat?: number },
   ) => {
     try {
-      const response = await http.put(`/api/v1/albums/photos/${photoId}`, data)
+      const response = await http.put(`${PHOTOS_PATH}${photoId}`, data)
       return response
     } catch (error) {
       console.error('更新照片失败:', error)
@@ -119,7 +126,7 @@ export default {
   // 删除照片
   deletePhoto: async (photoId: string) => {
     try {
-      const response = await http.delete(`/api/v1/albums/photos/${photoId}`)
+      const response = await http.delete(`${PHOTOS_PATH}${photoId}`)
       return response
     } catch (error) {
       console.error('删除照片失败:', error)
@@ -135,7 +142,7 @@ export default {
     maxLat: number
   }) => {
     try {
-      const response = await http.get('/api/v1/albums/geo/photos/', { params })
+      const response = await http.get(`${GEO_PATH}photos/`, { params })
       return response
     } catch (error) {
       console.error('根据经纬度获取照片失败:', error)
@@ -151,7 +158,7 @@ export default {
     maxLat: number
   }) => {
     try {
-      const response = await http.get('/api/v1/albums/geo/albums/', { params })
+      const response = await http.get(`${GEO_PATH}albums/`, { params })
       return response
     } catch (error) {
       console.error('根据经纬度获取相册失败:', error)
