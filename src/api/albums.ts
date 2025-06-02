@@ -1,12 +1,12 @@
-import http from '../services/httpService'
+import http from '../utils/http'
 
 /**
  * API基础路径
  */
-const BASE_PATH = '/api/v1/albums/';
-const PHOTOS_PATH = `${BASE_PATH}photos/`;
-const GEO_PATH = `${BASE_PATH}geo/`;
-const CATEGORIES_PATH = `${BASE_PATH}categories/`;
+const BASE_PATH = '/v1/albums/'
+const PHOTOS_PATH = `${BASE_PATH}photos/`
+const GEO_PATH = `${BASE_PATH}geo/`
+const CATEGORIES_PATH = `${BASE_PATH}categories/`
 
 /**
  * 分页参数接口
@@ -100,7 +100,7 @@ interface CategoryQueryParams extends PaginationParams {
  */
 export default {
   // ==================== 分类接口 ====================
-  
+
   // 获取分类列表
   getCategories: async (params?: CategoryQueryParams) => {
     try {
@@ -160,7 +160,7 @@ export default {
   },
 
   // ==================== 相册接口 ====================
-  
+
   // 获取相册列表
   getAlbums: async (params?: AlbumQueryParams) => {
     try {
@@ -173,12 +173,12 @@ export default {
   },
 
   // 创建相册 🔒
-  createAlbum: async (data: { 
-    name: string; 
-    description?: string; 
-    cover_photo?: string;
-    is_public?: boolean;
-    category_id?: string;
+  createAlbum: async (data: {
+    name: string
+    description?: string
+    cover_photo?: string
+    is_public?: boolean
+    category_id?: string
   }) => {
     try {
       const response = await http.post(`${BASE_PATH}`, data)
@@ -203,12 +203,12 @@ export default {
   // 更新相册 🔒
   updateAlbum: async (
     albumId: string,
-    data: { 
-      name?: string; 
-      description?: string; 
-      cover_photo?: string;
-      is_public?: boolean;
-      category_id?: string;
+    data: {
+      name?: string
+      description?: string
+      cover_photo?: string
+      is_public?: boolean
+      category_id?: string
     },
   ) => {
     try {
@@ -232,7 +232,7 @@ export default {
   },
 
   // ==================== 照片接口 ====================
-  
+
   // 获取照片列表
   getPhotos: async (params?: PhotoQueryParams) => {
     try {
@@ -277,12 +277,12 @@ export default {
   // 更新照片 🔒
   updatePhoto: async (
     photoId: string,
-    data: { 
-      title?: string; 
-      description?: string; 
-      lng?: number; 
-      lat?: number;
-      is_public?: boolean;
+    data: {
+      title?: string
+      description?: string
+      lng?: number
+      lat?: number
+      is_public?: boolean
     },
   ) => {
     try {
@@ -306,13 +306,15 @@ export default {
   },
 
   // ==================== 地理位置接口 ====================
-  
+
   // 根据坐标获取照片
-  getPhotosByGeo: async (params: GeoParams & { 
-    skip?: number;
-    limit?: number;
-    is_public?: boolean;
-  }) => {
+  getPhotosByGeo: async (
+    params: GeoParams & {
+      skip?: number
+      limit?: number
+      is_public?: boolean
+    },
+  ) => {
     try {
       const response = await http.get(`${GEO_PATH}photos/`, { params })
       return response
@@ -323,12 +325,14 @@ export default {
   },
 
   // 根据坐标获取相册
-  getAlbumsByGeo: async (params: GeoParams & {
-    skip?: number;
-    limit?: number;
-    is_public?: boolean;
-    with_photo_count?: boolean;
-  }) => {
+  getAlbumsByGeo: async (
+    params: GeoParams & {
+      skip?: number
+      limit?: number
+      is_public?: boolean
+      with_photo_count?: boolean
+    },
+  ) => {
     try {
       const response = await http.get(`${GEO_PATH}albums/`, { params })
       return response
@@ -340,7 +344,16 @@ export default {
 }
 
 // 导出类型定义
-export type { Category, Album, Photo, PaginationParams, AlbumQueryParams, PhotoQueryParams, CategoryQueryParams, GeoParams }
+export type {
+  Category,
+  Album,
+  Photo,
+  PaginationParams,
+  AlbumQueryParams,
+  PhotoQueryParams,
+  CategoryQueryParams,
+  GeoParams,
+}
 
 // 保持向后兼容
 export const basePath = BASE_PATH

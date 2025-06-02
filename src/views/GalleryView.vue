@@ -21,8 +21,23 @@
     </div>
 
     <div class="gallery-content flex-1 w-full h-full">
+      <!-- 加载状态 -->
+      <div v-if="loading" class="loading-container">
+        <el-loading-directive
+          v-loading="true"
+          element-loading-text="正在加载相册数据..."
+          class="w-full h-full"
+        />
+      </div>
+
+      <!-- 错误状态 -->
+      <div v-else-if="error" class="error-container">
+        <el-alert title="加载失败" :description="error" type="error" show-icon :closable="false" />
+        <el-button type="primary" @click="loadAlbums" class="mt-4"> 重新加载 </el-button>
+      </div>
+
       <!-- 列表模式 - 相册列表 -->
-      <div v-if="viewMode === 'list' && !selectedAlbum" class="albums-grid fade-in delay-2">
+      <div v-else-if="viewMode === 'list' && !selectedAlbum" class="albums-grid fade-in delay-2">
         <div
           v-for="album in filteredAlbums"
           :key="album.id"
@@ -49,7 +64,7 @@
             </div>
           </div>
         </div>
-        <div v-if="filteredAlbums.length === 0" class="no-albums">
+        <div v-if="filteredAlbums.length === 0 && !loading" class="no-albums">
           <p>当前分类下暂无相册</p>
         </div>
       </div>
@@ -111,20 +126,14 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { Picture, Calendar, Location, Grid, MapLocation, Back } from '@element-plus/icons-vue'
 import GalleryMapView from '../components/GalleryMapView.vue'
 import PhotoViewer from '../components/PhotoViewer.vue'
-import albumsAPI from "@/api/albums";
+import albumsAPI from '../api/albums'
 
 // 相册分类
-const categories = [
-  { id: 'all', name: '全部' },
-  { id: 'nature', name: '自然风光' },
-  { id: 'city', name: '城市风貌' },
-  { id: 'travel', name: '旅行记忆' },
-  { id: 'food', name: '美食记录' },
-]
+const categories = ref([{ id: 'all', name: '全部' }])
 
 // 当前选中的分类
 const activeCategory = ref('all')
@@ -139,127 +148,226 @@ const selectedAlbum = ref(null)
 const photoViewerVisible = ref(false)
 const selectedPhotoIndex = ref(0)
 
-albumsAPI.getAlbums().then((res) => {
-  console.log("🚀 ~ albums.getAlbums ~ res:", res);
-})
+// 数据状态
+const albums = ref([])
+const loading = ref(false)
+const error = ref(null)
 
-// 模拟相册数据
-const albums = [
-  {
-    id: 1,
-    title: '自然风光集锦',
-    description: '收集了各地的自然风光照片',
-    coverUrl: 'https://picsum.photos/id/10/800/600',
-    category: 'nature',
-    date: '2023-05-15',
-    location: '中国各地',
-    photos: [
+// 数据转换函数
+const transformAlbumData = (apiAlbum) => {
+  return {
+    id: apiAlbum.id,
+    title: apiAlbum.name,
+    description: apiAlbum.description || '',
+    coverUrl: apiAlbum.cover_photo || 'https://picsum.photos/800/600',
+    category: apiAlbum.category_id || 'all',
+    date: new Date(apiAlbum.created_at).toLocaleDateString('zh-CN'),
+    location: '未知位置',
+    photos: [],
+  }
+}
+
+const transformPhotoData = (apiPhoto) => {
+  return {
+    id: apiPhoto.id,
+    title: apiPhoto.title || '未命名照片',
+    description: apiPhoto.description || '',
+    url: apiPhoto.url,
+    date: new Date(apiPhoto.created_at).toLocaleDateString('zh-CN'),
+    location: '未知位置',
+    coordinates: [apiPhoto.lng, apiPhoto.lat],
+  }
+}
+
+// 加载分类数据
+const loadCategories = async () => {
+  try {
+    const response = await albumsAPI.getCategories({ is_public: true })
+    console.log('分类API响应:', response)
+
+    if (response && !response.error) {
+      // 处理不同的响应格式
+      let categoriesData = response
+      if (response.data) {
+        categoriesData = response.data
+      }
+      if (response.items) {
+        categoriesData = response.items
+      }
+
+      if (Array.isArray(categoriesData)) {
+        const apiCategories = categoriesData.map((cat) => ({
+          id: cat.id,
+          name: cat.name,
+        }))
+        categories.value = [{ id: 'all', name: '全部' }, ...apiCategories]
+      } else {
+        console.warn('分类数据格式不正确:', categoriesData)
+        // 使用默认分类
+        categories.value = [
+          { id: 'all', name: '全部' },
+          { id: 'landscape', name: '风景' },
+          { id: 'portrait', name: '人像' },
+          { id: 'street', name: '街拍' },
+        ]
+      }
+    } else {
+      console.error('分类API返回错误:', response?.error)
+      // 使用默认分类
+      categories.value = [
+        { id: 'all', name: '全部' },
+        { id: 'landscape', name: '风景' },
+        { id: 'portrait', name: '人像' },
+        { id: 'street', name: '街拍' },
+      ]
+    }
+  } catch (err) {
+    console.error('加载分类失败:', err)
+    // 使用默认分类
+    categories.value = [
+      { id: 'all', name: '全部' },
+      { id: 'landscape', name: '风景' },
+      { id: 'portrait', name: '人像' },
+      { id: 'street', name: '街拍' },
+    ]
+  }
+}
+
+// 加载相册数据
+const loadAlbums = async () => {
+  loading.value = true
+  error.value = null
+
+  try {
+    const response = await albumsAPI.getAlbums({
+      is_public: true,
+      with_photo_count: true,
+    })
+
+    console.log('相册API响应:', response)
+
+    if (response && !response.error) {
+      // 处理不同的响应格式
+      let albumsData = response
+      if (response.data) {
+        albumsData = response.data
+      }
+      if (response.items) {
+        albumsData = response.items
+      }
+
+      if (Array.isArray(albumsData)) {
+        const transformedAlbums = albumsData.map(transformAlbumData)
+
+        // 为每个相册加载照片
+        for (const album of transformedAlbums) {
+          try {
+            const photosResponse = await albumsAPI.getPhotos({
+              album_id: album.id,
+              is_public: true,
+            })
+
+            console.log(`相册 ${album.id} 照片响应:`, photosResponse)
+
+            if (photosResponse && !photosResponse.error) {
+              let photosData = photosResponse
+              if (photosResponse.data) {
+                photosData = photosResponse.data
+              }
+              if (photosResponse.items) {
+                photosData = photosResponse.items
+              }
+
+              if (Array.isArray(photosData)) {
+                album.photos = photosData.map(transformPhotoData)
+              } else {
+                album.photos = []
+              }
+            } else {
+              album.photos = []
+            }
+          } catch (photoErr) {
+            console.error(`加载相册 ${album.id} 的照片失败:`, photoErr)
+            album.photos = []
+          }
+        }
+
+        albums.value = transformedAlbums
+        console.log('最终相册数据:', albums.value)
+      } else {
+        console.warn('相册数据格式不正确:', albumsData)
+        // 创建一些示例数据用于测试
+        albums.value = [
+          {
+            id: '1',
+            title: '示例相册1',
+            description: '这是一个示例相册',
+            coverUrl: 'https://picsum.photos/800/600?random=1',
+            category: 'landscape',
+            date: new Date().toLocaleDateString('zh-CN'),
+            location: '示例位置',
+            photos: [
+              {
+                id: '1',
+                title: '示例照片1',
+                description: '示例照片描述',
+                url: 'https://picsum.photos/800/600?random=1',
+                date: new Date().toLocaleDateString('zh-CN'),
+                location: '示例位置',
+                coordinates: [116.4074, 39.9042],
+              },
+            ],
+          },
+        ]
+      }
+    } else {
+      console.error('相册API返回错误:', response?.error)
+      throw new Error(response?.error || '获取相册数据失败')
+    }
+  } catch (err) {
+    console.error('加载相册失败:', err)
+    error.value = err.message || '加载数据失败'
+
+    // 创建一些示例数据用于测试
+    albums.value = [
       {
-        id: 101,
-        title: '山间晨雾',
-        description: '清晨的山间雾气缭绕，宛如仙境',
-        url: 'https://picsum.photos/id/10/800/600',
-        date: '2023-05-15',
-        location: '黄山',
-        coordinates: [118.1555, 30.1312], // 经度,纬度
+        id: '1',
+        title: '示例相册1',
+        description: '这是一个示例相册',
+        coverUrl: 'https://picsum.photos/800/600?random=1',
+        category: 'landscape',
+        date: new Date().toLocaleDateString('zh-CN'),
+        location: '示例位置',
+        photos: [
+          {
+            id: '1',
+            title: '示例照片1',
+            description: '示例照片描述',
+            url: 'https://picsum.photos/800/600?random=1',
+            date: new Date().toLocaleDateString('zh-CN'),
+            location: '示例位置',
+            coordinates: [116.4074, 39.9042],
+          },
+        ],
       },
-      {
-        id: 102,
-        title: '海边日落',
-        description: '金色的阳光洒在海面上，美不胜收',
-        url: 'https://picsum.photos/id/30/800/600',
-        date: '2023-07-05',
-        location: '三亚',
-        coordinates: [109.5082, 18.2478],
-      },
-      {
-        id: 103,
-        title: '雪山之巅',
-        description: '登上雪山之巅，俯瞰壮丽山河',
-        url: 'https://picsum.photos/id/60/800/600',
-        date: '2023-10-18',
-        location: '四川',
-        coordinates: [103.9526, 30.7617],
-      },
-    ],
-  },
-  {
-    id: 2,
-    title: '城市风貌',
-    description: '记录现代都市的建筑与生活',
-    coverUrl: 'https://picsum.photos/id/20/800/600',
-    category: 'city',
-    date: '2023-06-20',
-    location: '多个城市',
-    photos: [
-      {
-        id: 201,
-        title: '城市夜景',
-        description: '繁华都市的璀璨夜景',
-        url: 'https://picsum.photos/id/20/800/600',
-        date: '2023-06-20',
-        location: '上海',
-        coordinates: [121.4737, 31.2304],
-      },
-      {
-        id: 202,
-        title: '现代建筑',
-        description: '现代建筑的几何美学',
-        url: 'https://picsum.photos/id/70/800/600',
-        date: '2023-11-22',
-        location: '北京',
-        coordinates: [116.4074, 39.9042],
-      },
-    ],
-  },
-  {
-    id: 3,
-    title: '旅行记忆',
-    description: '旅途中的美好回忆',
-    coverUrl: 'https://picsum.photos/id/40/800/600',
-    category: 'travel',
-    date: '2023-08-12',
-    location: '多地',
-    photos: [
-      {
-        id: 301,
-        title: '古镇小巷',
-        description: '雨后的古镇小巷，青石板路泛着微光',
-        url: 'https://picsum.photos/id/40/800/600',
-        date: '2023-08-12',
-        location: '乌镇',
-        coordinates: [120.4942, 30.7457],
-      },
-    ],
-  },
-  {
-    id: 4,
-    title: '美食记录',
-    description: '记录生活中的美食瞬间',
-    coverUrl: 'https://picsum.photos/id/50/800/600',
-    category: 'nature',
-    date: '2023-09-03',
-    location: '各地美食',
-    photos: [
-      {
-        id: 401,
-        title: '美味早餐',
-        description: '精致的早餐，开启美好的一天',
-        url: 'https://picsum.photos/id/50/800/600',
-        date: '2023-09-03',
-        location: '家里',
-        coordinates: [116.4074, 39.9042],
-      },
-    ],
-  },
-]
+    ]
+  } finally {
+    loading.value = false
+  }
+}
+
+// 组件挂载时加载数据
+onMounted(async () => {
+  await loadCategories()
+  await loadAlbums()
+})
 
 // 根据分类筛选相册
 const filteredAlbums = computed(() => {
   if (activeCategory.value === 'all') {
-    return albums
+    return albums.value
   }
-  return albums.filter((album) => album.category === activeCategory.value)
+  return albums.value.filter((album) => album.category === activeCategory.value)
 })
 
 // 获取所有照片（用于地图模式）
@@ -429,6 +537,15 @@ watch(activeCategory, () => {
 .no-albums,
 .no-photos {
   @apply text-center py-10 text-gray-500 dark:text-gray-400 text-lg;
+}
+
+/* 加载和错误状态样式 */
+.loading-container {
+  @apply flex items-center justify-center min-h-96;
+}
+
+.error-container {
+  @apply flex flex-col items-center justify-center min-h-96 p-8;
 }
 
 /* 动画效果 */
