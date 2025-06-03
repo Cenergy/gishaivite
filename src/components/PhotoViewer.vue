@@ -18,7 +18,7 @@
         
         <div class="photo-container" @click="toggleZoom">
           <img 
-            :src="currentPhoto.url" 
+            :src="currentPhoto.previewUrl || currentPhoto.url" 
             :alt="currentPhoto.title" 
             :class="['photo', { 'zoomed': isZoomed }]"
             ref="photoRef"

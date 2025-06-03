@@ -172,10 +172,19 @@ const transformPhotoData = (apiPhoto) => {
     id: apiPhoto.id,
     title: apiPhoto.title || '未命名照片',
     description: apiPhoto.description || '',
-    url: apiPhoto.url,
-    date: new Date(apiPhoto.created_at).toLocaleDateString('zh-CN'),
-    location: '未知位置',
-    coordinates: [apiPhoto.lng, apiPhoto.lat],
+    // 缩略图用于列表显示
+    url: apiPhoto.thumbnail_url,
+    // 预览图用于查看器显示
+    previewUrl: apiPhoto.preview_url,
+    // 原图URL
+    originalUrl: apiPhoto.original_url && apiPhoto.original_url.length > 0 ? apiPhoto.original_url[0] : apiPhoto.preview_url,
+    date: apiPhoto.taken_at ? new Date(apiPhoto.taken_at).toLocaleDateString('zh-CN') : new Date(apiPhoto.created_at).toLocaleDateString('zh-CN'),
+    location: apiPhoto.location || '未知位置',
+    coordinates: apiPhoto.longitude && apiPhoto.latitude ? [apiPhoto.longitude, apiPhoto.latitude] : null,
+    fileFormat: apiPhoto.file_format,
+    fileSize: apiPhoto.file_size,
+    width: apiPhoto.width,
+    height: apiPhoto.height,
   }
 }
 
