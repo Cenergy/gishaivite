@@ -162,12 +162,12 @@ const transformAlbumData = (apiAlbum) => {
     coverUrl: apiAlbum.cover_photo || 'https://picsum.photos/800/600',
     category: apiAlbum.category_id || 'all',
     date: new Date(apiAlbum.created_at).toLocaleDateString('zh-CN'),
-    location: '未知位置',
+    location: apiAlbum.location || '未知位置',
     photos: [],
   }
 }
 
-const transformPhotoData = (apiPhoto) => {
+const transformPhotoData = (apiPhoto, albumLocation = '未知位置') => {
   return {
     id: apiPhoto.id,
     title: apiPhoto.title || '未命名照片',
@@ -179,7 +179,7 @@ const transformPhotoData = (apiPhoto) => {
     // 原图URL
     originalUrl: apiPhoto.original_url && apiPhoto.original_url.length > 0 ? apiPhoto.original_url[0] : apiPhoto.preview_url,
     date: apiPhoto.taken_at ? new Date(apiPhoto.taken_at).toLocaleDateString('zh-CN') : new Date(apiPhoto.created_at).toLocaleDateString('zh-CN'),
-    location: apiPhoto.location || '未知位置',
+    location: apiPhoto.location || albumLocation,
     coordinates: apiPhoto.longitude && apiPhoto.latitude ? [apiPhoto.longitude, apiPhoto.latitude] : null,
     fileFormat: apiPhoto.file_format,
     fileSize: apiPhoto.file_size,
@@ -288,7 +288,7 @@ const loadAlbums = async () => {
               }
 
               if (Array.isArray(photosData)) {
-                album.photos = photosData.map(transformPhotoData)
+                album.photos = photosData.map(photo => transformPhotoData(photo, album.location))
               } else {
                 album.photos = []
               }
