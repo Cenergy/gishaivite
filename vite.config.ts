@@ -17,30 +17,15 @@ export default defineConfig({
     chunkSizeWarningLimit: 2500,
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          // 将node_modules中的包分离
-          if (id.includes('node_modules')) {
-            if (id.includes('vue')) {
-              return 'vendor-vue'
-            }
-            if (id.includes('element-plus')) {
-              return 'vendor-element'
-            }
-            if (id.includes('maptalks')) {
-              return 'vendor-map'
-            }
-            if (id.includes('axios')) {
-              return 'vendor-utils'
-            }
-            return 'vendor-other'
-          }
-          // 将大型组件分离
-          if (id.includes('GalleryMapView')) {
-            return 'gallery-map'
-          }
-          if (id.includes('PhotoViewer')) {
-            return 'photo-viewer'
-          }
+        manualChunks: {
+          // 基础框架
+          'vendor-vue': ['vue', 'vue-router'],
+          // UI组件库
+          'vendor-element': ['element-plus'],
+          // 工具库
+          'vendor-utils': ['axios'],
+          // 地图库单独分离，避免循环依赖
+          'vendor-map': ['maptalks-gl'],
         },
       },
     },
