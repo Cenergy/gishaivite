@@ -128,8 +128,10 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { Picture, Calendar, Location, Grid, MapLocation, Back } from '@element-plus/icons-vue'
-import GalleryMapView from '../components/GalleryMapView.vue'
-import PhotoViewer from '../components/PhotoViewer.vue'
+import { defineAsyncComponent } from 'vue'
+
+const GalleryMapView = defineAsyncComponent(() => import('../components/GalleryMapView.vue'))
+const PhotoViewer = defineAsyncComponent(() => import('../components/PhotoViewer.vue'))
 import albumsAPI from '../api/albums'
 
 // 相册分类
@@ -177,10 +179,16 @@ const transformPhotoData = (apiPhoto, albumLocation = '未知位置') => {
     // 预览图用于查看器显示
     previewUrl: apiPhoto.preview_url,
     // 原图URL
-    originalUrl: apiPhoto.original_url && apiPhoto.original_url.length > 0 ? apiPhoto.original_url[0] : apiPhoto.preview_url,
-    date: apiPhoto.taken_at ? new Date(apiPhoto.taken_at).toLocaleDateString('zh-CN') : new Date(apiPhoto.created_at).toLocaleDateString('zh-CN'),
+    originalUrl:
+      apiPhoto.original_url && apiPhoto.original_url.length > 0
+        ? apiPhoto.original_url[0]
+        : apiPhoto.preview_url,
+    date: apiPhoto.taken_at
+      ? new Date(apiPhoto.taken_at).toLocaleDateString('zh-CN')
+      : new Date(apiPhoto.created_at).toLocaleDateString('zh-CN'),
     location: apiPhoto.location || albumLocation,
-    coordinates: apiPhoto.longitude && apiPhoto.latitude ? [apiPhoto.longitude, apiPhoto.latitude] : null,
+    coordinates:
+      apiPhoto.longitude && apiPhoto.latitude ? [apiPhoto.longitude, apiPhoto.latitude] : null,
     fileFormat: apiPhoto.file_format,
     fileSize: apiPhoto.file_size,
     width: apiPhoto.width,
@@ -288,7 +296,7 @@ const loadAlbums = async () => {
               }
 
               if (Array.isArray(photosData)) {
-                album.photos = photosData.map(photo => transformPhotoData(photo, album.location))
+                album.photos = photosData.map((photo) => transformPhotoData(photo, album.location))
               } else {
                 album.photos = []
               }
