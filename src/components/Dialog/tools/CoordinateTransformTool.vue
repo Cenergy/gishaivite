@@ -154,181 +154,179 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-import { ElMessage } from "element-plus";
-import { convertCoordinates, convertCoordinatesFromExcel } from "@/api/coordinate";
+import { ref } from 'vue'
+import { ElMessage } from 'element-plus'
+import { convertCoordinates, convertCoordinatesFromExcel } from '@/api/coordinate'
 
-const sourceCrs = ref("WGS84");
-const targetCrs = ref("GCJ02");
-const longitude = ref("");
-const latitude = ref("");
-const result = ref("");
-const activeTab = ref("manual");
-const uploadFile = ref<File | null>(null);
-const excelSourceCrs = ref("WGS84");
-const excelTargetCrs = ref("GCJ02");
-const fileList = ref<any[]>([]);
-const isProcessing = ref(false); // 添加处理状态变量，用于控制处理按钮的禁用状态
+const sourceCrs = ref('WGS84')
+const targetCrs = ref('GCJ02')
+const longitude = ref('')
+const latitude = ref('')
+const result = ref('')
+const activeTab = ref('manual')
+const uploadFile = ref<File | null>(null)
+const excelSourceCrs = ref('WGS84')
+const excelTargetCrs = ref('GCJ02')
+const fileList = ref<any[]>([])
+const isProcessing = ref(false) // 添加处理状态变量，用于控制处理按钮的禁用状态
 
 const handleExceed = () => {
-  ElMessage.warning("只能上传一个文件，请先删除当前文件再上传新文件");
-};
+  ElMessage.warning('只能上传一个文件，请先删除当前文件再上传新文件')
+}
 
 const handleRemove = () => {
-  uploadFile.value = null;
-  fileList.value = [];
-  ElMessage.info("已移除上传文件");
-};
+  uploadFile.value = null
+  fileList.value = []
+  ElMessage.info('已移除上传文件')
+}
 
 const handleFileChange = (file: any) => {
   // 当文件状态为ready时才更新文件（避免重复处理）
-  if (file.status === "ready") {
-    uploadFile.value = file.raw;
-    fileList.value = [file];
+  if (file.status === 'ready') {
+    uploadFile.value = file.raw
+    fileList.value = [file]
     // 重置处理状态，允许用户处理新上传的文件
-    isProcessing.value = false;
-    ElMessage.success("文件已选择: " + file.name);
+    isProcessing.value = false
+    ElMessage.success('文件已选择: ' + file.name)
   }
-};
+}
 
 const downloadTemplate = () => {
-  window.location.href = "http://localhost:8000/api/v1/converters/coords/templates/gps";
-};
+  window.location.href = 'http://localhost:8000/api/v1/converters/coords/templates/gps'
+}
 
 // 清除已上传的文件
 const clearUploadFile = () => {
-  uploadFile.value = null;
-  fileList.value = [];
+  uploadFile.value = null
+  fileList.value = []
   // 重置处理状态
-  isProcessing.value = false;
-  ElMessage.info("已清除上传文件");
-};
+  isProcessing.value = false
+  ElMessage.info('已清除上传文件')
+}
 
 // 存储转换后的文件数据
-const convertedFileBlob = ref<Blob | null>(null);
-const convertedFileName = ref("");
+const convertedFileBlob = ref<Blob | null>(null)
+const convertedFileName = ref('')
 
 const processExcel = async () => {
-  if (!uploadFile.value) return;
+  if (!uploadFile.value) return
 
   // 设置处理状态为true，禁用处理按钮
-  isProcessing.value = true;
+  isProcessing.value = true
 
   // 重置之前的转换结果
-  convertedFileBlob.value = null;
-  convertedFileName.value = "";
+  convertedFileBlob.value = null
+  convertedFileName.value = ''
 
   // 创建FormData对象，用于发送文件到后端API
-  const formData = new FormData();
-  formData.append("file", uploadFile.value);
+  const formData = new FormData()
+  formData.append('file', uploadFile.value)
 
   // 根据源坐标系和目标坐标系构建转换类型参数
-  let type = "";
-  if (excelSourceCrs.value === "WGS84" && excelTargetCrs.value === "GCJ02") {
-    type = "wgs84_to_gcj02";
-  } else if (excelSourceCrs.value === "GCJ02" && excelTargetCrs.value === "WGS84") {
-    type = "gcj02_to_wgs84";
-  } else if (excelSourceCrs.value === "WGS84" && excelTargetCrs.value === "BD09") {
-    type = "wgs84_to_bd09";
-  } else if (excelSourceCrs.value === "BD09" && excelTargetCrs.value === "WGS84") {
-    type = "bd09_to_wgs84";
-  } else if (excelSourceCrs.value === "GCJ02" && excelTargetCrs.value === "BD09") {
-    type = "gcj02_to_bd09";
-  } else if (excelSourceCrs.value === "BD09" && excelTargetCrs.value === "GCJ02") {
-    type = "bd09_to_gcj02";
+  let type = ''
+  if (excelSourceCrs.value === 'WGS84' && excelTargetCrs.value === 'GCJ02') {
+    type = 'wgs84_to_gcj02'
+  } else if (excelSourceCrs.value === 'GCJ02' && excelTargetCrs.value === 'WGS84') {
+    type = 'gcj02_to_wgs84'
+  } else if (excelSourceCrs.value === 'WGS84' && excelTargetCrs.value === 'BD09') {
+    type = 'wgs84_to_bd09'
+  } else if (excelSourceCrs.value === 'BD09' && excelTargetCrs.value === 'WGS84') {
+    type = 'bd09_to_wgs84'
+  } else if (excelSourceCrs.value === 'GCJ02' && excelTargetCrs.value === 'BD09') {
+    type = 'gcj02_to_bd09'
+  } else if (excelSourceCrs.value === 'BD09' && excelTargetCrs.value === 'GCJ02') {
+    type = 'bd09_to_gcj02'
   }
 
-  formData.append("type", type);
+  formData.append('type', type)
 
   // 显示加载提示
-  ElMessage.info("正在处理文件，请稍候...");
+  ElMessage.info('正在处理文件，请稍候...')
 
-    // 调用封装的API处理Excel文件
-    const { data, error, headers } = await convertCoordinatesFromExcel(formData);
-    if (!data || error) {
-      console.error("坐标转换请求失败:", error);
-      // 重置处理状态，允许用户重新尝试处理文件
-      isProcessing.value = false;
-      ElMessage.error(
-        "坐标转换失败: " + (error.response?.data?.message || error.message || "未知错误")
-      );
-      return;
-    }
+  // 调用封装的API处理Excel文件
+  const response = await convertCoordinatesFromExcel(formData)
+  if (!response || 'error' in response) {
+    console.error('坐标转换请求失败:', response?.error)
+    // 重置处理状态，允许用户重新尝试处理文件
+    isProcessing.value = false
+    ElMessage.error('坐标转换失败: ' + (response?.error ? String(response.error) : '未知错误'))
+    return
+  }
 
-    // 直接使用响应数据作为Blob对象
-    const blob = new Blob([data], {
-      type:
-      headers["content-type"] ||
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
+  // 直接使用响应数据作为Blob对象
+  const blob = new Blob([response.data], {
+    type:
+      response.headers['content-type'] ||
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  })
 
-    // 保存转换结果
-    convertedFileBlob.value = blob;
-    convertedFileName.value = `转换结果_${new Date().getTime()}.xlsx`;
+  // 保存转换结果
+  convertedFileBlob.value = blob
+  convertedFileName.value = `转换结果_${new Date().getTime()}.xlsx`
 
-    // 不重置处理状态，保持处理按钮禁用状态直到用户上传新文件
-    // isProcessing.value = false
+  // 不重置处理状态，保持处理按钮禁用状态直到用户上传新文件
+  // isProcessing.value = false
 
-    ElMessage.success("坐标转换成功，请点击下载按钮获取结果文件");
-};
+  ElMessage.success('坐标转换成功，请点击下载按钮获取结果文件')
+}
 
 const downloadConvertedFile = () => {
   if (!convertedFileBlob.value) {
-    ElMessage.warning("没有可下载的文件，请先处理Excel文件");
-    return;
+    ElMessage.warning('没有可下载的文件，请先处理Excel文件')
+    return
   }
 
   // 创建下载链接
-  const downloadLink = document.createElement("a");
+  const downloadLink = document.createElement('a')
 
   // 创建URL对象
-  const url = window.URL.createObjectURL(convertedFileBlob.value);
-  downloadLink.href = url;
-  downloadLink.download = convertedFileName.value;
+  const url = window.URL.createObjectURL(convertedFileBlob.value)
+  downloadLink.href = url
+  downloadLink.download = convertedFileName.value
 
   // 添加到DOM并触发点击事件
-  document.body.appendChild(downloadLink);
-  downloadLink.click();
+  document.body.appendChild(downloadLink)
+  downloadLink.click()
 
   // 清理
-  window.URL.revokeObjectURL(url);
-  document.body.removeChild(downloadLink);
+  window.URL.revokeObjectURL(url)
+  document.body.removeChild(downloadLink)
 
-  ElMessage.success("文件已下载");
-};
+  ElMessage.success('文件已下载')
+}
 
 const transformCoordinates = async () => {
   if (!longitude.value || !latitude.value) {
-    ElMessage.warning("请输入经纬度");
-    return;
+    ElMessage.warning('请输入经纬度')
+    return
   }
 
   // 显示临时结果
-  result.value = `正在转换: ${longitude.value}, ${latitude.value} (${sourceCrs.value} → ${targetCrs.value})`;
+  result.value = `正在转换: ${longitude.value}, ${latitude.value} (${sourceCrs.value} → ${targetCrs.value})`
 
   // 准备API请求参数
-  const fromSys = sourceCrs.value.toLowerCase();
-  const toSys = targetCrs.value.toLowerCase();
-  const lng = longitude.value;
-  const lat = latitude.value;
+  const fromSys = sourceCrs.value.toLowerCase()
+  const toSys = targetCrs.value.toLowerCase()
+  const lng = longitude.value
+  const lat = latitude.value
 
   // 调用API服务进行坐标转换
-  const { data } = await convertCoordinates({
+  const response = await convertCoordinates({
     lng: Number(lng),
     lat: Number(lat),
     from_sys: fromSys,
     to_sys: toSys,
-  });
-  console.log("🚀 ~ transformCoordinates ~ data:", data);
+  })
+  console.log('🚀 ~ transformCoordinates ~ response:', response)
 
-  if (data && data.data) {
-    result.value = `转换结果: 经度=${data.data.lng}, 纬度=${data.data.lat}`;
-    ElMessage.success("坐标转换成功");
+  if (response && !('error' in response) && response.data) {
+    result.value = `转换结果: 经度=${response.data.lng}, 纬度=${response.data.lat}`
+    ElMessage.success('坐标转换成功')
   } else {
-    result.value = "转换失败: 返回数据格式不正确";
-    ElMessage.error("坐标转换失败");
+    result.value = '转换失败: 返回数据格式不正确'
+    ElMessage.error('坐标转换失败')
   }
-};
+}
 </script>
 
 <style scoped>
