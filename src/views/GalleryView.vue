@@ -165,6 +165,7 @@ const transformAlbumData = (apiAlbum) => {
     category: apiAlbum.category_id || 'all',
     date: new Date(apiAlbum.created_at).toLocaleDateString('zh-CN'),
     location: apiAlbum.location || '未知位置',
+    sortOrder: apiAlbum.sort_order || 0,
     photos: [],
   }
 }
@@ -381,10 +382,15 @@ onMounted(async () => {
 
 // 根据分类筛选相册
 const filteredAlbums = computed(() => {
+  let filtered = []
   if (activeCategory.value === 'all') {
-    return albums.value
+    filtered = albums.value
+  } else {
+    filtered = albums.value.filter((album) => album.category === activeCategory.value)
   }
-  return albums.value.filter((album) => album.category === activeCategory.value)
+
+  // 根据 sort_order 排序，越大在前面
+  return filtered.sort((a, b) => b.sortOrder - a.sortOrder)
 })
 
 // 获取所有照片（用于地图模式）
