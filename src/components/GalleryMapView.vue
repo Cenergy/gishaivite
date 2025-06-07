@@ -86,6 +86,9 @@ const addPhotoMarkers = () => {
   // 清除现有标记
   markerLayer.clear()
 
+  // 收集所有有效坐标
+  const validCoordinates = []
+
   if (props.albumMode) {
     // 相册模式：添加相册标记
     props.albums.forEach((album) => {
@@ -93,6 +96,7 @@ const addPhotoMarkers = () => {
       if (!album.photos || album.photos.length === 0 || !album.photos[0].coordinates) return
 
       const coordinates = album.photos[0].coordinates
+      validCoordinates.push(coordinates)
 
       // 创建标记
       const marker = new Marker(coordinates, {
@@ -145,6 +149,8 @@ const addPhotoMarkers = () => {
     props.photos.forEach((photo) => {
       if (!photo.coordinates) return
 
+      validCoordinates.push(photo.coordinates)
+
       // 创建标记
       const marker = new Marker(photo.coordinates, {
         symbol: {
@@ -179,6 +185,53 @@ const addPhotoMarkers = () => {
       // 将标记添加到图层
       markerLayer.addGeometry(marker)
     })
+  }
+
+  // 智能定位逻辑
+  updateMapView(validCoordinates)
+}
+
+// 智能定位地图视图
+const updateMapView = (coordinates) => {
+  if (!map) return
+
+  if (coordinates.length === 0) {
+    // 没有有效坐标，定位到默认中心点
+    map.setCenter([116.4074, 39.9042])
+    map.setZoom(5)
+  } else if (coordinates.length === 1) {
+    // 只有一个坐标，定位到该点
+    map.setCenter(coordinates[0])
+    map.setZoom(12)
+  } else {
+    // 多个坐标，使用 fitExtent 自适应显示所有点
+    try {
+      // 计算边界
+      let minLng = coordinates[0][0], maxLng = coordinates[0][0]
+      let minLat = coordinates[0][1], maxLat = coordinates[0][1]
+      
+      coordinates.forEach(coord => {
+        minLng = Math.min(minLng, coord[0])
+        maxLng = Math.max(maxLng, coord[0])
+        minLat = Math.min(minLat, coord[1])
+        maxLat = Math.max(maxLat, coord[1])
+      })
+      
+      // 添加一些边距
+      const padding = 0.01
+      const extent = [
+        minLng - padding,
+        minLat - padding,
+        maxLng + padding,
+        maxLat + padding
+      ]
+      
+      map.fitExtent(extent, 0, { animation: true })
+    } catch (error) {
+      console.warn('fitExtent failed, using center of first coordinate:', error)
+      map.setCenter(coordinates[0])
+      map.setZoom(10)
+    }
   }
 }
 
