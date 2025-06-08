@@ -104,12 +104,8 @@
       </div>
 
       <!-- 地图模式 -->
-      <GalleryMapView
+      <MapView
         v-if="viewMode === 'map'"
-        :photos="selectedAlbum ? selectedAlbum.photos : allPhotos"
-        :album-mode="!selectedAlbum"
-        :albums="filteredAlbums"
-        @select-album="openAlbum"
         class="w-full h-full flex-1"
       />
 
@@ -126,11 +122,12 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { Picture, Calendar, Location, Grid, MapLocation, Back } from '@element-plus/icons-vue'
 import { defineAsyncComponent } from 'vue'
+import eventBus from '@/utils/EventBus'
 
-const GalleryMapView = defineAsyncComponent(() => import('../components/GalleryMapView.vue'))
+const MapView = defineAsyncComponent(() => import('../components/MapView.vue'))
 const PhotoViewer = defineAsyncComponent(() => import('../components/PhotoViewer.vue'))
 import albumsAPI from '../api/albums'
 
@@ -378,6 +375,10 @@ const loadAlbums = async () => {
 onMounted(async () => {
   await loadCategories()
   await loadAlbums()
+  
+  // 监听地图事件
+  eventBus.on('album-selected', handleAlbumSelected)
+  eventBus.on('photo-selected', handlePhotoSelected)
 })
 
 // 根据分类筛选相册
@@ -412,6 +413,19 @@ const allPhotos = computed(() => {
 // 打开相册
 const openAlbum = (album) => {
   selectedAlbum.value = album
+  
+  // 如果当前是地图模式，切换到显示该相册的照片
+  if (viewMode.value === 'map') {
+    nextTick(() => {
+      setTimeout(() => {
+        eventBus.emit('switchMapMode', {
+          mode: 'photo',
+          photos: album.photos || [],
+          albums: []
+        })
+      }, 100)
+    })
+  }
 }
 
 // 返回相册列表
@@ -420,20 +434,78 @@ const backToAlbums = () => {
 }
 
 // 打开照片查看器
-const openPhotoViewer = (index) => {
-  selectedPhotoIndex.value = index
+const openPhotoViewer = (indexOrPhoto) => {
+  if (typeof indexOrPhoto === 'number') {
+    // 来自列表模式的索引
+    selectedPhotoIndex.value = indexOrPhoto
+  } else {
+    // 来自地图模式的照片对象
+    const photos = selectedAlbum.value ? selectedAlbum.value.photos : allPhotos.value
+    const index = photos.findIndex(photo => photo.id === indexOrPhoto.id)
+    selectedPhotoIndex.value = index >= 0 ? index : 0
+  }
   photoViewerVisible.value = true
 }
 
 // 监听视图模式变化
-watch(viewMode, () => {
-  // 切换到地图模式时，可以保留当前选中的相册
+watch(viewMode, (newMode) => {
+  if (newMode === 'map') {
+    // 切换到地图模式时，延迟更新地图标记以确保地图已初始化
+    nextTick(() => {
+      setTimeout(() => {
+        if (selectedAlbum.value) {
+          // 如果有选中的相册，显示该相册的照片
+          eventBus.emit('switchMapMode', {
+            mode: 'photo',
+            photos: selectedAlbum.value.photos || [],
+            albums: []
+          })
+        } else {
+          // 否则显示所有相册
+          eventBus.emit('switchMapMode', {
+            mode: 'album',
+            photos: [],
+            albums: filteredAlbums.value || []
+          })
+        }
+      }, 100)
+    })
+  }
 })
 
 // 监听分类变化
 watch(activeCategory, () => {
   // 切换分类时，清除选中的相册
   selectedAlbum.value = null
+  // 如果当前是地图模式，更新地图标记
+  if (viewMode.value === 'map') {
+    nextTick(() => {
+      setTimeout(() => {
+        eventBus.emit('switchMapMode', {
+          mode: 'album',
+          photos: [],
+          albums: filteredAlbums.value || []
+        })
+      }, 100)
+    })
+  }
+})
+
+// 事件处理函数
+const handleAlbumSelected = (album) => {
+  openAlbum(album)
+}
+
+const handlePhotoSelected = (photo) => {
+  openPhotoViewer(photo)
+}
+
+
+
+// 组件卸载时清理事件监听
+onUnmounted(() => {
+  eventBus.off('album-selected', handleAlbumSelected)
+  eventBus.off('photo-selected', handlePhotoSelected)
 })
 </script>
 

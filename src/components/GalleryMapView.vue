@@ -6,21 +6,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue'
-
-import {
-  Map,
-  GroupGLLayer,
-  VectorTileLayer,
-  TileLayer,
-  GLTFMarker,
-  Marker,
-  GLTFLayer,
-  VectorLayer,
-  PolygonLayer,
-  ui,
-} from 'maptalks-gl'
-
-import 'maptalks-gl/dist/maptalks-gl.css'
+import { MapManager } from '@/utils/MapManager.js'
 
 // 接收照片数据和相册数据作为props
 const props = defineProps({
@@ -38,214 +24,82 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['select-album'])
+const emit = defineEmits(['select-album', 'select-photo'])
 
 // 地图相关
 const mapContainer = ref(null)
-let map = null
-let markerLayer = null
+let mapManager = null
 
 // 初始化地图
 const initMap = () => {
   if (!mapContainer.value) return
 
-  map = new Map('map-container', {
+  // 创建地图管理器实例
+  mapManager = new MapManager('map-container', {
     center: [116.4074, 39.9042], // 默认中心点（北京）
     zoom: 5,
-    baseLayer: new TileLayer('base', {
-      urlTemplate:
-        'https://webrd01.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
-      subdomains: ['a', 'b', 'c', 'd'],
-      // attribution: "&copy; <a href='http://osm.org'>OpenStreetMap</a> contributors, &copy; <a href='https://carto.com/'>CARTO</a>",
-    }),
   })
 
-  const vtLayer = new VectorTileLayer('vt', {
-    urlTemplate: 'http://tile.maptalks.com/test/planet-single/{z}/{x}/{y}.mvt',
-  })
+  // 监听地图事件
+  setupMapEvents()
 
-  const groupLayer = new GroupGLLayer('group', [vtLayer]).addTo(map)
+  // 初始化地图
+  mapManager.init()
 
-  const gltfLayer = new GLTFLayer('gltflayer')
-  groupLayer.addLayer(gltfLayer)
-
-  const polygonLayer = new PolygonLayer('polygonlayer')
-  groupLayer.addLayer(polygonLayer)
-
-  // 创建标记图层
-  markerLayer = new VectorLayer('markers').addTo(map)
-
-  // 添加照片标记
-  addPhotoMarkers()
+  // 添加初始标记
+  updateMapMarkers()
 }
 
-// 添加标记到地图
-const addPhotoMarkers = () => {
-  if (!markerLayer) return
+// 设置地图事件监听
+const setupMapEvents = () => {
+  if (!mapManager) return
 
-  // 清除现有标记
-  markerLayer.clear()
+  // 监听相册选择事件
+  mapManager.on('album-selected', (event) => {
+    emit('select-album', event.detail)
+  })
 
-  // 收集所有有效坐标
-  const validCoordinates = []
+  // 监听照片选择事件
+  mapManager.on('photo-selected', (event) => {
+    emit('select-photo', event.detail)
+  })
+
+  // 监听地图初始化完成事件
+  mapManager.on('map-initialized', (event) => {
+    console.log('Map initialized:', event.detail)
+  })
+
+  // 监听标记更新事件
+  mapManager.on('markers-updated', (event) => {
+    console.log('Markers updated:', event.detail)
+  })
+
+  // 监听地图视图更新事件
+  mapManager.on('map-view-updated', (event) => {
+    console.log('Map view updated:', event.detail)
+  })
+}
+
+// 更新地图标记
+const updateMapMarkers = () => {
+  if (!mapManager) return
 
   if (props.albumMode) {
-    // 相册模式：添加相册标记
-    props.albums.forEach((album) => {
-      // 使用第一张照片的坐标作为相册坐标
-      if (!album.photos || album.photos.length === 0 || !album.photos[0].coordinates) return
-
-      const coordinates = album.photos[0].coordinates
-      validCoordinates.push(coordinates)
-
-      // 创建标记
-      const marker = new Marker(coordinates, {
-        symbol: {
-          markerType: 'pin',
-          markerFill: '#ff6b6b', // 相册使用不同颜色
-          markerLineColor: '#fff',
-          markerLineWidth: 2,
-          markerWidth: 35,
-          markerHeight: 45,
-        },
-      })
-
-      // 创建信息窗口
-      const infoWindow = new ui.InfoWindow({
-        title: album.title,
-        content: `
-          <div class="map-popup-content">
-            <img src="${album.coverUrl}" alt="${album.title}" style="width:100%;max-height:150px;object-fit:cover;" />
-            <div class="popup-info">
-              <p>${album.description}</p>
-              <p><small>照片数量: ${album.photos.length}</small></p>
-              <button class="popup-view-btn">查看相册</button>
-            </div>
-          </div>
-        `,
-      })
-
-      // 点击标记显示信息窗口
-      marker.on('click', (e) => {
-        infoWindow.addTo(map).show(coordinates)
-
-        // 为查看按钮添加点击事件
-        setTimeout(() => {
-          const viewBtn = document.querySelector('.popup-view-btn')
-          if (viewBtn) {
-            viewBtn.addEventListener('click', () => {
-              emit('select-album', album)
-              infoWindow.remove()
-            })
-          }
-        }, 100)
-      })
-
-      // 添加到图层
-      marker.addTo(markerLayer)
-    })
+    mapManager.updateMarkers(props.albums, true)
   } else {
-    // 照片模式：添加照片标记
-    props.photos.forEach((photo) => {
-      if (!photo.coordinates) return
-
-      validCoordinates.push(photo.coordinates)
-
-      // 创建标记
-      const marker = new Marker(photo.coordinates, {
-        symbol: {
-          markerType: 'pin',
-          markerFill: '#1890ff',
-          markerLineColor: '#fff',
-          markerLineWidth: 2,
-          markerWidth: 30,
-          markerHeight: 40,
-        },
-      })
-
-      // 创建信息窗口
-      const infoWindow = new ui.InfoWindow({
-        title: photo.title,
-        content: `
-          <div class="map-popup-content">
-            <img src="${photo.url}" alt="${photo.title}" style="width:100%;max-height:150px;object-fit:cover;" />
-            <p>${photo.description}</p>
-            <p><small>${photo.date} · ${photo.location}</small></p>
-          </div>
-        `,
-        width: 300,
-        height: 'auto',
-        autoCloseOn: 'click',
-        autoOpenOn: 'click',
-      })
-
-      // 将信息窗口添加到标记
-      marker.setInfoWindow(infoWindow)
-
-      // 将标记添加到图层
-      markerLayer.addGeometry(marker)
-    })
-  }
-
-  // 智能定位逻辑
-  updateMapView(validCoordinates)
-}
-
-// 智能定位地图视图
-const updateMapView = (coordinates) => {
-  if (!map) return
-
-  if (coordinates.length === 0) {
-    // 没有有效坐标，定位到默认中心点
-    map.setCenter([116.4074, 39.9042])
-    map.setZoom(5)
-  } else if (coordinates.length === 1) {
-    // 只有一个坐标，定位到该点
-    map.setCenter(coordinates[0])
-    map.setZoom(12)
-  } else {
-    // 多个坐标，使用 fitExtent 自适应显示所有点
-    try {
-      // 计算边界
-      let minLng = coordinates[0][0], maxLng = coordinates[0][0]
-      let minLat = coordinates[0][1], maxLat = coordinates[0][1]
-      
-      coordinates.forEach(coord => {
-        minLng = Math.min(minLng, coord[0])
-        maxLng = Math.max(maxLng, coord[0])
-        minLat = Math.min(minLat, coord[1])
-        maxLat = Math.max(maxLat, coord[1])
-      })
-      
-      // 添加一些边距
-      const padding = 0.01
-      const extent = [
-        minLng - padding,
-        minLat - padding,
-        maxLng + padding,
-        maxLat + padding
-      ]
-      
-      map.fitExtent(extent, 0, { animation: true })
-    } catch (error) {
-      console.warn('fitExtent failed, using center of first coordinate:', error)
-      map.setCenter(coordinates[0])
-      map.setZoom(10)
-    }
+    mapManager.updateMarkers(props.photos, false)
   }
 }
+
+
 
 // 监听数据变化，更新地图标记
 watch(
   [() => props.photos, () => props.albumMode, () => props.albums],
   () => {
-    if (map && markerLayer) {
-      // 清除现有标记并重新添加
-      markerLayer.clear()
-      addPhotoMarkers()
-    }
+    updateMapMarkers()
   },
-  { deep: true, immediate: true }
+  { deep: true, immediate: false }
 )
 
 // 组件挂载时初始化地图
@@ -258,9 +112,9 @@ onMounted(() => {
 
 // 组件卸载时销毁地图
 onUnmounted(() => {
-  if (map) {
-    map.remove()
-    map = null
+  if (mapManager) {
+    mapManager.destroy()
+    mapManager = null
   }
 })
 </script>
