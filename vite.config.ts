@@ -9,8 +9,8 @@ import compression from 'vite-plugin-compression'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
-    vue(), 
-    vueDevTools(), 
+    vue(),
+    vueDevTools(),
     UnoCSS(),
     // gzip压缩
     compression({
@@ -27,7 +27,7 @@ export default defineConfig({
       threshold: 1024,
       deleteOriginFile: false,
       filter: /\.(js|css|html|svg|json)$/i,
-    })
+    }),
   ],
   resolve: {
     alias: {
@@ -45,9 +45,27 @@ export default defineConfig({
           'vendor-element': ['element-plus'],
           // 工具库
           'vendor-utils': ['axios'],
-          // 地图库单独分离，避免循环依赖
+          // 地图库单独分离
           'vendor-map': ['maptalks-gl'],
+          // 图标库单独分离
+          'vendor-icons': ['@element-plus/icons-vue'],
         },
+        // 文件名优化
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]',
+      },
+    },
+    // 启用 CSS 代码分割
+    cssCodeSplit: true,
+    // 构建目标优化
+    target: 'es2015',
+    // 压缩配置
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true, // 生产环境移除console
+        drop_debugger: true, // 移除debugger
       },
     },
   },
