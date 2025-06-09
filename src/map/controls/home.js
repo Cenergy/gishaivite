@@ -15,13 +15,14 @@ class MapBus extends BaseMapBus {
    */
   startup() {
     // 初始化地图
-    this.init({
+    const mapInstance = this.init({
       center: [116.4074, 39.9042], // 默认中心点（北京）
       zoom: 5,
     })
     // 开启事件监听
     this.subscribe()
     // 首页显示的内容
+    return mapInstance
   }
   /**
    * 监听DOM串联地图的事件

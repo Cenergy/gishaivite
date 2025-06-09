@@ -1,27 +1,35 @@
 // utils/SafeEventBus.js
+import { getCurrentInstance, onUnmounted } from 'vue'
+
 class SafeEventBus {
   constructor() {
     this.events = new Map()
     this.componentListeners = new WeakMap()
   }
 
-  on(event, callback, component) {
+  on(event, callback) {
+    const instance = getCurrentInstance()
+
     if (!this.events.has(event)) {
       this.events.set(event, new Set())
     }
+
     this.events.get(event).add(callback)
 
-    // 记录组件的监听器
-    if (component) {
-      if (!this.componentListeners.has(component)) {
-        this.componentListeners.set(component, new Set())
-      }
-      this.componentListeners.get(component).add({ event, callback })
+    // 自动注册清理函数
+    if (instance) {
+      if (!this.componentListeners.has(instance)) {
+        this.componentListeners.set(instance, [])
 
-      // 组件卸载时自动清理
-      onUnmounted(() => {
-        this.cleanupComponent(component)
-      })
+        onUnmounted(() => {
+          const listeners = this.componentListeners.get(instance)
+          listeners.forEach(({ event, callback }) => {
+            this.off(event, callback)
+          })
+        })
+      }
+
+      this.componentListeners.get(instance).push({ event, callback })
     }
   }
 
@@ -36,14 +44,6 @@ class SafeEventBus {
       this.events.get(event).forEach((callback) => callback(data))
     }
   }
-
-  cleanupComponent(component) {
-    const listeners = this.componentListeners.get(component)
-    if (listeners) {
-      listeners.forEach(({ event, callback }) => {
-        this.off(event, callback)
-      })
-      this.componentListeners.delete(component)
-    }
-  }
 }
+
+export default new SafeEventBus()

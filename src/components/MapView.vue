@@ -7,23 +7,28 @@
 <script setup>
 import { onMounted, onUnmounted, nextTick } from 'vue'
 import { home as mapBus } from '@/map'
+import mapStore from '@/stores/mapStore'
 
-// 纯粹的地图容器组件，不处理业务逻辑
+// 纯粹的地图容器组件，使用响应式状态管理
 
 // 组件挂载时初始化地图
 onMounted(() => {
   // 延迟初始化地图，确保DOM已渲染
   nextTick(() => {
     // 地图初始化
-    if (mapBus.startup) mapBus.startup()
-    
-    // 地图初始化完成，父组件可以调用updateMarkers进行标记更新
+    if (mapBus.startup) {
+      const mapInstance = mapBus.startup()
+      // 将地图实例注册到状态管理器
+      mapStore.setMapInstance(mapInstance)
+    }
   })
 })
 
 // 组件卸载时销毁地图
 onUnmounted(() => {
   if (mapBus.destroy) mapBus.destroy()
+  // 清理状态管理器
+  mapStore.destroy()
 })
 </script>
 

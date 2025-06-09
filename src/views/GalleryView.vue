@@ -125,7 +125,7 @@
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { Picture, Calendar, Location, Grid, MapLocation, Back } from '@element-plus/icons-vue'
 import { defineAsyncComponent } from 'vue'
-import eventBus from '@/utils/EventBus'
+import mapStore from '@/stores/mapStore'
 
 const MapView = defineAsyncComponent(() => import('../components/MapView.vue'))
 const PhotoViewer = defineAsyncComponent(() => import('../components/PhotoViewer.vue'))
@@ -376,9 +376,20 @@ onMounted(async () => {
   await loadCategories()
   await loadAlbums()
   
-  // 监听地图事件
-  eventBus.on('album-selected', handleAlbumSelected)
-  eventBus.on('photo-selected', handlePhotoSelected)
+  // 将数据同步到状态管理器
+  mapStore.setAlbums(albums.value)
+  
+  // 监听状态管理器的事件
+  const albumSelectedCleanup = mapStore.on('album-selected', (album) => {
+    openAlbum(album)
+  })
+  
+  const photoSelectedCleanup = mapStore.on('photo-selected', (photo) => {
+    openPhotoViewer(photo)
+  })
+  
+  // 保存清理函数
+  cleanupFunctions.value = [albumSelectedCleanup, photoSelectedCleanup]
 })
 
 // 根据分类筛选相册
@@ -413,19 +424,6 @@ const allPhotos = computed(() => {
 // 打开相册
 const openAlbum = (album) => {
   selectedAlbum.value = album
-  
-  // 如果当前是地图模式，切换到显示该相册的照片
-  if (viewMode.value === 'map') {
-    nextTick(() => {
-      setTimeout(() => {
-        eventBus.emit('switchMapMode', {
-          mode: 'photo',
-          photos: album.photos || [],
-          albums: []
-        })
-      }, 100)
-    })
-  }
 }
 
 // 返回相册列表
@@ -449,63 +447,37 @@ const openPhotoViewer = (indexOrPhoto) => {
 
 // 监听视图模式变化
 watch(viewMode, (newMode) => {
-  if (newMode === 'map') {
-    // 切换到地图模式时，延迟更新地图标记以确保地图已初始化
-    nextTick(() => {
-      setTimeout(() => {
-        if (selectedAlbum.value) {
-          // 如果有选中的相册，显示该相册的照片
-          eventBus.emit('switchMapMode', {
-            mode: 'photo',
-            photos: selectedAlbum.value.photos || [],
-            albums: []
-          })
-        } else {
-          // 否则显示所有相册
-          eventBus.emit('switchMapMode', {
-            mode: 'album',
-            photos: [],
-            albums: filteredAlbums.value || []
-          })
-        }
-      }, 100)
-    })
-  }
+  mapStore.setViewMode(newMode)
 })
 
 // 监听分类变化
-watch(activeCategory, () => {
+watch(activeCategory, (newCategory) => {
   // 切换分类时，清除选中的相册
   selectedAlbum.value = null
-  // 如果当前是地图模式，更新地图标记
-  if (viewMode.value === 'map') {
-    nextTick(() => {
-      setTimeout(() => {
-        eventBus.emit('switchMapMode', {
-          mode: 'album',
-          photos: [],
-          albums: filteredAlbums.value || []
-        })
-      }, 100)
-    })
-  }
+  mapStore.setActiveCategory(newCategory)
 })
 
-// 事件处理函数
-const handleAlbumSelected = (album) => {
-  openAlbum(album)
-}
+// 监听选中相册变化
+watch(selectedAlbum, (newAlbum) => {
+  mapStore.setSelectedAlbum(newAlbum)
+})
 
-const handlePhotoSelected = (photo) => {
-  openPhotoViewer(photo)
-}
+// 监听筛选后的相册变化
+watch(filteredAlbums, (newFilteredAlbums) => {
+  // 更新状态管理器中的相册数据
+  mapStore.setAlbums(newFilteredAlbums)
+}, { immediate: true })
 
 
 
-// 组件卸载时清理事件监听
+// 清理函数数组
+const cleanupFunctions = ref([])
+
+// 组件卸载时清理
 onUnmounted(() => {
-  eventBus.off('album-selected', handleAlbumSelected)
-  eventBus.off('photo-selected', handlePhotoSelected)
+  // 清理事件监听器
+  cleanupFunctions.value.forEach(cleanup => cleanup())
+  cleanupFunctions.value = []
 })
 </script>
 

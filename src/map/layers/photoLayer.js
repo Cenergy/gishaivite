@@ -1,6 +1,6 @@
 import BaseLayer from './baseLayer'
 import { VectorLayer, Marker, ui } from 'maptalks-gl'
-import eventBus from '@/utils/EventBus'
+import mapStore from '@/stores/mapStore'
 
 class PhotoLayer extends BaseLayer {
   constructor(options = {}) {
@@ -18,36 +18,12 @@ class PhotoLayer extends BaseLayer {
     this.markerLayer = new VectorLayer('photo-markers')
     this.map.addLayer(this.markerLayer)
 
-    // 监听EventBus事件
-    this.setupEventListeners()
+    // 注册到状态管理器
+    this.cleanup = mapStore.registerLayer('photoLayer', this)
   }
 
-  setupEventListeners() {
-    // 监听照片数据更新事件
-    this.photoMarkersHandler = (data) => {
-      this.updatePhotoMarkers(data.photos || [])
-    }
-    eventBus.on('updatePhotoMarkers', this.photoMarkersHandler)
-
-    // 监听相册数据更新事件
-    this.albumMarkersHandler = (data) => {
-      this.updateAlbumMarkers(data.albums || [])
-    }
-    eventBus.on('updateAlbumMarkers', this.albumMarkersHandler)
-
-    // 监听切换模式事件
-    this.switchModeHandler = (data) => {
-      const { mode, photos, albums } = data
-      this.isAlbumMode = mode === 'album'
-
-      if (this.isAlbumMode) {
-        this.updateAlbumMarkers(albums || [])
-      } else {
-        this.updatePhotoMarkers(photos || [])
-      }
-    }
-    eventBus.on('switchMapMode', this.switchModeHandler)
-  }
+  // 响应式状态管理器会自动调用这些方法
+  // 不再需要手动设置事件监听器
 
   /**
    * 更新照片标记
@@ -164,7 +140,7 @@ class PhotoLayer extends BaseLayer {
       const viewBtn = document.querySelector('.popup-view-btn')
       if (viewBtn) {
         viewBtn.addEventListener('click', () => {
-          eventBus.emit('photo-selected', photo)
+          mapStore.handlePhotoSelected(photo)
           this.infoWindow.remove()
         })
       }
@@ -200,7 +176,7 @@ class PhotoLayer extends BaseLayer {
       const viewBtn = document.querySelector('.popup-view-btn')
       if (viewBtn) {
         viewBtn.addEventListener('click', () => {
-          eventBus.emit('album-selected', album)
+          mapStore.handleAlbumSelected(album)
           this.infoWindow.remove()
         })
       }
@@ -297,15 +273,9 @@ class PhotoLayer extends BaseLayer {
       this.markerLayer = null
     }
 
-    // 移除事件监听
-    if (this.photoMarkersHandler) {
-      eventBus.off('updatePhotoMarkers', this.photoMarkersHandler)
-    }
-    if (this.albumMarkersHandler) {
-      eventBus.off('updateAlbumMarkers', this.albumMarkersHandler)
-    }
-    if (this.switchModeHandler) {
-      eventBus.off('switchMapMode', this.switchModeHandler)
+    // 清理状态管理器注册
+    if (this.cleanup) {
+      this.cleanup()
     }
   }
 }
