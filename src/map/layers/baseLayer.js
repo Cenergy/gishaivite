@@ -3,10 +3,10 @@ export default class BaseLayer {
   constructor() {
     this.pulseIdList = [];
   }
-  init(map, isSmallMap) {
+  init(map,options) {
     // 假如是相同的处理类型，则注入
-    if (isSmallMap !== Boolean(this.isSmallMap)) return;
     this.map = map;
+    this.options = options;
     this._id = crypto.randomUUID();
     this._hasLoaded = false;
     this.timeInterval = 10 * 1000;
@@ -20,6 +20,32 @@ export default class BaseLayer {
   set hasLoaded(status) {
     this._hasLoaded = Boolean(status);
   }
+  /**
+   * 回到初始位置
+   * 将地图视图重置到初始的中心点和缩放级别
+   */
+  goHome() {
+    if (!this.map) {
+      console.warn('Map instance not found');
+      return;
+    }
+    
+    // 获取初始配置或使用默认值
+    const initialCenter = this.options?.center || [116.4074, 39.9042]; // 默认北京
+    const initialZoom = this.options?.zoom || 5;
+    
+    // 使用动画效果回到初始位置
+    this.map.animateTo(
+      {
+        center: initialCenter,
+        zoom: initialZoom,
+      },
+      {
+        duration: 1000, // 1秒动画时间
+      }
+    );
+  }
+
 
   openPointPopup({ content = "", component, latlng, options = {} }) {
     // TODO: 使用MapTalks的UI组件实现弹窗

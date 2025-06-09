@@ -99,7 +99,13 @@ class PhotoLayer extends BaseLayer {
     this.isAlbumMode = true
     this.clearMarkers()
 
-    if (!this.markerLayer || !albums.length) return
+    if (!this.markerLayer) return
+
+    // 如果没有相册，跳转到默认位置
+    if (!albums.length) {
+      this.updateMapView([])
+      return
+    }
 
     const validCoordinates = []
 
@@ -224,7 +230,10 @@ class PhotoLayer extends BaseLayer {
    * 智能定位地图视图
    */
   updateMapView(coordinates) {
-    if (!this.map || !coordinates.length) return
+    if (!this.map || !coordinates.length) {
+      this.goHome()
+      return
+    }
 
     if (coordinates.length === 1) {
       // 只有一个坐标，定位到该点

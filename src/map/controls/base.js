@@ -23,7 +23,7 @@ export default class BaseMapBus {
     Object.keys(entities).map((key) => {
       if (!entities[key]) return
       if (!entities[key].init) return
-      entities[key].init(this.map)
+      entities[key].init(this.map,options)
     })
     return this.map
   }
