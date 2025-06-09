@@ -158,7 +158,7 @@ const transformAlbumData = (apiAlbum) => {
     id: apiAlbum.id,
     title: apiAlbum.name,
     description: apiAlbum.description || '',
-    coverUrl: apiAlbum.cover_photo || 'https://picsum.photos/800/600',
+    coverUrl: apiAlbum.cover_image || 'https://picsum.photos/800/600',
     category: apiAlbum.category_id || 'all',
     date: new Date(apiAlbum.created_at).toLocaleDateString('zh-CN'),
     location: apiAlbum.location || '未知位置',

@@ -36,7 +36,7 @@ interface Album {
   id: string
   name: string
   description?: string
-  cover_photo?: string
+  cover_image?: string
   is_public?: boolean
   category_id?: string
   photo_count?: number
@@ -176,7 +176,7 @@ export default {
   createAlbum: async (data: {
     name: string
     description?: string
-    cover_photo?: string
+    cover_image?: string
     is_public?: boolean
     category_id?: string
   }) => {
@@ -206,7 +206,7 @@ export default {
     data: {
       name?: string
       description?: string
-      cover_photo?: string
+      cover_image?: string
       is_public?: boolean
       category_id?: string
     },
