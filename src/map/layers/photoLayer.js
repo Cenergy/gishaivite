@@ -18,8 +18,8 @@ class PhotoLayer extends BaseLayer {
     this.markerLayer = new VectorLayer('photo-markers')
     this.map.addLayer(this.markerLayer)
 
-    // 注册到状态管理器
-    this.cleanup = mapStore.registerLayer('photoLayer', this)
+    this.eventBus.on('updatePhotoMarkers', this.photoMarkersHandler)
+    this.eventBus.on('updateAlbumMarkers', this.albumMarkersHandler)
   }
 
   // 响应式状态管理器会自动调用这些方法
