@@ -38,6 +38,9 @@ importers:
       maptalks-gl:
         specifier: ^0.107.5
         version: 0.107.5
+      mitt:
+        specifier: ^3.0.1
+        version: 3.0.1
       pinia:
         specifier: ^3.0.1
         version: 3.0.2(typescript@5.8.3)(vue@3.5.13(typescript@5.8.3))
