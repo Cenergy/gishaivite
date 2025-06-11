@@ -1,30 +1,30 @@
-import BaseLayer from './baseLayer'
-import { VectorLayer, Marker, ui } from 'maptalks-gl'
-import eventBus from '@/utils/EventBus'
+import BaseLayer from './baseLayer';
+import { VectorLayer, Marker, ui } from 'maptalks-gl';
+import eventBus from '@/utils/EventBus';
 
 class PhotoLayer extends BaseLayer {
   constructor(options = {}) {
-    super(options)
-    this.markerLayer = null
-    this.photos = []
-    this.albums = []
-    this.isAlbumMode = false
-    this.infoWindow = null
+    super(options);
+    this.markerLayer = null;
+    this.photos = [];
+    this.albums = [];
+    this.isAlbumMode = false;
+    this.infoWindow = null;
   }
 
   init(map) {
-    super.init(map, false)
+    super.init(map, false);
     // 创建标记图层
-    this.markerLayer = new VectorLayer('photo-markers')
-    this.map.addLayer(this.markerLayer)
+    this.markerLayer = new VectorLayer('photo-markers');
+    this.map.addLayer(this.markerLayer);
 
-    // 监听EventBus事件
-    this.setupEventListeners()
+    // 注册事件监听器
+    this.registerEvents();
   }
 
-  setupEventListeners() {
-    // 事件监听器配置
-    this.eventListeners = [
+  registerEvents() {
+    // 直接使用基类的 addEventListeners 方法注册事件
+    super.addEventListeners([
       {
         event: 'updatePhotoMarkers',
         handler: (data) => this.updatePhotoMarkers(data.photos || [])
@@ -36,40 +36,35 @@ class PhotoLayer extends BaseLayer {
       {
         event: 'switchMapMode',
         handler: (data) => {
-          const { mode, photos, albums } = data
-          this.isAlbumMode = mode === 'album'
+          const { mode, photos, albums } = data;
+          this.isAlbumMode = mode === 'album';
           
           if (this.isAlbumMode) {
-            this.updateAlbumMarkers(albums || [])
+            this.updateAlbumMarkers(albums || []);
           } else {
-            this.updatePhotoMarkers(photos || [])
+            this.updatePhotoMarkers(photos || []);
           }
         }
       }
-    ]
-
-    // 批量注册事件监听器
-    this.eventListeners.forEach(({ event, handler }) => {
-      eventBus.on(event, handler)
-    })
+    ]);
   }
 
   /**
    * 更新照片标记
    */
   updatePhotoMarkers(photos) {
-    this.photos = photos
-    this.isAlbumMode = false
-    this.clearMarkers()
+    this.photos = photos;
+    this.isAlbumMode = false;
+    this.clearMarkers();
 
-    if (!this.markerLayer || !photos.length) return
+    if (!this.markerLayer || !photos.length) return;
 
-    const validCoordinates = []
+    const validCoordinates = [];
 
     photos.forEach((photo) => {
-      if (!photo.coordinates) return
+      if (!photo.coordinates) return;
 
-      validCoordinates.push(photo.coordinates)
+      validCoordinates.push(photo.coordinates);
 
       // 创建照片标记
       const marker = new Marker(photo.coordinates, {
@@ -81,45 +76,45 @@ class PhotoLayer extends BaseLayer {
           markerWidth: 30,
           markerHeight: 40,
         },
-      })
+      });
 
       // 点击标记显示信息窗口
       marker.on('click', (e) => {
-        this.showPhotoPopup(photo, photo.coordinates)
-      })
+        this.showPhotoPopup(photo, photo.coordinates);
+      });
 
       // 添加到图层
-      marker.addTo(this.markerLayer)
-    })
+      marker.addTo(this.markerLayer);
+    });
 
     // 智能定位
-    this.updateMapView(validCoordinates)
+    this.updateMapView(validCoordinates);
   }
 
   /**
    * 更新相册标记
    */
   updateAlbumMarkers(albums) {
-    this.albums = albums
-    this.isAlbumMode = true
-    this.clearMarkers()
+    this.albums = albums;
+    this.isAlbumMode = true;
+    this.clearMarkers();
 
-    if (!this.markerLayer) return
+    if (!this.markerLayer) return;
 
     // 如果没有相册，跳转到默认位置
     if (!albums.length) {
-      this.updateMapView([])
-      return
+      this.updateMapView([]);
+      return;
     }
 
-    const validCoordinates = []
+    const validCoordinates = [];
 
     albums.forEach((album) => {
       // 使用第一张照片的坐标作为相册坐标
-      if (!album.photos || album.photos.length === 0 || !album.photos[0].coordinates) return
+      if (!album.photos || album.photos.length === 0 || !album.photos[0].coordinates) return;
 
-      const coordinates = album.photos[0].coordinates
-      validCoordinates.push(coordinates)
+      const coordinates = album.photos[0].coordinates;
+      validCoordinates.push(coordinates);
 
       // 创建相册标记
       const marker = new Marker(coordinates, {
@@ -131,19 +126,19 @@ class PhotoLayer extends BaseLayer {
           markerWidth: 35,
           markerHeight: 45,
         },
-      })
+      });
 
       // 点击标记显示信息窗口
       marker.on('click', (e) => {
-        this.showAlbumPopup(album, coordinates)
-      })
+        this.showAlbumPopup(album, coordinates);
+      });
 
       // 添加到图层
-      marker.addTo(this.markerLayer)
-    })
+      marker.addTo(this.markerLayer);
+    });
 
     // 智能定位
-    this.updateMapView(validCoordinates)
+    this.updateMapView(validCoordinates);
   }
 
   /**
@@ -151,7 +146,7 @@ class PhotoLayer extends BaseLayer {
    */
   showPhotoPopup(photo, coordinates) {
     if (this.infoWindow) {
-      this.infoWindow.remove()
+      this.infoWindow.remove();
     }
 
     this.infoWindow = new ui.InfoWindow({
@@ -166,20 +161,20 @@ class PhotoLayer extends BaseLayer {
           </div>
         </div>
       `,
-    })
+    });
 
-    this.infoWindow.addTo(this.map).show(coordinates)
+    this.infoWindow.addTo(this.map).show(coordinates);
 
     // 为查看按钮添加点击事件
     setTimeout(() => {
-      const viewBtn = document.querySelector('.popup-view-btn')
+      const viewBtn = document.querySelector('.popup-view-btn');
       if (viewBtn) {
         viewBtn.addEventListener('click', () => {
-          eventBus.emit('photo-selected', photo)
-          this.infoWindow.remove()
-        })
+          eventBus.emit('photo-selected', photo);
+          this.infoWindow.remove();
+        });
       }
-    }, 100)
+    }, 100);
   }
 
   /**
@@ -187,7 +182,7 @@ class PhotoLayer extends BaseLayer {
    */
   showAlbumPopup(album, coordinates) {
     if (this.infoWindow) {
-      this.infoWindow.remove()
+      this.infoWindow.remove();
     }
 
     this.infoWindow = new ui.InfoWindow({
@@ -202,20 +197,20 @@ class PhotoLayer extends BaseLayer {
           </div>
         </div>
       `,
-    })
+    });
 
-    this.infoWindow.addTo(this.map).show(coordinates)
+    this.infoWindow.addTo(this.map).show(coordinates);
 
     // 为查看按钮添加点击事件
     setTimeout(() => {
-      const viewBtn = document.querySelector('.popup-view-btn')
+      const viewBtn = document.querySelector('.popup-view-btn');
       if (viewBtn) {
         viewBtn.addEventListener('click', () => {
-          eventBus.emit('album-selected', album)
-          this.infoWindow.remove()
-        })
+          eventBus.emit('album-selected', album);
+          this.infoWindow.remove();
+        });
       }
-    }, 100)
+    }, 100);
   }
 
   /**
@@ -223,11 +218,11 @@ class PhotoLayer extends BaseLayer {
    */
   clearMarkers() {
     if (this.markerLayer) {
-      this.markerLayer.clear()
+      this.markerLayer.clear();
     }
     if (this.infoWindow) {
-      this.infoWindow.remove()
-      this.infoWindow = null
+      this.infoWindow.remove();
+      this.infoWindow = null;
     }
   }
 
@@ -236,8 +231,8 @@ class PhotoLayer extends BaseLayer {
    */
   updateMapView(coordinates) {
     if (!this.map || !coordinates.length) {
-      this.goHome()
-      return
+      this.goHome();
+      return;
     }
 
     if (coordinates.length === 1) {
@@ -250,29 +245,29 @@ class PhotoLayer extends BaseLayer {
         {
           duration: 1000,
         },
-      )
+      );
     } else {
       // 多个坐标，计算边界并自适应显示
       try {
         let minLng = coordinates[0][0],
-          maxLng = coordinates[0][0]
+          maxLng = coordinates[0][0];
         let minLat = coordinates[0][1],
-          maxLat = coordinates[0][1]
+          maxLat = coordinates[0][1];
 
         coordinates.forEach((coord) => {
-          minLng = Math.min(minLng, coord[0])
-          maxLng = Math.max(maxLng, coord[0])
-          minLat = Math.min(minLat, coord[1])
-          maxLat = Math.max(maxLat, coord[1])
-        })
+          minLng = Math.min(minLng, coord[0]);
+          maxLng = Math.max(maxLng, coord[0]);
+          minLat = Math.min(minLat, coord[1]);
+          maxLat = Math.max(maxLat, coord[1]);
+        });
 
         // 添加一些边距
-        const padding = 0.01
-        const extent = [minLng - padding, minLat - padding, maxLng + padding, maxLat + padding]
+        const padding = 0.01;
+        const extent = [minLng - padding, minLat - padding, maxLng + padding, maxLat + padding];
 
-        this.map.fitExtent(extent, 0, { animation: true })
+        this.map.fitExtent(extent, 0, { animation: true });
       } catch (error) {
-        console.warn('fitExtent failed, using center of first coordinate:', error)
+        console.warn('fitExtent failed, using center of first coordinate:', error);
         this.map.animateTo(
           {
             center: coordinates[0],
@@ -281,45 +276,40 @@ class PhotoLayer extends BaseLayer {
           {
             duration: 1000,
           },
-        )
+        );
       }
     }
   }
 
   _showCore(options) {
     if (this.markerLayer) {
-      this.markerLayer.show()
+      this.markerLayer.show();
     }
-    this._visible = true
+    this._visible = true;
   }
 
   _hideCore(options) {
     if (this.markerLayer) {
-      this.markerLayer.hide()
+      this.markerLayer.hide();
     }
     if (this.infoWindow) {
-      this.infoWindow.remove()
-      this.infoWindow = null
+      this.infoWindow.remove();
+      this.infoWindow = null;
     }
-    this._visible = false
+    this._visible = false;
   }
 
   destroy() {
-    this.clearMarkers()
+    console.log("🚀 ~ PhotoLayer ~ destroy ~ destroy:",);
+    this.clearMarkers();
     if (this.markerLayer) {
-      this.map.removeLayer(this.markerLayer)
-      this.markerLayer = null
+      this.map.removeLayer(this.markerLayer);
+      this.markerLayer = null;
     }
-
-    // 批量移除事件监听器
-    if (this.eventListeners) {
-      this.eventListeners.forEach(({ event, handler }) => {
-        eventBus.off(event, handler)
-      })
-      this.eventListeners = null
-    }
+    
+    // 基类会自动清理事件监听器，无需手动调用
   }
 }
 
-const photoLayer = new PhotoLayer()
-export default photoLayer
+const photoLayer = new PhotoLayer();
+export default photoLayer;

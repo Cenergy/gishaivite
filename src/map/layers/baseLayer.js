@@ -1,7 +1,12 @@
-// 使用浏览器原生的crypto.randomUUID()替代uuid
+import eventBus from '@/utils/EventBus';
+
 export default class BaseLayer {
   constructor() {
-    this.pulseIdList = []
+    this.pulseIdList = [];
+    this.eventListeners = [];
+    
+    // 自动包装 destroy 方法，确保事件监听器总是被清理
+    this._wrapDestroy();
   }
   init(map,options) {
     // 假如是相同的处理类型，则注入
@@ -131,6 +136,48 @@ export default class BaseLayer {
         fn.apply(this, arg)
       }, delay)
     }
+  }
+
+  /**
+   * 添加事件监听器
+   * @param {string} event 事件名
+   * @param {function} handler 处理函数
+   */
+  addEventListeners(listeners) {
+    if (Array.isArray(listeners)) {
+      listeners.forEach(({ event, handler }) => {
+        eventBus.on(event, handler);
+        this.eventListeners.push({ event, handler });
+      });
+    }
+  }
+
+  /**
+   * 包装 destroy 方法，确保事件监听器总是被清理
+   * @private
+   */
+  _wrapDestroy() {
+    const originalDestroy = this.destroy;
+    this.destroy = function() {
+      // 先清理事件监听器
+      if (this.eventListeners && this.eventListeners.length > 0) {
+        this.eventListeners.forEach(({ event, handler }) => {
+          eventBus.off(event, handler);
+        });
+        this.eventListeners = [];
+      }
+      
+      // 再调用原始的 destroy 方法
+      return originalDestroy.apply(this, arguments);
+    };
+  }
+
+  /**
+   * 销毁图层 - 子类可以重写此方法，事件监听器会自动清理
+   */
+  destroy() {
+    // 子类可以重写此方法来添加自己的清理逻辑
+    // 事件监听器的清理会在 _wrapDestroy 中自动处理
   }
 
   _throwNotImplementationError() {

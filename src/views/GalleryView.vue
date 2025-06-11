@@ -126,6 +126,7 @@ import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { Picture, Calendar, Location, Grid, MapLocation, Back } from '@element-plus/icons-vue'
 import { defineAsyncComponent } from 'vue'
 import eventBus from '@/utils/EventBus'
+import photoLayer from '@/map/layers/photoLayer'
 
 const MapView = defineAsyncComponent(() => import('../components/MapView.vue'))
 const PhotoViewer = defineAsyncComponent(() => import('../components/PhotoViewer.vue'))
@@ -470,6 +471,9 @@ watch(viewMode, (newMode) => {
         }
       }, 100)
     })
+  }else{
+    console.log("🚀 ~ watch ~ photoLayer:", photoLayer);
+    photoLayer.destroy()
   }
 })
 
