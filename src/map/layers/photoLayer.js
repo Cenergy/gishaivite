@@ -23,30 +23,35 @@ class PhotoLayer extends BaseLayer {
   }
 
   setupEventListeners() {
-    // 监听照片数据更新事件
-    this.photoMarkersHandler = (data) => {
-      this.updatePhotoMarkers(data.photos || [])
-    }
-    eventBus.on('updatePhotoMarkers', this.photoMarkersHandler)
-
-    // 监听相册数据更新事件
-    this.albumMarkersHandler = (data) => {
-      this.updateAlbumMarkers(data.albums || [])
-    }
-    eventBus.on('updateAlbumMarkers', this.albumMarkersHandler)
-
-    // 监听切换模式事件
-    this.switchModeHandler = (data) => {
-      const { mode, photos, albums } = data
-      this.isAlbumMode = mode === 'album'
-
-      if (this.isAlbumMode) {
-        this.updateAlbumMarkers(albums || [])
-      } else {
-        this.updatePhotoMarkers(photos || [])
+    // 事件监听器配置
+    this.eventListeners = [
+      {
+        event: 'updatePhotoMarkers',
+        handler: (data) => this.updatePhotoMarkers(data.photos || [])
+      },
+      {
+        event: 'updateAlbumMarkers', 
+        handler: (data) => this.updateAlbumMarkers(data.albums || [])
+      },
+      {
+        event: 'switchMapMode',
+        handler: (data) => {
+          const { mode, photos, albums } = data
+          this.isAlbumMode = mode === 'album'
+          
+          if (this.isAlbumMode) {
+            this.updateAlbumMarkers(albums || [])
+          } else {
+            this.updatePhotoMarkers(photos || [])
+          }
+        }
       }
-    }
-    eventBus.on('switchMapMode', this.switchModeHandler)
+    ]
+
+    // 批量注册事件监听器
+    this.eventListeners.forEach(({ event, handler }) => {
+      eventBus.on(event, handler)
+    })
   }
 
   /**
@@ -306,15 +311,12 @@ class PhotoLayer extends BaseLayer {
       this.markerLayer = null
     }
 
-    // 移除事件监听
-    if (this.photoMarkersHandler) {
-      eventBus.off('updatePhotoMarkers', this.photoMarkersHandler)
-    }
-    if (this.albumMarkersHandler) {
-      eventBus.off('updateAlbumMarkers', this.albumMarkersHandler)
-    }
-    if (this.switchModeHandler) {
-      eventBus.off('switchMapMode', this.switchModeHandler)
+    // 批量移除事件监听器
+    if (this.eventListeners) {
+      this.eventListeners.forEach(({ event, handler }) => {
+        eventBus.off(event, handler)
+      })
+      this.eventListeners = null
     }
   }
 }
