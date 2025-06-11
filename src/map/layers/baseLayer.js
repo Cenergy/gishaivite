@@ -2,6 +2,10 @@
 export default class BaseLayer {
   constructor() {
     this.pulseIdList = []
+    // 异步请求管理
+    this.activeRequests = new Set()
+    this.isLoading = false
+    this.loadingStates = new Map()
   }
   init(map,options) {
     // 假如是相同的处理类型，则注入
@@ -10,6 +14,10 @@ export default class BaseLayer {
     this._id = crypto.randomUUID();
     this._hasLoaded = false;
     this.timeInterval = 10 * 1000;
+    // 初始化请求管理状态
+    this.activeRequests.clear();
+    this.isLoading = false;
+    this.loadingStates.clear();
   }
   get id() {
     return this._id
@@ -131,6 +139,143 @@ export default class BaseLayer {
         fn.apply(this, arg)
       }, delay)
     }
+  }
+
+  /**
+   * 安全的异步请求包装器
+   * @param {Function} requestFn 请求函数，接收signal参数
+   * @param {string} requestKey 请求标识符，用于状态管理
+   * @returns {Promise} 请求结果
+   */
+  async safeRequest(requestFn, requestKey = 'default') {
+    // 如果同类型请求正在进行，先取消
+    if (this.loadingStates.has(requestKey)) {
+      const existingController = this.loadingStates.get(requestKey)
+      existingController.abort()
+      this.loadingStates.delete(requestKey)
+    }
+
+    const controller = new AbortController()
+    this.activeRequests.add(controller)
+    this.loadingStates.set(requestKey, controller)
+    this.isLoading = true
+
+    try {
+      const result = await requestFn(controller.signal)
+      
+      // 检查请求是否被取消
+      if (controller.signal.aborted) {
+        throw new Error('Request was aborted')
+      }
+      
+      return result
+    } catch (error) {
+      if (error.name === 'AbortError' || error.message === 'Request was aborted') {
+        console.log(`Request ${requestKey} was cancelled`)
+        return null
+      }
+      throw error
+    } finally {
+      this.activeRequests.delete(controller)
+      this.loadingStates.delete(requestKey)
+      
+      // 如果没有活跃请求，更新loading状态
+      if (this.activeRequests.size === 0) {
+        this.isLoading = false
+      }
+    }
+  }
+
+  /**
+   * 取消指定类型的请求
+   * @param {string} requestKey 请求标识符
+   */
+  cancelRequest(requestKey) {
+    if (this.loadingStates.has(requestKey)) {
+      const controller = this.loadingStates.get(requestKey)
+      controller.abort()
+      this.loadingStates.delete(requestKey)
+      console.log(`Request ${requestKey} cancelled`)
+    }
+  }
+
+  /**
+   * 取消所有活跃的请求
+   */
+  cancelAllRequests() {
+    this.activeRequests.forEach(controller => {
+      controller.abort()
+    })
+    this.activeRequests.clear()
+    this.loadingStates.clear()
+    this.isLoading = false
+    console.log('All requests cancelled')
+  }
+
+  /**
+   * 获取当前请求状态
+   * @returns {Object} 包含loading状态和活跃请求数量的对象
+   */
+  getRequestStatus() {
+    return {
+      isLoading: this.isLoading,
+      activeRequestCount: this.activeRequests.size,
+      activeRequestKeys: Array.from(this.loadingStates.keys())
+    }
+  }
+
+  /**
+   * 检查指定请求是否正在进行
+   * @param {string} requestKey 请求标识符
+   * @returns {boolean}
+   */
+  isRequestActive(requestKey) {
+    return this.loadingStates.has(requestKey)
+  }
+
+  /**
+   * 带超时的安全请求
+   * @param {Function} requestFn 请求函数
+   * @param {string} requestKey 请求标识符
+   * @param {number} timeout 超时时间（毫秒）
+   * @returns {Promise}
+   */
+  async safeRequestWithTimeout(requestFn, requestKey = 'default', timeout = 30000) {
+    return this.safeRequest(async (signal) => {
+      // 创建超时Promise
+      const timeoutPromise = new Promise((_, reject) => {
+        const timeoutId = setTimeout(() => {
+          reject(new Error(`Request ${requestKey} timeout after ${timeout}ms`))
+        }, timeout)
+        
+        // 如果请求被取消，清除超时
+        signal.addEventListener('abort', () => {
+          clearTimeout(timeoutId)
+        })
+      })
+
+      // 竞争：请求 vs 超时
+      return Promise.race([
+        requestFn(signal),
+        timeoutPromise
+      ])
+    }, requestKey)
+  }
+
+  /**
+   * 销毁方法，清理所有资源
+   */
+  destroy() {
+    // 取消所有请求
+    this.cancelAllRequests()
+    
+    // 清理其他资源
+    this.closePointPopup()
+    
+    // 重置状态
+    this._hasLoaded = false
+    this.map = null
+    this.options = null
   }
 
   _throwNotImplementationError() {
