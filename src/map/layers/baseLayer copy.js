@@ -104,6 +104,21 @@ export default class BaseLayer {
     this._throwNotImplementationError()
   }
 
+  _handlePublishHour(post_modified) {
+    // 拿到当前时间戳和发布时的时间戳，然后得出时间戳差
+    const curTime = new Date()
+    const postTime = new Date(post_modified)
+    const timeDiff = curTime.getTime() - postTime.getTime()
+
+    // 单位换算
+    const min = 60 * 1000
+    const hour = min * 60
+
+    // 计算发布时间距离当前时间的小时
+    const exceedHour = Math.floor(timeDiff / hour)
+    return exceedHour
+  }
+
   /**
    *  防抖函数，频繁调用时，使用它
    * @param {*} fn 回调函数
