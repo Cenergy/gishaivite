@@ -2,12 +2,14 @@
   <div class="map-view">
     <MapView :mapBus="testMapBus" />
     <LayerControl />
+    <MapDetail />
   </div>
 </template>
 
 <script setup>
 import MapView from '@/components/MapView.vue'
 import LayerControl from '@/components/LayerControl/index.vue'
+import MapDetail from '@/components/MapDetail/index.vue'
 import { test as testMapBus } from '@/map'
 
 // 使用test控制器的地图页面

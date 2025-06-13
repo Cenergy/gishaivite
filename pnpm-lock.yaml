@@ -35,6 +35,9 @@ importers:
       glob:
         specifier: ^11.0.2
         version: 11.0.2
+      lil-gui:
+        specifier: ^0.20.0
+        version: 0.20.0
       maptalks-gl:
         specifier: ^0.107.5
         version: 0.107.5
@@ -1687,6 +1690,9 @@ packages:
   levn@0.4.1:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
     engines: {node: '>= 0.8.0'}
+
+  lil-gui@0.20.0:
+    resolution: {integrity: sha512-k7Ipr0ztqslMA2XvM5z5ZaWhxQtnEOwJBfI/hmSuRh6q4iMG9L0boqqrnZSzBR1jzyJ28OMl47l65ILzRe1TdA==}
 
   lineclip@1.1.5:
     resolution: {integrity: sha512-KlA/wRSjpKl7tS9iRUdlG72oQ7qZ1IlVbVgHwoO10TBR/4gQ86uhKow6nlzMAJJhjCWKto8OeoAzzIzKSmN25A==}
@@ -4062,6 +4068,8 @@ snapshots:
     dependencies:
       prelude-ls: 1.2.1
       type-check: 0.4.0
+
+  lil-gui@0.20.0: {}
 
   lineclip@1.1.5: {}
 
