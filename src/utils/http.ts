@@ -21,8 +21,8 @@ service.interceptors.request.use(
 // 响应拦截器
 service.interceptors.response.use(
   (response: AxiosResponse) => {
-    // 可以在这里处理统一的响应格式
-    return response.data
+    // 统一返回完整的response对象
+    return response
   },
   (error: AxiosError) => {
     // 统一错误处理

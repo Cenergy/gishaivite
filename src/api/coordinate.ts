@@ -10,8 +10,8 @@ export const convertCoordinates = async (params: {
   to_sys: string
 }) => {
   try {
-    const response = await http.get('/api/v1/converters/coords/convert', { params })
-    return response
+    const response = await http.get('/v1/converters/coords/convert', { params })
+    return response.data // 现在response是完整对象，需要返回data部分
   } catch (error) {
     console.error('坐标转换请求失败:', error)
     // throw error;
@@ -27,7 +27,7 @@ export const convertCoordinates = async (params: {
 export const convertCoordinatesFromExcel = async (formData: FormData) => {
   try {
     // 使用http实例发送请求，设置responseType为blob
-    const response = await http.post('/api/v1/converters/coords/convert_from_excel', formData, {
+    const response = await http.post('/v1/converters/coords/convert_from_excel', formData, {
       responseType: 'blob', // 设置响应类型为blob，用于处理StreamingResponse
     })
     return response
