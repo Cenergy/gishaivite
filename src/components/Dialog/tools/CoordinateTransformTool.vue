@@ -34,11 +34,29 @@
             <el-form label-width="100px">
               <div class="coordinate-input-row">
                 <el-form-item label="经度" class="coordinate-input-item">
-                  <el-input v-model="longitude" placeholder="请输入经度"></el-input>
+                  <el-input 
+                    v-model="longitude" 
+                    placeholder="请输入经度 (-180 ~ 180)"
+                    clearable
+                    @input="validateLongitude"
+                  >
+                    <template #suffix>
+                      <span class="input-unit">°</span>
+                    </template>
+                  </el-input>
                 </el-form-item>
 
                 <el-form-item label="纬度" class="coordinate-input-item">
-                  <el-input v-model="latitude" placeholder="请输入纬度"></el-input>
+                  <el-input 
+                    v-model="latitude" 
+                    placeholder="请输入纬度 (-90 ~ 90)"
+                    clearable
+                    @input="validateLatitude"
+                  >
+                    <template #suffix>
+                      <span class="input-unit">°</span>
+                    </template>
+                  </el-input>
                 </el-form-item>
               </div>
 
@@ -170,6 +188,35 @@ const excelTargetCrs = ref('GCJ02')
 const fileList = ref<any[]>([])
 const isProcessing = ref(false) // 添加处理状态变量，用于控制处理按钮的禁用状态
 
+// 输入验证函数
+const validateLongitude = (value: string) => {
+  // 清除之前的转换结果
+  if (result.value) {
+    result.value = ''
+  }
+  
+  // 允许输入数字、小数点、负号
+  const validPattern = /^-?\d*\.?\d*$/
+  if (value && !validPattern.test(value)) {
+    // 如果输入不符合格式，恢复到上一个有效值
+    longitude.value = longitude.value.replace(/[^-\d.]/g, '')
+  }
+}
+
+const validateLatitude = (value: string) => {
+  // 清除之前的转换结果
+  if (result.value) {
+    result.value = ''
+  }
+  
+  // 允许输入数字、小数点、负号
+  const validPattern = /^-?\d*\.?\d*$/
+  if (value && !validPattern.test(value)) {
+    // 如果输入不符合格式，恢复到上一个有效值
+    latitude.value = latitude.value.replace(/[^-\d.]/g, '')
+  }
+}
+
 const handleExceed = () => {
   ElMessage.warning('只能上传一个文件，请先删除当前文件再上传新文件')
 }
@@ -296,35 +343,97 @@ const downloadConvertedFile = () => {
 }
 
 const transformCoordinates = async () => {
+  // 输入验证
   if (!longitude.value || !latitude.value) {
     ElMessage.warning('请输入经纬度')
     return
   }
 
-  // 显示临时结果
-  result.value = `正在转换: ${longitude.value}, ${latitude.value} (${sourceCrs.value} → ${targetCrs.value})`
+  // 验证输入是否为有效数字
+  const lng = parseFloat(longitude.value.trim())
+  const lat = parseFloat(latitude.value.trim())
+  
+  if (isNaN(lng) || isNaN(lat)) {
+    ElMessage.error('请输入有效的数字格式')
+    return
+  }
 
-  // 准备API请求参数
-  const fromSys = sourceCrs.value.toLowerCase()
-  const toSys = targetCrs.value.toLowerCase()
-  const lng = longitude.value
-  const lat = latitude.value
+  // 验证经纬度范围
+  if (lng < -180 || lng > 180) {
+    ElMessage.error('经度范围应在-180到180之间')
+    return
+  }
+  
+  if (lat < -90 || lat > 90) {
+    ElMessage.error('纬度范围应在-90到90之间')
+    return
+  }
 
-  // 调用API服务进行坐标转换
-  const response = await convertCoordinates({
-    lng: Number(lng),
-    lat: Number(lat),
-    from_sys: fromSys,
-    to_sys: toSys,
-  })
-  console.log('🚀 ~ transformCoordinates ~ response:', response)
+  try {
+    // 显示临时结果
+    result.value = `正在转换: ${lng}, ${lat} (${sourceCrs.value} → ${targetCrs.value})`
 
-  if (response && !('error' in response) && response.data) {
-    result.value = `转换结果: 经度=${response.data.lng}, 纬度=${response.data.lat}`
-    ElMessage.success('坐标转换成功')
-  } else {
-    result.value = '转换失败: 返回数据格式不正确'
-    ElMessage.error('坐标转换失败')
+    // 准备API请求参数
+    const fromSys = sourceCrs.value.toLowerCase()
+    const toSys = targetCrs.value.toLowerCase()
+
+    // 调用API服务进行坐标转换
+    const response = await convertCoordinates({
+      lng: lng,
+      lat: lat,
+      from_sys: fromSys,
+      to_sys: toSys,
+    })
+    
+    console.log('🚀 ~ transformCoordinates ~ response:', response)
+
+    // 检查响应数据
+    if (response && !('error' in response)) {
+      // 处理不同的响应数据结构
+      let resultData = response.data || response
+      
+      if (resultData && typeof resultData === 'object') {
+        // 检查是否有lng和lat字段
+        if ('lng' in resultData && 'lat' in resultData) {
+          const resultLng = resultData.lng
+          const resultLat = resultData.lat
+          
+          if (resultLng !== undefined && resultLat !== undefined && 
+              !isNaN(resultLng) && !isNaN(resultLat)) {
+            result.value = `转换结果: 经度=${resultLng}, 纬度=${resultLat}`
+            ElMessage.success('坐标转换成功')
+            return
+          }
+        }
+        
+        // 检查其他可能的字段名
+        if ('longitude' in resultData && 'latitude' in resultData) {
+          const resultLng = resultData.longitude
+          const resultLat = resultData.latitude
+          
+          if (resultLng !== undefined && resultLat !== undefined && 
+              !isNaN(resultLng) && !isNaN(resultLat)) {
+            result.value = `转换结果: 经度=${resultLng}, 纬度=${resultLat}`
+            ElMessage.success('坐标转换成功')
+            return
+          }
+        }
+      }
+      
+      // 如果到这里说明数据结构不符合预期
+      console.error('API返回数据结构异常:', resultData)
+      result.value = '转换失败: API返回数据格式不正确'
+      ElMessage.error('转换失败: 服务器返回数据格式异常')
+    } else {
+      // 处理API错误
+      const errorMsg = response?.error || '未知错误'
+      result.value = `转换失败: ${errorMsg}`
+      ElMessage.error(`坐标转换失败: ${errorMsg}`)
+    }
+  } catch (error) {
+    console.error('坐标转换异常:', error)
+    result.value = '转换失败: 网络或服务异常'
+    ElMessage.error('坐标转换失败，请检查网络连接或稍后重试')
   }
 }
 </script>
@@ -371,6 +480,12 @@ const transformCoordinates = async () => {
 .coordinate-input-item {
   flex: 1;
   min-width: 250px;
+}
+
+.input-unit {
+  color: #909399;
+  font-size: 14px;
+  margin-right: 8px;
 }
 
 /* 共享卡片样式 */
@@ -467,6 +582,19 @@ const transformCoordinates = async () => {
   font-style: normal;
   text-decoration: underline;
   cursor: pointer;
+}
+
+/* 输入框样式优化 */
+:deep(.el-input__wrapper) {
+  transition: all 0.3s ease;
+}
+
+:deep(.el-input__wrapper:hover) {
+  box-shadow: 0 0 0 1px #409eff inset;
+}
+
+:deep(.el-input__inner) {
+  text-align: center;
 }
 
 @media screen and (max-width: 768px) {
