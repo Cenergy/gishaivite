@@ -15,7 +15,15 @@
 
     <!-- 主要内容区域 -->
     <div class="gallery-content flex-1 w-full h-full">
+      <!-- 地图模式 - 独立显示，不受数据状态影响 -->
+      <MapView
+        v-if="viewMode === 'map'"
+        class="w-full h-full flex-1"
+      />
+      
+      <!-- 列表模式 - 受数据状态控制 -->
       <LoadingState 
+        v-else
         :loading="loading" 
         :error="error" 
         :is-empty="filteredAlbums.length === 0 && !loading"
@@ -24,23 +32,17 @@
       >
         <!-- 列表模式 - 相册列表 -->
         <AlbumGrid 
-          v-if="viewMode === 'list' && !selectedAlbum"
+          v-if="!selectedAlbum"
           :albums="filteredAlbums"
           @album-click="openAlbum"
         />
 
         <!-- 相册内照片列表 -->
         <PhotoGrid 
-          v-if="viewMode === 'list' && selectedAlbum"
+          v-if="selectedAlbum"
           :album="selectedAlbum"
           @back-click="backToAlbums"
           @photo-click="openPhotoViewer"
-        />
-
-        <!-- 地图模式 -->
-        <MapView
-          v-if="viewMode === 'map'"
-          class="w-full h-full flex-1"
         />
       </LoadingState>
 
