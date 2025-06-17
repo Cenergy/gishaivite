@@ -1,6 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
-import ThemeDemo from '../components/ThemeDemo.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -8,7 +6,7 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: HomeView,
+      component: () => import(/* webpackChunkName: "home" */ '../views/HomeView.vue'),
     },
     {
       path: '/about',
@@ -21,7 +19,7 @@ const router = createRouter({
     {
       path: '/theme-demo',
       name: 'theme-demo',
-      component: ThemeDemo,
+      component: () => import(/* webpackChunkName: "theme-demo" */ '../components/ThemeDemo.vue'),
     },
     {
       path: '/gallery',
@@ -31,7 +29,7 @@ const router = createRouter({
     {
       path: '/map',
       name: 'map',
-      component: () => import('../views/MapContentView.vue')
+      component: () => import(/* webpackChunkName: "map" */ '../views/MapContentView.vue')
     },
   ],
 })

@@ -71,16 +71,25 @@
 </template>
 
 <script setup>
-import UnoTest from '../components/UnoTest.vue'
-import UnoAdvanced from '../components/UnoAdvanced.vue'
-import { onMounted, ref, onUnmounted } from 'vue'
-import ToolsSection from '@/components/ToolsSection.vue'
-import BlogSection from '@/components/BlogSection.vue'
-import ResourcesSection from '@/components/ResourcesSection.vue'
-import FollowSection from '@/components/FollowSection.vue'
-import FooterSection from '@/components/FooterSection.vue'
-import ThemeToggle from '@/components/ThemeToggle.vue'
-import GallerySection from '@/components/GallerySection.vue'
+import { onMounted, ref, onUnmounted, defineAsyncComponent } from 'vue'
+
+// 异步组件导入 - 懒加载优化
+// 首屏可见组件 - 较短延迟
+const ThemeToggle = defineAsyncComponent({
+  loader: () => import('@/components/ThemeToggle.vue'),
+  delay: 100,
+  timeout: 3000
+})
+
+// 首屏下方组件 - 懒加载
+const UnoTest = defineAsyncComponent(() => import('../components/UnoTest.vue'))
+const UnoAdvanced = defineAsyncComponent(() => import('../components/UnoAdvanced.vue'))
+const ToolsSection = defineAsyncComponent(() => import('@/components/ToolsSection.vue'))
+const BlogSection = defineAsyncComponent(() => import('@/components/BlogSection.vue'))
+const ResourcesSection = defineAsyncComponent(() => import('@/components/ResourcesSection.vue'))
+const GallerySection = defineAsyncComponent(() => import('@/components/GallerySection.vue'))
+const FollowSection = defineAsyncComponent(() => import('@/components/FollowSection.vue'))
+const FooterSection = defineAsyncComponent(() => import('@/components/FooterSection.vue'))
 
 const isMenuOpen = ref(false)
 const isHeaderFixed = ref(false)
