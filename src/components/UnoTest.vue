@@ -16,6 +16,14 @@
       >
         按钮2
       </button>
+      
+      <router-link 
+        to="/geo-worker-demo"
+        class="px-4 py-2 bg-purple-500 hover:bg-purple-600 rounded transition-colors duration-300 text-white no-underline inline-flex items-center"
+      >
+        <i class="i-tabler:cpu mr-2"></i>
+        Web Worker 演示
+      </router-link>
     </div>
   </div>
 </template>
