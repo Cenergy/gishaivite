@@ -94,7 +94,6 @@ export function useGalleryData() {
         ]
       }
     } catch (err) {
-      console.error('加载分类失败:', err)
       // 使用默认分类
       categories.value = [
         { id: 'all', name: '全部' },
@@ -155,7 +154,6 @@ export function useGalleryData() {
                 album.photos = []
               }
             } catch (photoErr) {
-              console.error(`加载相册 ${album.id} 的照片失败:`, photoErr)
               album.photos = []
             }
           }
@@ -190,7 +188,6 @@ export function useGalleryData() {
         throw new Error(response?.error || '获取相册数据失败')
       }
     } catch (err) {
-      console.error('加载相册失败:', err)
       error.value = err.message || '加载数据失败'
 
       // 创建一些示例数据用于测试

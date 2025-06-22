@@ -128,7 +128,6 @@ export default {
       }
     },
     handleLayerSelect(isSelected, data) {
-      console.log(isSelected, data);
       if (isSelected) {
         eventBus.emit("addMapLayer", {
           val: data.value,

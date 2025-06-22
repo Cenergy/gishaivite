@@ -30,24 +30,25 @@ service.interceptors.response.use(
       // 根据HTTP状态码处理不同错误
       switch (error.response.status) {
         case 401:
-          console.error('未授权，请重新登录')
+          // 未授权，请重新登录
           break
         case 403:
-          console.error('拒绝访问')
+          // 拒绝访问
           break
         case 404:
-          console.error('请求资源不存在')
+          // 请求资源不存在
           break
         case 500:
-          console.error('服务器错误')
+          // 服务器错误
           break
         default:
-          console.error('请求错误', error.message)
+          // 请求错误
+          break
       }
     } else if (error.request) {
-      console.error('请求未响应', error.message)
+      // 请求未响应
     } else {
-      console.error('请求设置错误', error.message)
+      // 请求设置错误
     }
     return Promise.reject(error)
   },

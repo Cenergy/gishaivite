@@ -31,7 +31,6 @@ export default class BaseLayer {
    */
   goHome() {
     if (!this.map) {
-      console.warn('Map instance not found');
       return;
     }
     
@@ -55,7 +54,6 @@ export default class BaseLayer {
   openPointPopup({ content = '', component, latlng, options = {} }) {
     // TODO: 使用MapTalks的UI组件实现弹窗
     // MapTalks使用InfoWindow或自定义UI组件
-    console.log('openPointPopup called with:', { content, latlng, options })
   }
   closePointPopup() {
     this.popup && this.popup.close()
@@ -93,11 +91,9 @@ export default class BaseLayer {
 
   hidePulse(id) {
     // TODO: 使用MapTalks实现脉冲效果的隐藏
-    console.log('hidePulse called with id:', id)
   }
   showPulse(id) {
     // TODO: 使用MapTalks实现脉冲效果的显示
-    console.log('showPulse called with id:', id)
   }
 
   _setLegend(visible) {

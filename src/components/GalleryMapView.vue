@@ -66,17 +66,17 @@ const setupMapEvents = () => {
 
   // 监听地图初始化完成事件
   mapManager.on('map-initialized', (event) => {
-    console.log('Map initialized:', event.detail)
+    // 地图初始化完成
   })
 
   // 监听标记更新事件
   mapManager.on('markers-updated', (event) => {
-    console.log('Markers updated:', event.detail)
+    // 标记已更新
   })
 
   // 监听地图视图更新事件
   mapManager.on('map-view-updated', (event) => {
-    console.log('Map view updated:', event.detail)
+    // 地图视图已更新
   })
 }
 

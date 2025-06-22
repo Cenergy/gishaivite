@@ -1,6 +1,5 @@
 import BaseMapBus from './base'
 import eventBus from '@/utils/EventBus'
-import * as layers from '../layers'
 
 // 复选框中label与layer对象的关系
 /**
@@ -40,11 +39,9 @@ class MapBus extends BaseMapBus {
     eventBus.on('addMapLayer', (checkItem = {}) => {
       const checkObject = { checkItem, checkStatus: true }
       this._checkboxMapChange(checkObject)
-      console.log('🚀 ~ MapBus ~ eventBus.on ~ checkObject:', checkObject)
     })
     // 监听的是复选框的状态
     eventBus.on('removeMapLayer', (checkItem = {}) => {
-      console.log('🚀 ~ MapBus ~ eventBus.on ~ checkItem:', checkItem)
       const checkObject = { checkItem, checkStatus: false }
       this._checkboxMapChange(checkObject)
     })
@@ -55,11 +52,11 @@ class MapBus extends BaseMapBus {
    * @param {Object} options
    * @returns
    */
-  _checkboxMapChange(options = {}) {}
+  _checkboxMapChange() {}
 
   /**
    * 定位的实现
    */
-  _mapLocate(res) {}
+  _mapLocate() {}
 }
 export default new MapBus()

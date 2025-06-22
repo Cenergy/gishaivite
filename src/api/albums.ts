@@ -107,7 +107,6 @@ export default {
       const response = await http.get(`${CATEGORIES_PATH}`, { params })
       return response.data
     } catch (error) {
-      console.error('获取分类列表失败:', error)
       return { error }
     }
   },
@@ -118,7 +117,6 @@ export default {
       const response = await http.post(`${CATEGORIES_PATH}`, data)
       return response.data
     } catch (error) {
-      console.error('创建分类失败:', error)
       return { error }
     }
   },
@@ -129,7 +127,6 @@ export default {
       const response = await http.get(`${CATEGORIES_PATH}${categoryId}`)
       return response.data
     } catch (error) {
-      console.error('获取分类详情失败:', error)
       return { error }
     }
   },
@@ -143,7 +140,6 @@ export default {
       const response = await http.put(`${CATEGORIES_PATH}${categoryId}`, data)
       return response.data
     } catch (error) {
-      console.error('更新分类失败:', error)
       return { error }
     }
   },
@@ -154,7 +150,6 @@ export default {
       const response = await http.delete(`${CATEGORIES_PATH}${categoryId}`)
       return response.data
     } catch (error) {
-      console.error('删除分类失败:', error)
       return { error }
     }
   },
@@ -167,7 +162,6 @@ export default {
       const response = await http.get(`${BASE_PATH}`, { params })
       return response.data
     } catch (error) {
-      console.error('获取相册列表失败:', error)
       return { error }
     }
   },
@@ -184,7 +178,6 @@ export default {
       const response = await http.post(`${BASE_PATH}`, data)
       return response.data
     } catch (error) {
-      console.error('创建相册失败:', error)
       return { error }
     }
   },
@@ -195,7 +188,6 @@ export default {
       const response = await http.get(`${BASE_PATH}${albumId}`)
       return response.data
     } catch (error) {
-      console.error('获取相册详情失败:', error)
       return { error }
     }
   },
@@ -215,7 +207,6 @@ export default {
       const response = await http.put(`${BASE_PATH}${albumId}`, data)
       return response.data
     } catch (error) {
-      console.error('更新相册失败:', error)
       return { error }
     }
   },
@@ -226,7 +217,6 @@ export default {
       const response = await http.delete(`${BASE_PATH}${albumId}`)
       return response.data
     } catch (error) {
-      console.error('删除相册失败:', error)
       return { error }
     }
   },
@@ -239,7 +229,6 @@ export default {
       const response = await http.get(`${PHOTOS_PATH}`, { params })
       return response.data
     } catch (error) {
-      console.error('获取照片列表失败:', error)
       return { error }
     }
   },
@@ -258,7 +247,6 @@ export default {
       const response = await http.post(`${PHOTOS_PATH}`, data)
       return response.data
     } catch (error) {
-      console.error('创建照片失败:', error)
       return { error }
     }
   },
@@ -269,7 +257,6 @@ export default {
       const response = await http.get(`${PHOTOS_PATH}${photoId}`)
       return response.data
     } catch (error) {
-      console.error('获取照片详情失败:', error)
       return { error }
     }
   },
@@ -289,7 +276,6 @@ export default {
       const response = await http.put(`${PHOTOS_PATH}${photoId}`, data)
       return response.data
     } catch (error) {
-      console.error('更新照片失败:', error)
       return { error }
     }
   },
@@ -300,7 +286,6 @@ export default {
       const response = await http.delete(`${PHOTOS_PATH}${photoId}`)
       return response.data
     } catch (error) {
-      console.error('删除照片失败:', error)
       return { error }
     }
   },
@@ -319,7 +304,6 @@ export default {
       const response = await http.get(`${GEO_PATH}photos/`, { params })
       return response.data
     } catch (error) {
-      console.error('根据坐标获取照片失败:', error)
       return { error }
     }
   },
@@ -337,7 +321,6 @@ export default {
       const response = await http.get(`${GEO_PATH}albums/`, { params })
       return response.data
     } catch (error) {
-      console.error('根据坐标获取相册失败:', error)
       return { error }
     }
   },

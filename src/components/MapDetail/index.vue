@@ -40,8 +40,6 @@ export default {
       this.expand = !this.expand;
     },
     handleAddPanel(data) {
-      console.log(data, "test");
-
       let idx = this.tabList.findIndex((item) => item.label == data.label);
       if (idx == -1) {
         this.tabList.push(data);

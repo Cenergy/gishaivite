@@ -6,7 +6,7 @@
     </div>
 </template>
 
-<script>
+<script lang="js">
 import { GUI } from 'lil-gui';
 import eventBus from '@/utils/EventBus'
 export default {
@@ -152,7 +152,6 @@ export default {
         getData() {
             // getRiverList()
             //     .then(res => {
-            //         // console.log(res.data)
             //         this.rawData = res.data
             //         this.data = res.data
             //     })
@@ -192,7 +191,7 @@ export default {
             this.initDatGUI();
         });
     },
-    beforeDestroy() {
+    beforeUnmount() {
         // 清理dat.gui实例
         if (this.gui) {
             this.gui.destroy();

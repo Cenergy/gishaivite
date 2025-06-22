@@ -69,7 +69,6 @@ export class GeoWorkerManager extends BaseWorkerManager {
         
         results.push(result)
       } catch (error) {
-        console.error(`Failed to process GeoJSON ${i + 1}:`, error)
         results.push({ error: error.message })
       }
     }

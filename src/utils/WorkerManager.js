@@ -31,18 +31,15 @@ export class BaseWorkerManager {
 
       // 监听 Worker 错误
       this.worker.onerror = (error) => {
-        console.error('Worker error:', error)
         this.rejectAllPendingTasks(new Error('Worker error: ' + error.message))
       }
 
       // 监听 Worker 终止
       this.worker.onmessageerror = (error) => {
-        console.error('Worker message error:', error)
         this.rejectAllPendingTasks(new Error('Worker message error'))
       }
 
     } catch (error) {
-      console.error('Failed to create worker:', error)
       throw new Error('Web Workers not supported or failed to initialize')
     }
   }
@@ -57,7 +54,6 @@ export class BaseWorkerManager {
     switch (type) {
       case 'ready':
         this.isReady = true
-        console.log(`${this.constructor.name} is ready`)
         break
 
       case 'success':
@@ -86,7 +82,7 @@ export class BaseWorkerManager {
         break
 
       default:
-        console.warn('Unknown message type from worker:', type)
+        // 未知消息类型
     }
   }
 
@@ -121,7 +117,6 @@ export class BaseWorkerManager {
       // 通过 JSON 序列化/反序列化来清理不可克隆的对象
       return JSON.parse(JSON.stringify(data))
     } catch (error) {
-      console.warn('Data serialization failed, using original data:', error)
       return data
     }
   }

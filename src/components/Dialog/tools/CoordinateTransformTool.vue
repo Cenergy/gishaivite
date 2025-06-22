@@ -293,7 +293,6 @@ const processExcel = async () => {
   // 调用封装的API处理Excel文件
   const response = await convertCoordinatesFromExcel(formData)
   if (!response || 'error' in response) {
-    console.error('坐标转换请求失败:', response?.error)
     // 重置处理状态，允许用户重新尝试处理文件
     isProcessing.value = false
     ElMessage.error('坐标转换失败: ' + (response?.error ? String(response.error) : '未知错误'))
@@ -385,12 +384,10 @@ const transformCoordinates = async () => {
       to_sys: toSys,
     })
     
-    console.log('🚀 ~ transformCoordinates ~ response:', response)
-
     // 检查响应数据
     if (response && !('error' in response)) {
       // 处理不同的响应数据结构
-      let resultData = response.data || response
+      const resultData = response.data || response
       
       if (resultData && typeof resultData === 'object') {
         // 检查是否有lng和lat字段
@@ -421,7 +418,6 @@ const transformCoordinates = async () => {
       }
       
       // 如果到这里说明数据结构不符合预期
-      console.error('API返回数据结构异常:', resultData)
       result.value = '转换失败: API返回数据格式不正确'
       ElMessage.error('转换失败: 服务器返回数据格式异常')
     } else {
@@ -430,8 +426,7 @@ const transformCoordinates = async () => {
       result.value = `转换失败: ${errorMsg}`
       ElMessage.error(`坐标转换失败: ${errorMsg}`)
     }
-  } catch (error) {
-    console.error('坐标转换异常:', error)
+  } catch {
     result.value = '转换失败: 网络或服务异常'
     ElMessage.error('坐标转换失败，请检查网络连接或稍后重试')
   }

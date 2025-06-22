@@ -35,7 +35,6 @@ export class MapManager {
    */
   init() {
     if (!this.containerId) {
-      console.error('Map container ID is required')
       return
     }
 
@@ -239,7 +238,7 @@ export class MapManager {
         
         this.map.fitExtent(extent, 0, { animation: true })
       } catch (error) {
-        console.warn('fitExtent failed, using center of first coordinate:', error)
+        // fitExtent失败，使用第一个坐标的中心点
         this.map.setCenter(coordinates[0])
         this.map.setZoom(10)
       }

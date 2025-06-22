@@ -267,7 +267,7 @@ class PhotoLayer extends BaseLayer {
 
         this.map.fitExtent(extent, 0, { animation: true });
       } catch (error) {
-        console.warn('fitExtent failed, using center of first coordinate:', error);
+        // fitExtent失败，使用第一个坐标的中心点
         this.map.animateTo(
           {
             center: coordinates[0],
@@ -300,7 +300,6 @@ class PhotoLayer extends BaseLayer {
   }
 
   destroy() {
-    console.log("🚀 ~ PhotoLayer ~ destroy ~ destroy:",);
     this.clearMarkers();
     if (this.markerLayer) {
       this.map.removeLayer(this.markerLayer);

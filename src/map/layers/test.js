@@ -5,10 +5,10 @@ class TestLayer extends BaseLayer {
     super(options);
   }
   show() {
-    console.log('🚀 ~ TestLayer ~ show ~ show:');
+    // 显示图层
   }
   hide() {
-    console.log('🚀 ~ TestLayer ~ hide ~ hide:');
+    // 隐藏图层
   }
 }
 

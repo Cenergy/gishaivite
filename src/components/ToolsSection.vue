@@ -117,14 +117,13 @@ const closeDialog = () => {
 
 // 处理弹窗确认
 const handleDialogConfirm = () => {
-  console.log('工具操作已确认:', currentToolType.value)
   // 这里可以添加具体的工具操作逻辑
   showDialog.value = false
 }
 
 // 处理弹窗打开事件
 const handleDialogOpened = () => {
-  console.log('工具对话框已打开:', currentToolType.value)
+  // 工具对话框已打开
 }
 </script>
 

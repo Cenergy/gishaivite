@@ -13,7 +13,6 @@ export const convertCoordinates = async (params: {
     const response = await http.get('/v1/converters/coords/convert', { params })
     return response.data // 现在response是完整对象，需要返回data部分
   } catch (error) {
-    console.error('坐标转换请求失败:', error)
     // throw error;
     return { error }
   }
@@ -32,7 +31,6 @@ export const convertCoordinatesFromExcel = async (formData: FormData) => {
     })
     return response
   } catch (error) {
-    console.error('Excel文件坐标转换请求失败:', error)
     return { error }
   }
 }
