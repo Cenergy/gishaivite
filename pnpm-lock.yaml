@@ -32,6 +32,9 @@ importers:
       element-plus:
         specifier: ^2.9.8
         version: 2.9.8(vue@3.5.13(typescript@5.8.3))
+      gcoord:
+        specifier: ^1.0.7
+        version: 1.0.7
       glob:
         specifier: ^11.0.2
         version: 11.0.2
@@ -1476,6 +1479,10 @@ packages:
 
   function-bind@1.1.2:
     resolution: {integrity: sha512-7XHNxH7qX9xG5mIwxkhumTox/MIRNcOgDrxWsMt2pAr23WHp6MrRlN7FBSFpCpr+oVO0F744iUgR82nJMfG2SA==}
+
+  gcoord@1.0.7:
+    resolution: {integrity: sha512-UCN2iSm69jBOYz2ma2eg5I5imp65Cj70rcTTfMNSNMvZpR1U6oGjmVh080aCvC/6lN1ClkuOoBeaLuebw9AZJg==}
+    engines: {node: '>=16.11.0'}
 
   gensync@1.0.0-beta.2:
     resolution: {integrity: sha512-3hN7NaskYvMDLQY55gnW3NQ+mesEAepTqlg+VEbj7zzqEMBVNhzcGYYeqFo/TlYz6eQiFcp1HcsCZO+nGgS8zg==}
@@ -3898,6 +3905,8 @@ snapshots:
     optional: true
 
   function-bind@1.1.2: {}
+
+  gcoord@1.0.7: {}
 
   gensync@1.0.0-beta.2: {}
 
