@@ -54,17 +54,17 @@ export default class BaseMapBus {
       }),
     });
 
-    const vtLayer = new VectorTileLayer('vt', {
-      urlTemplate: 'http://tile.maptalks.com/test/planet-single/{z}/{x}/{y}.mvt',
-    });
+    // const vtLayer = new VectorTileLayer('vt', {
+    //   urlTemplate: 'http://tile.maptalks.com/test/planet-single/{z}/{x}/{y}.mvt',
+    // });
 
-    const groupLayer = new GroupGLLayer('group', [vtLayer]).addTo(this.map);
+    // const groupLayer = new GroupGLLayer('group', [vtLayer]).addTo(this.map);
 
-    const gltfLayer = new GLTFLayer('gltflayer');
-    groupLayer.addLayer(gltfLayer);
+    // const gltfLayer = new GLTFLayer('gltflayer');
+    // groupLayer.addLayer(gltfLayer);
 
-    const polygonLayer = new PolygonLayer('polygonlayer');
-    groupLayer.addLayer(polygonLayer);
+    // const polygonLayer = new PolygonLayer('polygonlayer');
+    // groupLayer.addLayer(polygonLayer);
 
     // 创建标记图层
     this.markerLayer = new VectorLayer('markers').addTo(this.map);
