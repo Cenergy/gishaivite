@@ -1,0 +1,174 @@
+/* 全局CSS变量 */
+:root {
+  --primary-color: #0066cc;
+  --secondary-color: #004d99;
+  --text-color: #333;
+  --card-background: white;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --animation-duration: 1s;
+}
+
+/* 动画类 */
+.fade-in {
+  opacity: 0;
+  animation: fadeIn 1s ease-in forwards;
+}
+
+.delay-1 {
+  animation-delay: 0.5s;
+}
+
+.delay-2 {
+  animation-delay: 1s;
+}
+
+.delay-3 {
+  animation-delay: 1.5s;
+}
+
+/* 关键帧动画 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 平滑滚动样式 */
+html {
+  scroll-behavior: smooth;
+}
+
+/* 滚动动画相关样式 */
+.scroll-animation {
+  opacity: 0;
+  transform: translateY(50px);
+  transition: all 0.6s ease-out;
+}
+
+.scroll-animation.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 卡片通用样式 */
+.cards-container {
+  display: flex;
+  justify-content: center;
+  gap: 2.5rem;
+  margin: 4rem auto;
+  flex-wrap: wrap;
+  max-width: 1200px;
+  padding: 0 2rem;
+}
+
+.card {
+  background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);
+  border-radius: 12px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+  padding: 2rem;
+  width: 300px;
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(0, 102, 204, 0.1);
+  /* 添加暗黑模式样式 */
+  @apply dark:bg-gradient-to-br dark:from-gray-800 dark:to-gray-900 dark:text-gray-200 dark:border-gray-700 dark:shadow-gray-900/30;
+}
+
+.card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.12);
+  background: linear-gradient(135deg, #ffffff 0%, #f0f6ff 100%);
+  /* 添加暗黑模式悬停样式 */
+  @apply dark:bg-gradient-to-br dark:from-gray-700 dark:to-gray-800 dark:shadow-gray-900/40;
+}
+
+.tool-card {
+  background: var(--card-background, white);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  padding: 2.5rem;
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  margin: 0.5rem;
+  /* 添加暗黑模式样式 */
+  @apply dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700 dark:shadow-gray-900/30;
+}
+
+.tool-card:hover {
+  transform: translateY(-12px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(135deg, #f5f9ff 0%, #e6f0ff 100%);
+  /* 添加暗黑模式悬停样式 */
+  @apply dark:bg-gradient-to-br dark:from-gray-700 dark:to-gray-800 dark:shadow-gray-900/40;
+}
+
+.card-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  color: var(--primary-color, #0066cc);
+  /* 添加暗黑模式图标颜色 */
+  @apply dark:text-blue-400;
+}
+
+.card-btn {
+  background-color: var(--primary-color, #0066cc);
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s, transform 0.3s;
+  margin-top: auto;
+}
+
+.card-btn:hover {
+  background-color: var(--secondary-color, #004d99);
+  transform: scale(1.05);
+}
+
+/* 响应式卡片样式 */
+@media (max-width: 768px) {
+  .cards-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .card,
+  .tool-card {
+    width: 90%;
+    max-width: 350px;
+    margin-bottom: 1.5rem;
+  }
+
+  /* 调整行列布局 */
+  .el-row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .el-col {
+    width: 100%;
+    max-width: 100%;
+    flex: 0 0 100%;
+    margin-bottom: 1.5rem;
+  }
+}
+
+/* 添加更多断点以实现更好的响应式效果 */
+@media (min-width: 769px) and (max-width: 992px) {
+  .el-col {
+    width: 50%;
+    max-width: 50%;
+    flex: 0 0 50%;
+  }
+}
