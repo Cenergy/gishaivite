@@ -1,18 +1,18 @@
 <template>
   <div class="map-view">
-    <MapView :mapBus="testMapBus" />
+    <BaseMap :mapBus="testMapBus" />
     <LayerControl />
     <MapDetail />
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { defineAsyncComponent } from 'vue'
 import { test as testMapBus } from '@/map'
 
 // 异步组件导入 - 懒加载优化
-const MapView = defineAsyncComponent({
-  loader: () => import('@/components/MapView.vue'),
+const BaseMap = defineAsyncComponent({
+  loader: () => import('@/components/BaseMap.vue'),
   delay: 200,
   timeout: 3000
 })

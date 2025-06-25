@@ -16,7 +16,7 @@
     <!-- 主要内容区域 -->
     <div class="gallery-content flex-1 w-full h-full">
       <!-- 地图模式 - 独立显示，不受数据状态影响 -->
-      <MapView
+      <BaseMap
         v-if="viewMode === 'map'"
         class="w-full h-full flex-1"
       />
@@ -63,8 +63,8 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { defineAsyncComponent } from 'vue'
 
 // 异步组件导入 - 懒加载优化
-const MapView = defineAsyncComponent({
-  loader: () => import('../components/MapView.vue'),
+const BaseMap = defineAsyncComponent({
+  loader: () => import('../components/BaseMap.vue'),
   loadingComponent: () => import('../components/Gallery/LoadingState.vue'),
   delay: 200,
   timeout: 3000

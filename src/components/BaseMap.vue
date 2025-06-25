@@ -4,20 +4,20 @@
   </div>
 </template>
 
-<script setup>
-import { onMounted, onUnmounted, nextTick, computed } from 'vue'
-import { home as defaultMapBus } from '@/map'
+<script setup lang="ts">
+import { onMounted, onUnmounted, nextTick, computed } from 'vue';
+import { home as defaultMapBus } from '@/map';
 
 // 定义props
 const props = defineProps({
   mapBus: {
     type: Object,
-    default: null
-  }
-})
+    default: null,
+  },
+});
 
 // 计算属性：如果传递了mapBus则使用传递的，否则使用默认导入的
-const mapBus = computed(() => props.mapBus || defaultMapBus)
+const mapBus = computed(() => props.mapBus || defaultMapBus);
 
 // 纯粹的地图容器组件，不处理业务逻辑
 
@@ -26,16 +26,16 @@ onMounted(() => {
   // 延迟初始化地图，确保DOM已渲染
   nextTick(() => {
     // 地图初始化
-    if (mapBus.value.startup) mapBus.value.startup()
-    
+    if (mapBus.value.startup) mapBus.value.startup();
+
     // 地图初始化完成，父组件可以调用updateMarkers进行标记更新
-  })
-})
+  });
+});
 
 // 组件卸载时销毁地图
 onUnmounted(() => {
-  if (mapBus.value.destroy) mapBus.value.destroy()
-})
+  if (mapBus.value.destroy) mapBus.value.destroy();
+});
 </script>
 
 <style scoped>
