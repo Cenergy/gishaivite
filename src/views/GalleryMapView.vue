@@ -12,13 +12,13 @@ import { test as testMapBus } from '@/map'
 
 // 异步组件导入 - 懒加载优化
 const BaseMap = defineAsyncComponent({
-  loader: () => import('@/components/BaseMap.vue'),
+  loader: () => import('@/components/common/BaseMap.vue'),
   delay: 200,
   timeout: 3000
 })
 
-const LayerControl = defineAsyncComponent(() => import('@/components/LayerControl/index.vue'))
-const MapDetail = defineAsyncComponent(() => import('@/components/MapDetail/index.vue'))
+const LayerControl = defineAsyncComponent(() => import('@/components/map/LayerControl.vue'))
+const MapDetail = defineAsyncComponent(() => import('@/components/map/MapDetail.vue'))
 
 // 使用test控制器的地图页面
 </script>

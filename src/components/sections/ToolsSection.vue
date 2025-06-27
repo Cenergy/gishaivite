@@ -94,7 +94,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { ToolDialog } from './Dialog/index'
+import { ToolDialog } from '@/components/dialog'
 
 // 弹窗状态管理
 const showDialog = ref(false)

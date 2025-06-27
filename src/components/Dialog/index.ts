@@ -1,13 +1,7 @@
-/**
- * Dialog组件统一导出文件
- * 提供更清晰的组件导入方式
- */
-
-// 基础对话框组件
-export { default as BaseDialog } from './base/BaseDialog.vue'
-
-// 工具对话框组件
 export { default as ToolDialog } from './ToolDialog.vue'
-
-// 工具内容组件
-export * from './tools'
+export { default as BaseDialog } from './BaseDialog.vue'
+export { default as CoordinateTransformTool } from './CoordinateTransformTool.vue'
+export { default as GISQueryTool } from './GISQueryTool.vue'
+export { default as MapVisualizationTool } from './MapVisualizationTool.vue'
+export { default as MobileCollectionTool } from './MobileCollectionTool.vue'
+export { default as SpatialAnalysisTool } from './SpatialAnalysisTool.vue'

@@ -21,13 +21,13 @@ import { defineAsyncComponent } from 'vue'
 import { useScrollEffects } from '@/composables/useScrollEffects'
 
 // 导入新的组件
-import AppHeader from '@/components/AppHeader.vue'
-import MainContent from '@/components/MainContent.vue'
+import AppHeader from '@/components/layout/AppHeader.vue'
+import MainContent from '@/components/layout/MainContent.vue'
 
 // 异步组件导入 - 懒加载优化
-const UnoTest = defineAsyncComponent(() => import('../components/UnoTest.vue'))
-const UnoAdvanced = defineAsyncComponent(() => import('../components/UnoAdvanced.vue'))
-const FooterSection = defineAsyncComponent(() => import('@/components/FooterSection.vue'))
+const UnoTest = defineAsyncComponent(() => import('@/components/demo/UnoTest.vue'))
+const UnoAdvanced = defineAsyncComponent(() => import('@/components/demo/UnoAdvanced.vue'))
+const FooterSection = defineAsyncComponent(() => import('@/components/layout/FooterSection.vue'))
 
 // 使用滚动效果组合式函数
 const { isHeaderFixed } = useScrollEffects()

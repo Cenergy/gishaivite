@@ -14,14 +14,12 @@
 
 <script setup lang="ts">
 import { computed, defineProps, defineEmits } from 'vue'
-import { BaseDialog } from './base'
-import {
-  GISQueryTool,
-  MapVisualizationTool,
-  SpatialAnalysisTool,
-  MobileCollectionTool,
-  CoordinateTransformTool,
-} from './tools'
+import BaseDialog from './BaseDialog.vue'
+import GISQueryTool from './GISQueryTool.vue'
+import MapVisualizationTool from './MapVisualizationTool.vue'
+import SpatialAnalysisTool from './SpatialAnalysisTool.vue'
+import MobileCollectionTool from './MobileCollectionTool.vue'
+import CoordinateTransformTool from './CoordinateTransformTool.vue'
 
 const props = defineProps({
   toolType: {

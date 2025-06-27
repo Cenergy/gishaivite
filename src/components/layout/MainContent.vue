@@ -14,11 +14,11 @@
 import { defineAsyncComponent } from 'vue'
 
 // 首屏下方组件 - 懒加载
-const ToolsSection = defineAsyncComponent(() => import('@/components/ToolsSection.vue'))
-const BlogSection = defineAsyncComponent(() => import('@/components/BlogSection.vue'))
-const ResourcesSection = defineAsyncComponent(() => import('@/components/ResourcesSection.vue'))
-const GallerySection = defineAsyncComponent(() => import('@/components/GallerySection.vue'))
-const FollowSection = defineAsyncComponent(() => import('@/components/FollowSection.vue'))
+const ToolsSection = defineAsyncComponent(() => import('@/components/sections/ToolsSection.vue'))
+const BlogSection = defineAsyncComponent(() => import('@/components/sections/BlogSection.vue'))
+const ResourcesSection = defineAsyncComponent(() => import('@/components/sections/ResourcesSection.vue'))
+const GallerySection = defineAsyncComponent(() => import('@/components/sections/GallerySection.vue'))
+const FollowSection = defineAsyncComponent(() => import('@/components/sections/FollowSection.vue'))
 </script>
 
 <style scoped>

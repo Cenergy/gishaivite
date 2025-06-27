@@ -17,9 +17,10 @@
   </div>
 </template>
 <script>
-import * as components from "./components";
+import * as components from "./panels";
 // import Waterlogging from './components/Waterlogging.vue'
 import eventBus from "@/utils/EventBus";
+
 export default {
   components,
 
@@ -40,6 +41,7 @@ export default {
       this.expand = !this.expand;
     },
     handleAddPanel(data) {
+      console.log("🚀 ~ handleAddPanel ~ data:", data);
       let idx = this.tabList.findIndex((item) => item.label == data.label);
       if (idx == -1) {
         this.tabList.push(data);

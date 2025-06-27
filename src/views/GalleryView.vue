@@ -64,23 +64,23 @@ import { defineAsyncComponent } from 'vue'
 
 // 异步组件导入 - 懒加载优化
 const BaseMap = defineAsyncComponent({
-  loader: () => import('../components/BaseMap.vue'),
-  loadingComponent: () => import('../components/Gallery/LoadingState.vue'),
+  loader: () => import('../components/common/BaseMap.vue'),
+  loadingComponent: () => import('../components/gallery/LoadingState.vue'),
   delay: 200,
   timeout: 3000
 })
 
 const PhotoViewer = defineAsyncComponent({
-  loader: () => import('../components/PhotoViewer.vue'),
+  loader: () => import('../components/common/PhotoViewer.vue'),
   delay: 200,
   timeout: 3000
 })
 
-const CategorySelector = defineAsyncComponent(() => import('../components/Gallery/CategorySelector.vue'))
-const ViewModeSelector = defineAsyncComponent(() => import('../components/Gallery/ViewModeSelector.vue'))
-const AlbumGrid = defineAsyncComponent(() => import('../components/Gallery/AlbumGrid.vue'))
-const PhotoGrid = defineAsyncComponent(() => import('../components/Gallery/PhotoGrid.vue'))
-const LoadingState = defineAsyncComponent(() => import('../components/Gallery/LoadingState.vue'))
+const CategorySelector = defineAsyncComponent(() => import('../components/gallery/CategorySelector.vue'))
+const ViewModeSelector = defineAsyncComponent(() => import('../components/gallery/ViewModeSelector.vue'))
+const AlbumGrid = defineAsyncComponent(() => import('../components/gallery/AlbumGrid.vue'))
+const PhotoGrid = defineAsyncComponent(() => import('../components/gallery/PhotoGrid.vue'))
+const LoadingState = defineAsyncComponent(() => import('../components/gallery/LoadingState.vue'))
 
 // Composables导入
 import { useGalleryData } from '@/composables/useGalleryData'

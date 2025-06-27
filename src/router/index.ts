@@ -14,27 +14,27 @@ const router = createRouter({
       // route level code-splitting
       // this generates a separate chunk (About.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
-      component: () => import('../views/AboutView.vue'),
+      component: () => import('@/views/AboutView.vue'),
     },
     {
       path: '/theme-demo',
       name: 'theme-demo',
-      component: () => import(/* webpackChunkName: "theme-demo" */ '../components/ThemeDemo.vue'),
+      component: () => import(/* webpackChunkName: "theme-demo" */ '@/components/demo/ThemeDemo.vue'),
     },
     {
       path: '/gallery',
       name: 'gallery',
-      component: () => import(/* webpackChunkName: "gallery" */ '../views/GalleryView.vue'),
+      component: () => import(/* webpackChunkName: "gallery" */ '@/views/GalleryView.vue'),
     },
     {
       path: '/map',
       name: 'map',
-      component: () => import(/* webpackChunkName: "map" */ '../views/GalleryMapView.vue')
+      component: () => import(/* webpackChunkName: "map" */ '@/views/GalleryMapView.vue')
     },
     {
       path: '/geo-worker-demo',
       name: 'GeoWorkerDemo',
-      component: () => import('../components/GeoWorkerDemo.vue')
+      component: () => import('@/components/demo/GeoWorkerDemo.vue')
     },
   ],
 })

@@ -51,7 +51,7 @@ import { ref, defineAsyncComponent } from 'vue'
 
 // 异步组件导入
 const ThemeToggle = defineAsyncComponent({
-  loader: () => import('@/components/ThemeToggle.vue'),
+  loader: () => import('@/components/common/ThemeToggle.vue'),
   delay: 100,
   timeout: 3000
 })
