@@ -58,30 +58,7 @@ export default class BaseMapBus {
       })
     ];
 
-
-    const colors4 = [
-      [0, '#F0F9E9'],
-      [200, '#D7EFD1'],
-      [400, '#A6DCB6'],
-      [650, '#8FD4BD'],
-      [880, '#67C1CB'],
-      [1100, '#3C9FC8'],
-      [1300, '#1171B1'],
-      [1450, '#085799'],
-      [1600, '#084586'],
-    ];
-
-    const terrain = {
-      type: 'mapbox',
-      maxAvailableZoom: 16,
-      requireSkuToken: false,
-      // urlTemplate: "https://microget-1300406971.cos.ap-shanghai.myqcloud.com/maptalks-study/assets/data/tile-rgb/{z}/{x}/{y}.png",
-      urlTemplate: 'http://127.0.0.1:5503/gis/terrain_webp/{z}/{x}/{y}.webp',
-      colors: colors4,
-      exaggeration: 1,
-    };
-    const group = new GroupGLLayer('group', layers, {
-      terrain,
+    const group = new GroupGLLayer('basic_scene_group', layers, {
     });
     group.addTo(this.map);
 
