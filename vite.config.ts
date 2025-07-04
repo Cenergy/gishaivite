@@ -78,7 +78,17 @@ export default defineConfig({
         rewrite: (path) => path,
       },
       '/static': {
-        target: 'http://localhost:8000',
+        target: 'https://api2.gishai.top',
+        changeOrigin: true,
+        rewrite: (path) => path,
+      },
+      '/terrain': {
+        target: 'https://api2.gishai.top',
+        changeOrigin: true,
+        rewrite: (path) => path,
+      },
+      '/terrains': {
+        target: 'https://api2.gishai.top',
         changeOrigin: true,
         rewrite: (path) => path,
       },

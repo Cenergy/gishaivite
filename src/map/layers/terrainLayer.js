@@ -36,7 +36,7 @@ class TerrainLayer extends BaseLayer {
       console.warn('TerrainLayer: Map not initialized');
       return;
     }
-    
+
     // 如果已经显示，避免重复设置
     if (this._visible) {
       return;
@@ -66,7 +66,7 @@ class TerrainLayer extends BaseLayer {
       maxAvailableZoom: 16,
       requireSkuToken: false,
       // urlTemplate: "https://microget-1300406971.cos.ap-shanghai.myqcloud.com/maptalks-study/assets/data/tile-rgb/{z}/{x}/{y}.png",
-      urlTemplate: 'http://127.0.0.1:5503/gis/terrain_webp/{z}/{x}/{y}.webp',
+      urlTemplate: '/terrains/{z}/{x}/{y}.webp',
       colors: colors4,
       exaggeration: 1,
     };
