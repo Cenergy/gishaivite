@@ -58,7 +58,16 @@ export default class BaseMapBus {
       })
     ];
 
+     // GroupGLLayer能实现抗锯齿等后处理，也能加入其他三维图层，让子图层都融合到同一个三维空间中
+     const sceneConfig = {
+      postProcess: {
+          enable: true,
+          antialias: { enable: true }
+      }
+  };
+
     const group = new GroupGLLayer('basic_scene_group', layers, {
+      sceneConfig
     });
     group.addTo(this.map);
 

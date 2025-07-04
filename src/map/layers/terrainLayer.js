@@ -27,9 +27,27 @@ class TerrainLayer extends BaseLayer {
     ]);
   }
 
+  /**
+   * 显示地形图层
+   */
   show() {
-    const groupLayer = this.map.getLayer('basic_scene_group');
+    if (!this.map) {
+      console.warn('TerrainLayer: Map not initialized');
+      return;
+    }
     
+    // 如果已经显示，避免重复设置
+    if (this._visible) {
+      return;
+    }
+
+    const groupLayer = this.map.getLayer('basic_scene_group');
+    if (!groupLayer) {
+      console.warn('TerrainLayer: basic_scene_group layer not found');
+      return;
+    }
+
+
     const colors4 = [
       [0, '#F0F9E9'],
       [200, '#D7EFD1'],
@@ -51,18 +69,47 @@ class TerrainLayer extends BaseLayer {
       colors: colors4,
       exaggeration: 1,
     };
-    groupLayer.setTerrain(terrain);
+
+    try {
+      groupLayer.setTerrain(terrain);
+      this._visible = true;
+      console.log('TerrainLayer: Terrain enabled');
+    } catch (error) {
+      console.error('TerrainLayer: Failed to set terrain', error);
+    }
   }
 
-  _showCore(options) {
-    this._visible = true;
-  }
+  /**
+   * 隐藏地形图层
+   */
+  hide() {
+    if (!this.map) {
+      console.warn('TerrainLayer: Map not initialized');
+      return;
+    }
 
-  _hideCore(options) {
-    this._visible = false;
-  }
+    const groupLayer = this.map.getLayer('basic_scene_group');
+    if (!groupLayer) {
+      console.warn('TerrainLayer: basic_scene_group layer not found');
+      return;
+    }
 
+    // 如果已经隐藏，避免重复设置
+    if (!this._visible) {
+      return;
+    }
+
+    try {
+      groupLayer.setTerrain(null);
+      this._visible = false;
+      console.log('TerrainLayer: Terrain disabled');
+    } catch (error) {
+      console.error('TerrainLayer: Failed to remove terrain', error);
+    }
+  }
   destroy() {
+    const groupLayer = this.map.getLayer('basic_scene_group');
+    groupLayer.setTerrain(null);
     // 基类会自动清理事件监听器，无需手动调用
   }
 }
