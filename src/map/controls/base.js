@@ -14,6 +14,7 @@ import {
 
 import 'maptalks-gl/dist/maptalks-gl.css';
 import * as entities from '../layers';
+import { LAYER_NAMES } from '../constants';
 
 import  gcoord from 'gcoord';
 
@@ -66,7 +67,7 @@ export default class BaseMapBus {
       }
   };
 
-    const group = new GroupGLLayer('basic_scene_group', layers, {
+    const group = new GroupGLLayer(LAYER_NAMES.BASIC_SCENE_GROUP, layers, {
       sceneConfig
     });
     group.addTo(this.map);

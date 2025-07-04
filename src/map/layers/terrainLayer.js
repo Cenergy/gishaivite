@@ -1,6 +1,7 @@
 import BaseLayer from './baseLayer';
 import { GroupGLLayer, Marker, ui } from 'maptalks-gl';
 import eventBus from '@/utils/EventBus';
+import { LAYER_NAMES } from '../constants';
 
 class TerrainLayer extends BaseLayer {
   constructor(options = {}) {
@@ -41,9 +42,9 @@ class TerrainLayer extends BaseLayer {
       return;
     }
 
-    const groupLayer = this.map.getLayer('basic_scene_group');
+    const groupLayer = this.map.getLayer(LAYER_NAMES.BASIC_SCENE_GROUP);
     if (!groupLayer) {
-      console.warn('TerrainLayer: basic_scene_group layer not found');
+      console.warn(`TerrainLayer: ${LAYER_NAMES.BASIC_SCENE_GROUP} layer not found`);
       return;
     }
 
@@ -88,9 +89,9 @@ class TerrainLayer extends BaseLayer {
       return;
     }
 
-    const groupLayer = this.map.getLayer('basic_scene_group');
+    const groupLayer = this.map.getLayer(LAYER_NAMES.BASIC_SCENE_GROUP);
     if (!groupLayer) {
-      console.warn('TerrainLayer: basic_scene_group layer not found');
+      console.warn(`TerrainLayer: ${LAYER_NAMES.BASIC_SCENE_GROUP} layer not found`);
       return;
     }
 
@@ -108,7 +109,7 @@ class TerrainLayer extends BaseLayer {
     }
   }
   destroy() {
-    const groupLayer = this.map.getLayer('basic_scene_group');
+    const groupLayer = this.map.getLayer(LAYER_NAMES.BASIC_SCENE_GROUP);
     groupLayer.setTerrain(null);
     // 基类会自动清理事件监听器，无需手动调用
   }
