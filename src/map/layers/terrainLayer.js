@@ -66,7 +66,7 @@ class TerrainLayer extends BaseLayer {
       maxAvailableZoom: 16,
       requireSkuToken: false,
       // urlTemplate: "https://microget-1300406971.cos.ap-shanghai.myqcloud.com/maptalks-study/assets/data/tile-rgb/{z}/{x}/{y}.png",
-      urlTemplate: '/terrains/{z}/{x}/{y}.webp',
+      urlTemplate: '/resources/terrain_webp/{z}/{x}/{y}.webp',
       colors: colors4,
       exaggeration: 1,
     };

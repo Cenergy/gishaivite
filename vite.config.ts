@@ -82,12 +82,7 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path,
       },
-      '/terrain': {
-        target: 'https://api2.gishai.top',
-        changeOrigin: true,
-        rewrite: (path) => path,
-      },
-      '/terrains': {
+      '/resources': {
         target: 'https://api2.gishai.top',
         changeOrigin: true,
         rewrite: (path) => path,
