@@ -47,5 +47,7 @@ const { isHeaderFixed } = useScrollEffects()
 .header-placeholder {
   height: 60px; /* 与头部高度保持一致 */
   width: 100%;
+  margin-bottom: -40px; /* 负边距抵消占位元素的高度，避免影响后续内容 */
+  pointer-events: none; /* 确保不会阻挡用户交互 */
 }
 </style>
