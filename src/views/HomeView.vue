@@ -11,6 +11,8 @@
     </div> -->
 
     <AppHeader :is-header-fixed="isHeaderFixed" />
+    <!-- 当头部固定时的占位元素，避免内容跳跃 -->
+    <div v-if="isHeaderFixed" class="header-placeholder"></div>
     <MainContent />
     <FooterSection class="fade-in delay-3" />
   </div>
@@ -40,5 +42,10 @@ const { isHeaderFixed } = useScrollEffects()
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+.header-placeholder {
+  height: 60px; /* 与头部高度保持一致 */
+  width: 100%;
 }
 </style>

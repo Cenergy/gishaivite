@@ -38,20 +38,54 @@ export function useScrollEffects() {
     }
 
     // 监听滚动固定header
+    let lastScrollY = 0
+    let headerOriginalTop = 0
+    
+    // 获取头部原始位置
+    const getHeaderOriginalPosition = () => {
+      const header = document.querySelector('.header')
+      if (header && headerOriginalTop === 0) {
+        headerOriginalTop = header.offsetTop
+      }
+    }
+    
     handleScroll = () => {
-      const heroSection = document.querySelector('.hero-section')
-      if (heroSection) {
-        const heroHeight = heroSection.offsetHeight
-        isHeaderFixed.value = window.scrollY > heroHeight - 80
+      const currentScrollY = window.scrollY
+      const header = document.querySelector('.header')
+      
+      if (header) {
+        // 确保获取到头部原始位置
+        if (headerOriginalTop === 0) {
+          getHeaderOriginalPosition()
+        }
+        
+        // 添加一个小的缓冲区域（10px），避免频繁切换
+        const threshold = headerOriginalTop + 10
+        
+        // 向下滚动且超过阈值时固定
+        if (currentScrollY >= threshold && currentScrollY > lastScrollY) {
+          isHeaderFixed.value = true
+        }
+        // 向上滚动且回到原始位置附近时取消固定
+        else if (currentScrollY <= headerOriginalTop && currentScrollY < lastScrollY) {
+          isHeaderFixed.value = false
+        }
+        
+        lastScrollY = currentScrollY
       } else {
-        // 如果没有hero section，根据滚动距离判断
-        isHeaderFixed.value = window.scrollY > 100
+        // 降级方案：如果找不到header元素，使用滚动距离判断
+        isHeaderFixed.value = currentScrollY > 100
       }
     }
 
     // 初始检查
     checkScroll()
-    handleScroll()
+    
+    // 延迟获取头部位置，确保DOM完全渲染
+    setTimeout(() => {
+      getHeaderOriginalPosition()
+      handleScroll()
+    }, 100)
 
     // 添加滚动事件监听
     window.addEventListener('scroll', checkScroll)
