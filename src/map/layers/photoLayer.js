@@ -2,6 +2,9 @@ import BaseLayer from './baseLayer';
 import { VectorLayer, Marker, ui } from 'maptalks-gl';
 import eventBus from '@/utils/EventBus';
 
+import componentToHtml from "@/map/tools/componentToHtml";
+import {UnoMap} from "@/components/demo";
+
 class PhotoLayer extends BaseLayer {
   constructor(options = {}) {
     super(options);
@@ -30,7 +33,7 @@ class PhotoLayer extends BaseLayer {
         handler: (data) => this.updatePhotoMarkers(data.photos || [])
       },
       {
-        event: 'updateAlbumMarkers', 
+        event: 'updateAlbumMarkers',
         handler: (data) => this.updateAlbumMarkers(data.albums || [])
       },
       {
@@ -38,7 +41,7 @@ class PhotoLayer extends BaseLayer {
         handler: (data) => {
           const { mode, photos, albums } = data;
           this.isAlbumMode = mode === 'album';
-          
+
           if (this.isAlbumMode) {
             this.updateAlbumMarkers(albums || []);
           } else {
@@ -79,7 +82,7 @@ class PhotoLayer extends BaseLayer {
       });
 
       // 点击标记显示信息窗口
-      marker.on('click', (e) => {
+      marker.on('click', () => {
         this.showPhotoPopup(photo, photo.coordinates);
       });
 
@@ -129,7 +132,7 @@ class PhotoLayer extends BaseLayer {
       });
 
       // 点击标记显示信息窗口
-      marker.on('click', (e) => {
+      marker.on('click', () => {
         this.showAlbumPopup(album, coordinates);
       });
 
@@ -151,16 +154,12 @@ class PhotoLayer extends BaseLayer {
 
     this.infoWindow = new ui.InfoWindow({
       title: photo.title || '照片',
-      content: `
-        <div class="map-popup-content">
-          <img src="${photo.url}" alt="${photo.title || '照片'}" style="width:100%;max-height:150px;object-fit:cover;" />
-          <div class="popup-info">
-            <p>${photo.description || ''}</p>
-            <p><small>拍摄时间: ${photo.date || '未知'}</small></p>
-            <button class="popup-view-btn" data-photo-id="${photo.id}">查看大图</button>
-          </div>
-        </div>
-      `,
+      content: componentToHtml({
+        component: UnoMap,
+        props: {
+          photoData: photo
+        }
+      }),
     });
 
     this.infoWindow.addTo(this.map).show(coordinates);
@@ -266,7 +265,7 @@ class PhotoLayer extends BaseLayer {
         const extent = [minLng - padding, minLat - padding, maxLng + padding, maxLat + padding];
 
         this.map.fitExtent(extent, 0, { animation: true });
-      } catch (error) {
+      } catch (_error) {
         // fitExtent失败，使用第一个坐标的中心点
         this.map.animateTo(
           {
@@ -281,14 +280,14 @@ class PhotoLayer extends BaseLayer {
     }
   }
 
-  _showCore(options) {
+  _showCore(_options) {
     if (this.markerLayer) {
       this.markerLayer.show();
     }
     this._visible = true;
   }
 
-  _hideCore(options) {
+  _hideCore(_options) {
     if (this.markerLayer) {
       this.markerLayer.hide();
     }
@@ -305,7 +304,7 @@ class PhotoLayer extends BaseLayer {
       this.map.removeLayer(this.markerLayer);
       this.markerLayer = null;
     }
-    
+
     // 基类会自动清理事件监听器，无需手动调用
   }
 }
