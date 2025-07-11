@@ -1,33 +1,39 @@
 <template>
-  <div class="p-4 m-4 bg-blue-500 text-white rounded-lg shadow-lg">
-    <h2 class="text-xl font-bold mb-2">UnoCSS Tailwind预设测试</h2>
-    <p class="opacity-80">这个组件使用了UnoCSS的Tailwind预设样式</p>
-    <div class="mt-4 flex gap-2">
-      <button
-        class="px-4 py-2 bg-green-500 hover:bg-green-600 rounded transition-colors duration-300"
-      >
-        <i class="i-custom:circle" />
-        <i class="i-logo:logo text-#1E80FF" />
-        按钮1
-      </button>
-
-      <button
-        class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded transition-colors duration-300"
-      >
-        按钮2
-      </button>
-      
-      <router-link 
-        to="/geo-worker-demo"
-        class="px-4 py-2 bg-purple-500 hover:bg-purple-600 rounded transition-colors duration-300 text-white no-underline inline-flex items-center"
-      >
-        <i class="i-tabler:cpu mr-2"></i>
-        Web Worker 演示
-      </router-link>
+  <div class="map-popup-content">
+    <img
+      :src="photo.url"
+      :alt="photo.title || '照片'"
+      style="w-full max-h-37.5 object-cover"
+    />
+    <div class="popup-info">
+      <p>{{ photo.description || '' }}</p>
+      <p><small>拍摄时间: {{ photo.date || '未知' }}</small></p>
+      <button class="popup-view-btn" :data-photo-id="photo.id" @click="handleViewPhoto">查看大图</button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-// 这个组件展示了UnoCSS的Tailwind预设功能
+import { onMounted } from 'vue'
+import { Photo } from "@/types/photo";
+
+const props = defineProps<{
+  photo: Photo
+}>()
+
+// 定义事件
+const emit = defineEmits<{
+  viewPhoto: [photoId: string, photo: Photo]
+}>()
+
+// 处理查看大图点击事件
+const handleViewPhoto = () => {
+  emit('viewPhoto', props.photo.id, props.photo)
+  console.log('查看大图:', props.photo.title || props.photo.id)
+}
+
+onMounted(() => {
+  console.log("🚀 ~ onMounted ~ photo:", props.photo);
+})
+
 </script>

@@ -1,7 +1,7 @@
 <template>
   <div class="gallery-categories fade-in delay-1">
     <el-radio-group v-model="selectedCategory" size="large" @change="handleCategoryChange">
-      <el-radio-button v-for="category in categories" :key="category.id" :label="category.id">
+      <el-radio-button v-for="category in categories" :key="category.id" :value="category.id">
         {{ category.name }}
       </el-radio-button>
     </el-radio-group>
@@ -18,7 +18,7 @@ const props = defineProps({
     default: () => []
   },
   modelValue: {
-    type: String,
+    type: [String, Number],
     required: true
   }
 })

@@ -2,8 +2,8 @@ import BaseLayer from './baseLayer';
 import { VectorLayer, Marker, ui } from 'maptalks-gl';
 import eventBus from '@/utils/EventBus';
 
-import componentToHtml from "@/map/tools/componentToHtml";
-import {UnoMap} from "@/components/demo";
+import componentToHtml from '@/map/tools/componentToHtml';
+import { UnoMap } from '@/components/demo';
 
 class PhotoLayer extends BaseLayer {
   constructor(options = {}) {
@@ -30,11 +30,11 @@ class PhotoLayer extends BaseLayer {
     super.addEventListeners([
       {
         event: 'updatePhotoMarkers',
-        handler: (data) => this.updatePhotoMarkers(data.photos || [])
+        handler: (data) => this.updatePhotoMarkers(data.photos || []),
       },
       {
         event: 'updateAlbumMarkers',
-        handler: (data) => this.updateAlbumMarkers(data.albums || [])
+        handler: (data) => this.updateAlbumMarkers(data.albums || []),
       },
       {
         event: 'switchMapMode',
@@ -47,8 +47,8 @@ class PhotoLayer extends BaseLayer {
           } else {
             this.updatePhotoMarkers(photos || []);
           }
-        }
-      }
+        },
+      },
     ]);
   }
 
@@ -157,8 +157,8 @@ class PhotoLayer extends BaseLayer {
       content: componentToHtml({
         component: UnoMap,
         props: {
-          photoData: photo
-        }
+          photo,
+        },
       }),
     });
 

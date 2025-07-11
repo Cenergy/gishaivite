@@ -6,9 +6,9 @@
       <el-form label-position="top">
         <el-form-item label="底图类型">
           <el-radio-group v-model="mapType">
-            <el-radio label="vector">矢量底图</el-radio>
-            <el-radio label="satellite">卫星影像</el-radio>
-            <el-radio label="terrain">地形图</el-radio>
+            <el-radio value="vector">矢量底图</el-radio>
+            <el-radio value="satellite">卫星影像</el-radio>
+            <el-radio value="terrain">地形图</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="可视化方式">

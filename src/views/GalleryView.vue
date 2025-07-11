@@ -170,19 +170,19 @@ const handlePhotoSelected = (photo) => {
   openPhotoViewer(photo)
 }
 
+// 设置事件监听器
+const cleanup = setupEventListeners({
+  onAlbumSelected: handleAlbumSelected,
+  onPhotoSelected: handlePhotoSelected
+})
+
 // 生命周期钩子
 onMounted(async () => {
   await initializeData()
-  
-  // 设置事件监听器
-  const cleanup = setupEventListeners({
-    onAlbumSelected: handleAlbumSelected,
-    onPhotoSelected: handlePhotoSelected
-  })
-  
-  // 保存清理函数
-  onUnmounted(cleanup)
 })
+
+// 组件卸载时清理事件监听器
+onUnmounted(cleanup)
 </script>
 
 <style scoped>

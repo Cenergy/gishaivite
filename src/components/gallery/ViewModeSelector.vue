@@ -1,10 +1,10 @@
 <template>
   <div class="gallery-view-mode fade-in">
     <el-radio-group v-model="selectedMode" size="large" @change="handleModeChange">
-      <el-radio-button label="list">
+      <el-radio-button value="list">
         <el-icon><Grid /></el-icon> 列表模式
       </el-radio-button>
-      <el-radio-button label="map">
+      <el-radio-button value="map">
         <el-icon><MapLocation /></el-icon> 地图模式
       </el-radio-button>
     </el-radio-group>

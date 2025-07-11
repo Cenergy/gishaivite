@@ -1,12 +1,8 @@
 <template>
   <div class="state-container">
     <!-- 加载状态 -->
-    <div v-if="loading" class="loading-container">
-      <el-loading-directive
-        v-loading="true"
-        :element-loading-text="loadingText"
-        class="w-full h-full"
-      />
+    <div v-if="loading" class="loading-container" v-loading="true" :element-loading-text="loadingText">
+      <div class="w-full h-full min-h-[200px]"></div>
     </div>
 
     <!-- 错误状态 -->

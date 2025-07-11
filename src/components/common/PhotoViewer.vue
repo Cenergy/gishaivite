@@ -6,13 +6,13 @@
           <h4 v-if="props.albumTitle" class="album-title">{{ props.albumTitle }}</h4>
           <h3>{{ currentPhoto.title }}</h3>
         </div>
-        <el-button type="text" @click="closeViewer" class="close-btn">
+        <el-button link @click="closeViewer" class="close-btn">
           <el-icon><Close /></el-icon>
         </el-button>
       </div>
       
       <div class="photo-viewer-body">
-        <el-button type="text" @click="prevPhoto" class="nav-btn prev-btn" :disabled="currentIndex <= 0">
+        <el-button link @click="prevPhoto" class="nav-btn prev-btn" :disabled="currentIndex <= 0">
           <el-icon><ArrowLeft /></el-icon>
         </el-button>
         
@@ -29,7 +29,7 @@
           />
         </div>
         
-        <el-button type="text" @click="nextPhoto" class="nav-btn next-btn" :disabled="currentIndex >= photos.length - 1">
+        <el-button link @click="nextPhoto" class="nav-btn next-btn" :disabled="currentIndex >= photos.length - 1">
           <el-icon><ArrowRight /></el-icon>
         </el-button>
       </div>

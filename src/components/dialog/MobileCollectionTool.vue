@@ -6,8 +6,8 @@
       <el-form label-position="top">
         <el-form-item label="采集模式">
           <el-radio-group v-model="collectionMode">
-            <el-radio label="online">在线模式</el-radio>
-            <el-radio label="offline">离线模式</el-radio>
+            <el-radio value="online">在线模式</el-radio>
+            <el-radio value="offline">离线模式</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="数据类型">
