@@ -42,15 +42,7 @@ export default function(options) {
         render() {
             return h(component, props);
         }
-    });
+    }).mount(container);
     
-    // 注册必要的插件
-    app.use(createPinia());
-    app.use(router);
-    app.use(ElementPlus);
-    
-    // 挂载组件并返回DOM元素
-    app.mount(container);
-    
-    return container.firstElementChild || container;
+    return app.$el || container;
 }
