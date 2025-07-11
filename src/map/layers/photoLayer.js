@@ -3,7 +3,7 @@ import { VectorLayer, Marker, ui } from 'maptalks-gl';
 import eventBus from '@/utils/EventBus';
 
 import componentToHtml from '@/map/tools/componentToHtml';
-import { UnoMap } from '@/components/demo';
+import { AlbumPopup, PhotoPopup } from '@/components/map/popups';
 
 class PhotoLayer extends BaseLayer {
   constructor(options = {}) {
@@ -155,7 +155,7 @@ class PhotoLayer extends BaseLayer {
     this.infoWindow = new ui.InfoWindow({
       title: photo.title || '照片',
       content: componentToHtml({
-        component: UnoMap,
+        component: PhotoPopup,
         props: {
           photo,
         },
@@ -186,16 +186,12 @@ class PhotoLayer extends BaseLayer {
 
     this.infoWindow = new ui.InfoWindow({
       title: album.title,
-      content: `
-        <div class="map-popup-content">
-          <img src="${album.coverUrl}" alt="${album.title}" style="width:100%;max-height:150px;object-fit:cover;" />
-          <div class="popup-info">
-            <p>${album.description}</p>
-            <p><small>照片数量: ${album.photos.length}</small></p>
-            <button class="popup-view-btn" data-album-id="${album.id}">查看相册</button>
-          </div>
-        </div>
-      `,
+      content: componentToHtml({
+        component: AlbumPopup,
+        props: {
+          album,
+        },
+      }),
     });
 
     this.infoWindow.addTo(this.map).show(coordinates);
