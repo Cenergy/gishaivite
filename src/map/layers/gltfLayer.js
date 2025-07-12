@@ -1,170 +1,156 @@
 import BaseLayer from './baseLayer';
-import { GLTFLayer, GLTFMarker } from 'maptalks-gl';
+import { GLTFLayer, GLTFMarker, VectorLayer } from 'maptalks-gl';
 import eventBus from '@/utils/EventBus';
+import { LAYER_NAMES } from '../constants';
 
-class GLTFModelLayer extends BaseLayer {
+/**
+ * GLTF 3D模型图层类
+ * 用于加载和管理 GLTF/GLB 格式的3D模型
+ */
+class GltfModelLayer extends BaseLayer {
   constructor(options = {}) {
     super(options);
     this.gltfLayer = null;
-    this.gltfMarkers = [];
-    this._visible = false;
+    this.markerLayer = null;
+    this.models = [];
+    this.loadedModels = new Map(); // 缓存已加载的模型
   }
 
+  /**
+   * 初始化图层
+   * @param {Map} map - MapTalks地图实例
+   */
   init(map) {
-    super.init(map);
+    super.init(map, false);
+    
+    // 创建GLTF图层
+    this.gltfLayer = new GLTFLayer('gltf-models', {
+      animation: true, // 启用动画
+      enableAltitude: true, // 启用高度
+    });
+    
+    // 创建标记图层用于模型位置标记
+    this.markerLayer = new VectorLayer('gltf-markers');
+    
+    // 获取或创建GroupGLLayer
+    let groupLayer = this.map.getLayer(LAYER_NAMES.BASIC_SCENE_GROUP);
+    if (!groupLayer) {
+      console.warn('GltfModelLayer: GroupGLLayer not found, creating new one');
+      // 如果没有找到GroupGLLayer，可以创建一个新的或者添加到地图
+      this.map.addLayer(this.gltfLayer);
+      this.map.addLayer(this.markerLayer);
+    } else {
+      groupLayer.addLayer(this.gltfLayer);
+      groupLayer.addLayer(this.markerLayer);
+    }
+
     // 注册事件监听器
     this.registerEvents();
-    this.show();
   }
 
+  /**
+   * 注册事件监听器
+   */
   registerEvents() {
-    // 直接使用基类的 addEventListeners 方法注册事件
     super.addEventListeners([
       {
-        event: 'changeModelType',
-        handler: (type) => {
-          console.log('GLTFModelLayer: Change model type to', type);
-          // 可以根据类型切换不同的模型
-        },
+        event: 'loadGltfModel',
+        handler: (data) => this.loadModel(data),
       },
       {
-        event: 'toggleModelVisibility',
-        handler: (visible) => {
-          console.log('GLTFModelLayer: Toggle visibility', visible);
-          if (visible) {
-            this.show();
-          } else {
-            this.hide();
-          }
-        },
+        event: 'removeGltfModel',
+        handler: (data) => this.removeModel(data.id),
       },
       {
-        event: 'locateToModel',
-        handler: (data) => {
-          console.log('GLTFModelLayer: Locate to model', data);
-          this.locateToModel();
-        },
+        event: 'updateGltfModels',
+        handler: (data) => this.updateModels(data.models || []),
       },
       {
-        event: 'showTestModel',
-        handler: (data) => {
-          console.log('GLTFModelLayer: Show test model', data);
-          this.show();
-        },
+        event: 'clearGltfModels',
+        handler: () => this.clearModels(),
       },
       {
-        event: 'hideTestModel',
-        handler: () => {
-          console.log('GLTFModelLayer: Hide test model');
-          this.hide();
-        },
-      },
-      {
-        event: 'loadTestModel',
-        handler: (data) => {
-          console.log('GLTFModelLayer: Load test model', data);
-          this.show();
-        },
-      },
-      {
-        event: 'destroyTestModel',
-        handler: () => {
-          console.log('GLTFModelLayer: Destroy test model');
-          this.remove();
-        },
+        event: 'animateGltfModel',
+        handler: (data) => this.animateModel(data),
       },
     ]);
   }
 
   /**
-   * 显示GLTF模型图层
+   * 加载单个GLTF模型
+   * @param {Object} modelData - 模型数据
+   * @param {string} modelData.id - 模型唯一标识
+   * @param {string} modelData.url - 模型文件URL
+   * @param {Array} modelData.coordinates - 模型位置坐标 [lng, lat, altitude]
+   * @param {Object} modelData.options - 模型选项
    */
-  show() {
-    if (!this.map) {
-      console.warn('GLTFModelLayer: Map not initialized');
+  async loadModel(modelData) {
+    if (!this.gltfLayer || !modelData) {
+      console.warn('GltfModelLayer: Layer not initialized or invalid model data');
       return;
     }
 
-    // 如果已经显示，避免重复设置
-    if (this._visible) {
+    const { id, url, coordinates, options = {} } = modelData;
+    
+    if (!id || !url || !coordinates) {
+      console.warn('GltfModelLayer: Missing required model data (id, url, coordinates)');
       return;
     }
 
     try {
-      // 如果图层已存在，直接显示
-      if (this.gltfLayer) {
-        this.gltfLayer.show();
-        this._visible = true;
-        console.log('GLTFModelLayer: GLTF model layer shown');
+      // 检查是否已经加载过该模型
+      if (this.loadedModels.has(id)) {
+        console.warn(`GltfModelLayer: Model ${id} already loaded`);
         return;
       }
 
-      // 创建GLTF图层
-      this.gltfLayer = new GLTFLayer('flyingAircraft', {
-        enableAltitude: true,
-        zIndex: 500,
-      });
-      
-      this.gltfLayer.addTo(this.map);
-      
-      // 定义无人机坐标
-      const coordinate = {
-        x: 113.97790555555555,
-        y: 22.660430555555557,
-        z: 333.8968505859375
-      };
-
       // 创建GLTF标记
-      const gltfMarker = new GLTFMarker(
-        coordinate,
-        {
-          symbol: {
-            url: './models/drone-normal.glb',
-            modelHeight: 30,
-            rotationZ: 150,
-          }
-        }
-      );
-      
-      gltfMarker.addTo(this.gltfLayer);
-      this.gltfMarkers.push(gltfMarker);
-      
-      this._visible = true;
-      console.log('GLTFModelLayer: GLTF model layer created and shown');
-    } catch (error) {
-      console.error('GLTFModelLayer: Failed to show GLTF layer', error);
-    }
-  }
+      const gltfMarker = new GLTFMarker(coordinates, {
+        symbol: {
+          url: url,
+          scaleX: options.scaleX || 1,
+          scaleY: options.scaleY || 1,
+          scaleZ: options.scaleZ || 1,
+          rotationX: options.rotationX || 0,
+          rotationY: options.rotationY || 0,
+          rotationZ: options.rotationZ || 0,
+          translation: options.translation || [0, 0, 0],
+          animation: options.animation || false,
+        },
+        properties: {
+          id: id,
+          name: options.name || `Model ${id}`,
+          description: options.description || '',
+        },
+      });
 
-  /**
-   * 定位到模型
-   */
-  locateToModel() {
-    if (!this.map || !this.gltfMarkers.length) {
-      console.warn('GLTFModelLayer: Map not initialized or no markers available');
-      return;
-    }
+      // 添加点击事件
+      gltfMarker.on('click', () => {
+        this.onModelClick(modelData);
+      });
 
-    try {
-      // 获取第一个标记的坐标
-      const marker = this.gltfMarkers[0];
-      if (marker && marker.getCoordinates) {
-        const coordinates = marker.getCoordinates();
-        
-        // 设置地图视角到模型位置
-        this.map.animateTo({
-          center: [coordinates.x, coordinates.y],
-          zoom: 18,
-          pitch: 45,
-          bearing: 0
-        }, {
-          duration: 2000
-        });
-        
-        console.log('GLTFModelLayer: Located to model at', coordinates);
+      // 添加到图层
+      this.gltfLayer.addGeometry(gltfMarker);
+      
+      // 缓存模型
+      this.loadedModels.set(id, {
+        marker: gltfMarker,
+        data: modelData,
+      });
+
+      // 添加位置标记（可选）
+      if (options.showMarker !== false) {
+        this.addPositionMarker(modelData);
       }
+
+      console.log(`GltfModelLayer: Model ${id} loaded successfully`);
+      
+      // 触发模型加载完成事件
+      eventBus.emit('gltf-model-loaded', { id, modelData });
+      
     } catch (error) {
-      console.error('GLTFModelLayer: Failed to locate to model', error);
+      console.error(`GltfModelLayer: Failed to load model ${id}:`, error);
+      eventBus.emit('gltf-model-error', { id, error: error.message });
     }
   }
 
