@@ -1,6 +1,7 @@
 import BaseLayer from './baseLayer';
 import { VectorLayer, Marker, ui } from 'maptalks-gl';
 import eventBus from '@/utils/EventBus';
+import UIMarkerLayer from '../core/UIMarkerLayer';
 
 import componentToHtml from '@/map/tools/componentToHtml';
 import { AlbumPopup, PhotoPopup } from '@/components/map/popups';
@@ -13,6 +14,7 @@ class PhotoLayer extends BaseLayer {
     this.albums = [];
     this.isAlbumMode = false;
     this.infoWindow = null;
+    this.uiMarkerLayer = null;
   }
 
   init(map) {
@@ -20,7 +22,7 @@ class PhotoLayer extends BaseLayer {
     // 创建标记图层
     this.markerLayer = new VectorLayer('photo-markers');
     this.map.addLayer(this.markerLayer);
-
+    this.uiMarkerLayer = new UIMarkerLayer().addTo(map);
     // 注册事件监听器
     this.registerEvents();
   }
@@ -63,6 +65,19 @@ class PhotoLayer extends BaseLayer {
     if (!this.markerLayer || !photos.length) return;
 
     const validCoordinates = [];
+    // const markers = photos.map((photo) => {
+    //   return new ui.UIMarker(photo.coordinates, {
+    //     collision: true,
+    //     content: componentToHtml({
+    //       component: PhotoPopup,
+    //       props: {
+    //         photo,
+    //       },
+    //     }),
+    //   });
+    // });
+
+    // this.uiMarkerLayer.addMarker(markers);
 
     photos.forEach((photo) => {
       if (!photo.coordinates) return;
