@@ -110,6 +110,11 @@ export default {
             label: "淹没分析",
             flag: false,
           },
+          {
+            value: "ModelTest",
+            label: "GLTF模型",
+            flag: false,
+          },
         ],
       },
     };

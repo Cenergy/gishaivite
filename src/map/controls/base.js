@@ -16,7 +16,7 @@ import 'maptalks-gl/dist/maptalks-gl.css';
 import * as entities from '../layers';
 import { LAYER_NAMES } from '../constants';
 
-import  gcoord from 'gcoord';
+import gcoord from 'gcoord';
 
 export default class BaseMapBus {
   constructor() {}
@@ -37,8 +37,8 @@ export default class BaseMapBus {
     this.map = new Map('map', {
       center: center,
       zoom: zoom,
+      pitch: 45,
     });
-
 
     const layers = [
       new TileLayer('base', {
@@ -51,24 +51,22 @@ export default class BaseMapBus {
           const center = map.getCenter();
           //坐标转换的第三方库 https://github.com/hujiulong/gcoord
           const c = gcoord.transform(center.toArray(), gcoord.AMap, gcoord.WGS84);
-          const offset = map
-            .coordToPoint(center, z)
-            .sub(map.coordToPoint(new Coordinate(c), z));
+          const offset = map.coordToPoint(center, z).sub(map.coordToPoint(new Coordinate(c), z));
           return offset._round().toArray();
         },
-      })
+      }),
     ];
 
-     // GroupGLLayer能实现抗锯齿等后处理，也能加入其他三维图层，让子图层都融合到同一个三维空间中
-     const sceneConfig = {
+    // GroupGLLayer能实现抗锯齿等后处理，也能加入其他三维图层，让子图层都融合到同一个三维空间中
+    const sceneConfig = {
       postProcess: {
-          enable: true,
-          antialias: { enable: true }
-      }
-  };
+        enable: true,
+        antialias: { enable: true },
+      },
+    };
 
     const group = new GroupGLLayer(LAYER_NAMES.BASIC_SCENE_GROUP, layers, {
-      sceneConfig
+      sceneConfig,
     });
     group.addTo(this.map);
 

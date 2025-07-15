@@ -21,9 +21,56 @@ class GLTFModelLayer extends BaseLayer {
     // 直接使用基类的 addEventListeners 方法注册事件
     super.addEventListeners([
       {
-        event: 'test',
+        event: 'changeModelType',
+        handler: (type) => {
+          console.log('GLTFModelLayer: Change model type to', type);
+          // 可以根据类型切换不同的模型
+        },
+      },
+      {
+        event: 'toggleModelVisibility',
+        handler: (visible) => {
+          console.log('GLTFModelLayer: Toggle visibility', visible);
+          if (visible) {
+            this.show();
+          } else {
+            this.hide();
+          }
+        },
+      },
+      {
+        event: 'locateToModel',
         handler: (data) => {
-          console.log('GLTFModelLayer test event:', data);
+          console.log('GLTFModelLayer: Locate to model', data);
+          this.locateToModel();
+        },
+      },
+      {
+        event: 'showTestModel',
+        handler: (data) => {
+          console.log('GLTFModelLayer: Show test model', data);
+          this.show();
+        },
+      },
+      {
+        event: 'hideTestModel',
+        handler: () => {
+          console.log('GLTFModelLayer: Hide test model');
+          this.hide();
+        },
+      },
+      {
+        event: 'loadTestModel',
+        handler: (data) => {
+          console.log('GLTFModelLayer: Load test model', data);
+          this.show();
+        },
+      },
+      {
+        event: 'destroyTestModel',
+        handler: () => {
+          console.log('GLTFModelLayer: Destroy test model');
+          this.remove();
         },
       },
     ]);
@@ -44,6 +91,14 @@ class GLTFModelLayer extends BaseLayer {
     }
 
     try {
+      // 如果图层已存在，直接显示
+      if (this.gltfLayer) {
+        this.gltfLayer.show();
+        this._visible = true;
+        console.log('GLTFModelLayer: GLTF model layer shown');
+        return;
+      }
+
       // 创建GLTF图层
       this.gltfLayer = new GLTFLayer('flyingAircraft', {
         enableAltitude: true,
@@ -51,9 +106,6 @@ class GLTFModelLayer extends BaseLayer {
       });
       
       this.gltfLayer.addTo(this.map);
-
-
-      
       
       // 定义无人机坐标
       const coordinate = {
@@ -73,16 +125,46 @@ class GLTFModelLayer extends BaseLayer {
           }
         }
       );
-   
-      // this.gltfLayer.addGeometry(gltfMarker);
-      gltfMarker.addTo(this.gltfLayer);
       
+      gltfMarker.addTo(this.gltfLayer);
       this.gltfMarkers.push(gltfMarker);
       
       this._visible = true;
-      console.log('GLTFModelLayer: GLTF model layer shown');
+      console.log('GLTFModelLayer: GLTF model layer created and shown');
     } catch (error) {
       console.error('GLTFModelLayer: Failed to show GLTF layer', error);
+    }
+  }
+
+  /**
+   * 定位到模型
+   */
+  locateToModel() {
+    if (!this.map || !this.gltfMarkers.length) {
+      console.warn('GLTFModelLayer: Map not initialized or no markers available');
+      return;
+    }
+
+    try {
+      // 获取第一个标记的坐标
+      const marker = this.gltfMarkers[0];
+      if (marker && marker.getCoordinates) {
+        const coordinates = marker.getCoordinates();
+        
+        // 设置地图视角到模型位置
+        this.map.animateTo({
+          center: [coordinates.x, coordinates.y],
+          zoom: 18,
+          pitch: 45,
+          bearing: 0
+        }, {
+          duration: 2000
+        });
+        
+        console.log('GLTFModelLayer: Located to model at', coordinates);
+      }
+    } catch (error) {
+      console.error('GLTFModelLayer: Failed to locate to model', error);
     }
   }
 
@@ -97,6 +179,28 @@ class GLTFModelLayer extends BaseLayer {
 
     // 如果已经隐藏，避免重复设置
     if (!this._visible) {
+      return;
+    }
+
+    try {
+      // 隐藏GLTF图层（不移除，只是隐藏）
+      if (this.gltfLayer && this.gltfLayer.hide) {
+        this.gltfLayer.hide();
+      }
+      
+      this._visible = false;
+      console.log('GLTFModelLayer: GLTF model layer hidden');
+    } catch (error) {
+      console.error('GLTFModelLayer: Failed to hide GLTF layer', error);
+    }
+  }
+
+  /**
+   * 移除图层，清理所有资源
+   */
+  remove() {
+    if (!this.map) {
+      console.warn('GLTFModelLayer: Map not initialized');
       return;
     }
 
@@ -116,9 +220,9 @@ class GLTFModelLayer extends BaseLayer {
       this.gltfLayer = null;
       
       this._visible = false;
-      console.log('GLTFModelLayer: GLTF model layer hidden');
+      console.log('GLTFModelLayer: GLTF model layer removed');
     } catch (error) {
-      console.error('GLTFModelLayer: Failed to hide GLTF layer', error);
+      console.error('GLTFModelLayer: Failed to remove GLTF layer', error);
     }
   }
 
@@ -126,8 +230,8 @@ class GLTFModelLayer extends BaseLayer {
    * 销毁图层，清理所有资源
    */
   destroy() {
-    // 先隐藏图层
-    this.hide();
+    // 先移除图层
+    this.remove();
     
     // 清理引用
     this.gltfLayer = null;
