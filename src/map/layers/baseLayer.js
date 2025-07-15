@@ -30,24 +30,44 @@ export default class BaseLayer {
    * 将地图视图重置到初始的中心点和缩放级别
    */
   goHome() {
-    if (!this.map) {
+    // 严格检查地图实例和必要方法
+    if (!this.map || typeof this.map.animateTo !== 'function') {
+      console.warn('BaseLayer: Map instance not properly initialized');
       return;
     }
     
-    // 获取初始配置或使用默认值
-    const initialCenter = this.options?.center || [116.4074, 39.9042]; // 默认北京
-    const initialZoom = this.options?.zoom || 5;
-    
-    // 使用动画效果回到初始位置
-    this.map.animateTo(
-      {
-        center: initialCenter,
-        zoom: initialZoom,
-      },
-      {
-        duration: 1000, // 1秒动画时间
+    try {
+      // 获取初始配置或使用默认值
+      const initialCenter = this.options?.center || [116.4074, 39.9042]; // 默认北京
+      const initialZoom = this.options?.zoom || 5;
+      
+      // 使用动画效果回到初始位置
+      this.map.animateTo(
+        {
+          center: initialCenter,
+          zoom: initialZoom,
+        },
+        {
+          duration: 1000, // 1秒动画时间
+        }
+      );
+    } catch (error) {
+      console.error('BaseLayer: Error in goHome:', error);
+      // 降级处理：直接设置中心点和缩放级别
+      try {
+        const initialCenter = this.options?.center || [116.4074, 39.9042];
+        const initialZoom = this.options?.zoom || 5;
+        
+        if (typeof this.map.setCenter === 'function') {
+          this.map.setCenter(initialCenter);
+        }
+        if (typeof this.map.setZoom === 'function') {
+          this.map.setZoom(initialZoom);
+        }
+      } catch (fallbackError) {
+        console.error('BaseLayer: Fallback setCenter/setZoom also failed:', fallbackError);
       }
-    );
+    }
   }
 
 

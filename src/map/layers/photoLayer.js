@@ -240,25 +240,31 @@ class PhotoLayer extends BaseLayer {
    * 智能定位地图视图
    */
   updateMapView(coordinates) {
-    if (!this.map || !coordinates.length) {
+    // 严格检查地图实例和必要方法
+    if (!this.map || typeof this.map.animateTo !== 'function') {
+      console.warn('PhotoLayer: Map instance not properly initialized');
+      return;
+    }
+
+    if (!coordinates.length) {
       this.goHome();
       return;
     }
 
-    if (coordinates.length === 1) {
-      // 只有一个坐标，定位到该点
-      this.map.animateTo(
-        {
-          center: coordinates[0],
-          zoom: 12,
-        },
-        {
-          duration: 1000,
-        },
-      );
-    } else {
-      // 多个坐标，计算边界并自适应显示
-      try {
+    try {
+      if (coordinates.length === 1) {
+        // 只有一个坐标，定位到该点
+        this.map.animateTo(
+          {
+            center: coordinates[0],
+            zoom: 12,
+          },
+          {
+            duration: 1000,
+          },
+        );
+      } else {
+        // 多个坐标，计算边界并自适应显示
         let minLng = coordinates[0][0],
           maxLng = coordinates[0][0];
         let minLat = coordinates[0][1],
@@ -275,9 +281,26 @@ class PhotoLayer extends BaseLayer {
         const padding = 0.01;
         const extent = [minLng - padding, minLat - padding, maxLng + padding, maxLat + padding];
 
-        this.map.fitExtent(extent, 0, { animation: true });
-      } catch (_error) {
-        // fitExtent失败，使用第一个坐标的中心点
+        // 检查 fitExtent 方法是否存在
+        if (typeof this.map.fitExtent === 'function') {
+          this.map.fitExtent(extent, 0, { animation: true });
+        } else {
+          // 降级到 animateTo
+          this.map.animateTo(
+            {
+              center: [(minLng + maxLng) / 2, (minLat + maxLat) / 2],
+              zoom: 10,
+            },
+            {
+              duration: 1000,
+            },
+          );
+        }
+      }
+    } catch (error) {
+      console.error('PhotoLayer: Error in updateMapView:', error);
+      // 降级处理：使用第一个坐标的中心点
+      try {
         this.map.animateTo(
           {
             center: coordinates[0],
@@ -287,6 +310,8 @@ class PhotoLayer extends BaseLayer {
             duration: 1000,
           },
         );
+      } catch (fallbackError) {
+        console.error('PhotoLayer: Fallback animateTo also failed:', fallbackError);
       }
     }
   }
