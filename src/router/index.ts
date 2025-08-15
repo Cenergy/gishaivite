@@ -32,6 +32,11 @@ const router = createRouter({
       component: () => import(/* webpackChunkName: "map" */ '@/views/GalleryMapView.vue')
     },
     {
+      path: '/threed',
+      name: 'threed',
+      component: () => import(/* webpackChunkName: "threed" */ '@/views/ThreeDView.vue')
+    },
+    {
       path: '/geo-worker-demo',
       name: 'GeoWorkerDemo',
       component: () => import('@/components/demo/GeoWorkerDemo.vue')
