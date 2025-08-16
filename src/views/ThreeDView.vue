@@ -886,9 +886,14 @@ const downloadChunk = async (filename: string, start: number, end: number): Prom
   const uuid = getUuidByName(filename)
   if (!uuid) throw new Error('无法获取模型UUID')
 
-  const headers: Record<string, string> = {
-    'Range': `bytes=${start}-${end}`
+  const headers: Record<string, string> = {}
+  
+  // 只有在分块模式下才添加Range请求头
+  const chunkSizeNum = Number(chunkSize.value)
+  if (chunkSizeNum > 0) {
+    headers['Range'] = `bytes=${start}-${end}`
   }
+  
   if (authToken) {
     headers['Authorization'] = `Bearer ${authToken}`
   }
@@ -1008,12 +1013,13 @@ const loadModelStreamWASMRealtime = async (): Promise<{ model: THREE.Object3D; g
     let chunkIndex: number, totalChunks: number
 
     // 处理不分块的情况
-    if (chunkSize.value === 0) {
+    const chunkSizeNum = Number(chunkSize.value)
+    if (chunkSizeNum === 0) {
       chunkIndex = 0
       totalChunks = 1
     } else {
-      chunkIndex = Math.floor(startByte / chunkSize.value)
-      totalChunks = Math.ceil(streamState.totalBytes / chunkSize.value)
+      chunkIndex = Math.floor(startByte / chunkSizeNum)
+      totalChunks = Math.ceil(streamState.totalBytes / chunkSizeNum)
     }
 
     let decodeResult: StreamResult | null = null
@@ -1029,12 +1035,12 @@ const loadModelStreamWASMRealtime = async (): Promise<{ model: THREE.Object3D; g
 
       // 计算结束字节位置
       let endByte: number
-      if (chunkSize.value === 0) {
+      if (chunkSizeNum === 0) {
         // 不分块：下载整个文件
         endByte = streamState.totalBytes - 1
       } else {
         // 分块下载
-        endByte = Math.min(currentByte + chunkSize.value - 1, streamState.totalBytes - 1)
+        endByte = Math.min(currentByte + chunkSizeNum - 1, streamState.totalBytes - 1)
       }
 
       try {
