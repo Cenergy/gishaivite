@@ -72,21 +72,21 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        // target: 'http://localhost:8000',
-        target: 'https://api2.gishai.top',
+        target: 'http://127.0.0.1:8008',
+        // target: 'https://api2.gishai.top',
         changeOrigin: true,
         rewrite: (path) => path,
       },
-      '/static': {
-        target: 'https://api2.gishai.top',
-        changeOrigin: true,
-        rewrite: (path) => path,
-      },
-      '/resources': {
-        target: 'https://api2.gishai.top',
-        changeOrigin: true,
-        rewrite: (path) => path,
-      },
+      // '/static': {
+      //   target: 'https://api2.gishai.top',
+      //   changeOrigin: true,
+      //   rewrite: (path) => path,
+      // },
+      // '/resources': {
+      //   target: 'https://api2.gishai.top',
+      //   changeOrigin: true,
+      //   rewrite: (path) => path,
+      // },
     },
   },
 })
