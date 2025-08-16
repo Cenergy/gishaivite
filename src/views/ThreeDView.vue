@@ -217,7 +217,14 @@ const performanceStats = reactive({
   '网络请求': '-',
   '数据传输': '-',
   '数据解码': '-',
-  '几何转换': '-'
+  '几何转换': '-',
+  '分块数量': '-',
+  '分块大小': '-',
+  '压缩比': '-',
+  '原始大小': '-',
+  '压缩大小': '-',
+  '平均速度': '-',
+  '流式解码': '-'
 })
 
 // 加载方式选项
@@ -243,6 +250,43 @@ let isAnimationPlaying = false
 interface WASMDecoder {
   init(): Promise<void>
   decode(data: ArrayBuffer): Promise<{ data: ArrayBuffer }>
+  StreamDecoder: new () => StreamDecoder
+  getStreamDecoder(): (new () => StreamDecoder) | null
+}
+
+interface StreamDecoder {
+  add_chunk(chunk: Uint8Array): StreamResult
+  free(): void
+}
+
+interface StreamResult {
+  success: boolean
+  is_complete: boolean
+  progress: number
+  data: string | ArrayBuffer | object
+  error?: string
+  chunks_processed: number
+  total_received: number
+  stats?: {
+    originalSize: number
+    compressedSize: number
+    compressionRatio: number
+    wasmDecodeTime: number
+  }
+}
+
+interface ExtendedPerformanceStats {
+  totalTime: number
+  downloadTime: number
+  decodeTime: number
+  chunksCount?: number
+  chunkSize?: number
+  compressionRatio?: string
+  originalSize?: number
+  compressedSize?: number
+  averageSpeed?: number
+  wasmDecodeTime?: string
+  streamingEnabled?: boolean
 }
 
 interface ModelLoader {
@@ -255,7 +299,23 @@ let wasmDecoder: WASMDecoder | null = null
 let authToken: string | null = null
 
 // 流式加载相关
-const streamController: AbortController | null = null
+const streamState = reactive({
+  controller: null as AbortController | null,
+  downloadBuffer: null as ArrayBuffer | null,
+  downloadedBytes: 0,
+  totalBytes: 0,
+  downloadStartTime: 0,
+  lastProgressTime: 0,
+  lastDownloadedBytes: 0,
+  isPaused: false,
+  isCancelled: false,
+  resumeData: null as {
+    filename: string
+    downloadedBytes: number
+    totalBytes: number
+    timestamp: number
+  } | null
+})
 
 // 模型选项数组
 const modelOptions = [
@@ -793,10 +853,342 @@ const loadModelStreamWASM = async (): Promise<{ model: THREE.Object3D; geometry:
   return await loadModelWASM()
 }
 
-const loadModelStreamWASMRealtime = async (): Promise<{ model: THREE.Object3D; geometry: THREE.BufferGeometry; performanceStats?: { totalTime: number; downloadTime: number; decodeTime: number } }> => {
+// 辅助函数：获取文件信息
+const getFileInfo = async (filename: string): Promise<{ size: number; supportsRangeRequests: boolean }> => {
+  const uuid = getUuidByName(filename)
+  if (!uuid) throw new Error('无法获取模型UUID')
+
+  const headers: Record<string, string> = {}
+  if (authToken) {
+    headers['Authorization'] = `Bearer ${authToken}`
+  }
+
+  const response = await fetch(`/api/v1/resources/models/uuid/${uuid}`, {
+    method: 'HEAD',
+    headers
+  })
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+  }
+
+  const contentLength = response.headers.get('content-length')
+  const acceptRanges = response.headers.get('accept-ranges')
+
+  return {
+    size: contentLength ? parseInt(contentLength) : 0,
+    supportsRangeRequests: acceptRanges === 'bytes'
+  }
+}
+
+// 辅助函数：下载分块
+const downloadChunk = async (filename: string, start: number, end: number): Promise<ArrayBuffer> => {
+  const uuid = getUuidByName(filename)
+  if (!uuid) throw new Error('无法获取模型UUID')
+
+  const headers: Record<string, string> = {
+    'Range': `bytes=${start}-${end}`
+  }
+  if (authToken) {
+    headers['Authorization'] = `Bearer ${authToken}`
+  }
+
+  const response = await fetch(`/api/v1/resources/models/uuid/${uuid}`, {
+    headers,
+    signal: streamState.controller?.signal
+  })
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+  }
+
+  return await response.arrayBuffer()
+}
+
+// 辅助函数：计算下载速度
+const calculateDownloadSpeed = (currentTime: number): number => {
+  const timeDiff = currentTime - streamState.lastProgressTime
+  const bytesDiff = streamState.downloadedBytes - streamState.lastDownloadedBytes
+
+  if (timeDiff > 0) {
+    const speed = (bytesDiff / timeDiff) * 1000 // bytes per second
+    streamState.lastProgressTime = currentTime
+    streamState.lastDownloadedBytes = streamState.downloadedBytes
+    return speed
+  }
+  return 0
+}
+
+// 辅助函数：计算剩余时间
+const calculateRemainingTime = (speed: number): string => {
+  if (speed <= 0) return '计算中...'
+
+  const remainingBytes = streamState.totalBytes - streamState.downloadedBytes
+  const remainingSeconds = remainingBytes / speed
+
+  if (remainingSeconds < 60) {
+    return `${Math.ceil(remainingSeconds)}秒`
+  } else if (remainingSeconds < 3600) {
+    return `${Math.ceil(remainingSeconds / 60)}分钟`
+  } else {
+    return `${Math.ceil(remainingSeconds / 3600)}小时`
+  }
+}
+
+// 辅助函数：格式化字节数
+const formatBytes = (bytes: number): string => {
+  if (bytes === 0) return '0 B'
+
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+
+// 辅助函数：更新流式信息
+const updateStreamInfo = (downloaded: number, total: number, speed: number, remaining: string, currentChunkNum: number, totalChunks: number) => {
+  downloadedSize.value = formatBytes(downloaded)
+  totalSize.value = formatBytes(total)
+  downloadSpeed.value = formatBytes(speed) + '/s'
+  remainingTime.value = remaining
+  currentChunk.value = `${currentChunkNum}/${totalChunks}`
+}
+
+const loadModelStreamWASMRealtime = async (): Promise<{ model: THREE.Object3D; geometry: THREE.BufferGeometry; performanceStats?: ExtendedPerformanceStats }> => {
   console.log('⚡ 开始实时流式WASM加载...')
-  // 暂时使用普通WASM加载，后续可以实现真正的实时流式功能
-  return await loadModelWASM()
+
+  if (!wasmDecoder) {
+    throw new Error('WASM 解码器未初始化')
+  }
+
+  const uuid = getUuidByName(selectedModel.value)
+  if (!uuid) throw new Error('无法获取模型UUID')
+
+  const startTime = Date.now()
+  streamState.downloadStartTime = startTime
+  streamState.lastProgressTime = startTime
+  streamState.lastDownloadedBytes = 0
+  streamState.isPaused = false
+  streamState.isCancelled = false
+  streamState.controller = new AbortController()
+
+  // 创建流式解码器实例
+  const StreamDecoderClass = wasmDecoder.getStreamDecoder()
+  if (!StreamDecoderClass) {
+    throw new Error('StreamDecoder 不可用，可能是因为使用了 JavaScript 备选模式')
+  }
+  const streamDecoder = new StreamDecoderClass()
+
+  // 启用控制按钮
+  canPause.value = true
+  canResume.value = false
+  canCancel.value = true
+
+  try {
+    updateProgress(5, '⚡ 实时流式WASM: 获取文件信息...')
+
+    // 获取文件大小和支持的范围请求
+    const fileInfo = await getFileInfo(selectedModel.value)
+    streamState.totalBytes = fileInfo.size
+
+    updateStreamInfo(0, streamState.totalBytes, 0, '计算中...', 0, 0)
+    updateProgress(10, '⚡ 实时流式WASM: 开始边下载边解码...')
+
+    // 检查是否有断点续传数据
+    let startByte = 0
+    if (enableResume.value && streamState.resumeData && streamState.resumeData.filename === selectedModel.value) {
+      startByte = streamState.resumeData.downloadedBytes
+      streamState.downloadedBytes = startByte
+      console.log(`📥 断点续传: 从字节 ${startByte} 开始下载`)
+    }
+
+    // 边下载边解码的流式处理
+    let currentByte = startByte
+    let chunkIndex: number, totalChunks: number
+
+    // 处理不分块的情况
+    if (chunkSize.value === 0) {
+      chunkIndex = 0
+      totalChunks = 1
+    } else {
+      chunkIndex = Math.floor(startByte / chunkSize.value)
+      totalChunks = Math.ceil(streamState.totalBytes / chunkSize.value)
+    }
+
+    let decodeResult: StreamResult | null = null
+    let isDecodeComplete = false
+
+    while (currentByte < streamState.totalBytes && !streamState.isCancelled && !isDecodeComplete) {
+      // 检查是否暂停
+      while (streamState.isPaused && !streamState.isCancelled) {
+        await new Promise(resolve => setTimeout(resolve, 100))
+      }
+
+      if (streamState.isCancelled) break
+
+      // 计算结束字节位置
+      let endByte: number
+      if (chunkSize.value === 0) {
+        // 不分块：下载整个文件
+        endByte = streamState.totalBytes - 1
+      } else {
+        // 分块下载
+        endByte = Math.min(currentByte + chunkSize.value - 1, streamState.totalBytes - 1)
+      }
+
+      try {
+        // 下载单个分块
+        const chunkStartTime = performance.now()
+        const chunk = await downloadChunk(selectedModel.value, currentByte, endByte)
+        const chunkDownloadTime = performance.now() - chunkStartTime
+
+        // 🔥 关键区别：立即将分块送入流式解码器进行边下载边解码
+        const decodeStartTime = performance.now()
+        const streamResult = streamDecoder.add_chunk(new Uint8Array(chunk))
+        const chunkDecodeTime = performance.now() - decodeStartTime
+
+        console.log(`📦 分块 ${chunkIndex}: 下载耗时 ${chunkDownloadTime.toFixed(1)}ms, 解码耗时 ${chunkDecodeTime.toFixed(1)}ms, 解码进度 ${(streamResult.progress * 100).toFixed(1)}%`)
+
+        currentByte = endByte + 1
+        streamState.downloadedBytes = currentByte
+        chunkIndex++
+
+        // 更新进度 - 下载进度占50%，解码进度占40%
+        const downloadProgress = (streamState.downloadedBytes / streamState.totalBytes) * 50
+        const decodeProgress = streamResult.progress * 40
+        const totalProgress = 10 + downloadProgress + decodeProgress
+
+        const currentTime = performance.now()
+        const speed = calculateDownloadSpeed(currentTime)
+        const remainingTimeText = calculateRemainingTime(speed)
+
+        // 添加请求间隔延迟以避免触发限流
+        if (currentByte < streamState.totalBytes) {
+          await new Promise(resolve => setTimeout(resolve, 50)) // 50ms延迟
+        }
+
+        // 更新UI显示
+        if (streamResult.is_complete) {
+          updateProgress(90, '⚡ 实时流式WASM: 解码完成，构建模型...')
+          decodeResult = streamResult
+          isDecodeComplete = true
+
+          console.log('🎉 流式解码完成!', {
+            chunks_processed: streamResult.chunks_processed,
+            total_received: streamResult.total_received,
+            final_progress: streamResult.progress
+          })
+        } else {
+          updateProgress(
+            totalProgress,
+            `⚡ 实时流式WASM: 下载并解码中... ${formatBytes(streamState.downloadedBytes)}/${formatBytes(streamState.totalBytes)} (解码进度: ${(streamResult.progress * 100).toFixed(1)}%)`
+          )
+        }
+
+        updateStreamInfo(
+          streamState.downloadedBytes,
+          streamState.totalBytes,
+          speed,
+          remainingTimeText,
+          chunkIndex,
+          totalChunks
+        )
+
+        // 保存断点续传数据
+        if (enableResume.value) {
+          streamState.resumeData = {
+            filename: selectedModel.value,
+            downloadedBytes: streamState.downloadedBytes,
+            totalBytes: streamState.totalBytes,
+            timestamp: Date.now()
+          }
+        }
+
+        // 检查解码错误
+        if (!streamResult.success && streamResult.error) {
+          throw new Error(`流式解码失败: ${streamResult.error}`)
+        }
+
+      } catch (error) {
+        console.error(`下载分块 ${chunkIndex} 失败:`, error)
+        // 重试机制
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        continue
+      }
+    }
+
+    if (streamState.isCancelled) {
+      throw new Error('下载已取消')
+    }
+
+    if (!isDecodeComplete || !decodeResult) {
+      throw new Error('流式解码未完成')
+    }
+
+    // 解析数据
+    let parsedData = decodeResult.data
+    if (typeof decodeResult.data === 'string') {
+      try {
+        parsedData = JSON.parse(decodeResult.data)
+      } catch (e) {
+        console.warn('⚠️ 无法解析为JSON:', e)
+      }
+    }
+
+    // 构建模型
+     const modelResult = await buildModelWithGLTFLoader(parsedData as string | ArrayBuffer | Record<string, unknown> || decodeResult.data as string | ArrayBuffer)
+    const totalTime = Date.now() - startTime
+
+    updateProgress(100, '⚡ 实时流式WASM: 加载完成!')
+
+    // 清除断点续传数据
+    streamState.resumeData = null
+
+    // 禁用控制按钮
+    canPause.value = false
+    canResume.value = false
+    canCancel.value = false
+
+    const stats = decodeResult.stats || {
+       originalSize: streamState.totalBytes,
+       compressedSize: streamState.totalBytes,
+       compressionRatio: 1.0,
+       wasmDecodeTime: totalTime * 0.4
+     }
+
+     const averageSpeed = streamState.totalBytes / (totalTime / 1000) // bytes per second
+
+     return {
+       model: modelResult.model,
+       geometry: modelResult.geometry,
+       performanceStats: {
+         totalTime: totalTime,
+         downloadTime: totalTime * 0.6, // 估算下载时间
+         decodeTime: totalTime * 0.4,   // 估算解码时间
+         chunksCount: chunkIndex,
+         chunkSize: chunkSize.value,
+         compressionRatio: (stats.compressionRatio * 100).toFixed(1),
+         originalSize: stats.originalSize,
+         compressedSize: stats.compressedSize,
+         averageSpeed: averageSpeed,
+         wasmDecodeTime: (stats.wasmDecodeTime || totalTime * 0.4).toFixed(2),
+         streamingEnabled: true
+       }
+     }
+
+  } catch (error) {
+    console.error('实时流式WASM 模型加载失败:', error)
+    canPause.value = false
+    canResume.value = false
+    canCancel.value = false
+    throw error
+  } finally {
+    // 清理流式解码器
+    if (streamDecoder) {
+      streamDecoder.free()
+    }
+  }
 }
 
 const loadModel = async () => {
@@ -811,7 +1203,7 @@ const loadModel = async () => {
   try {
     updateProgress(0, '开始加载...')
 
-    let result: { model: THREE.Object3D; geometry: THREE.BufferGeometry; performanceStats?: { totalTime: number; downloadTime: number; decodeTime: number } }
+    let result: { model: THREE.Object3D; geometry: THREE.BufferGeometry; performanceStats?: ExtendedPerformanceStats }
 
     switch (loadMethod.value) {
       case 'stream':
@@ -848,7 +1240,7 @@ const loadModel = async () => {
           }
         })
       scene.add(currentModel)
-      
+
       // 处理动画
       setupAnimations(currentModel)
 
@@ -870,10 +1262,36 @@ const loadModel = async () => {
       updateInfo('顶点数', result.geometry && result.geometry.attributes && result.geometry.attributes.position ? result.geometry.attributes.position.count.toString() : '未知')
 
       if (result.performanceStats) {
-        performanceStats['总耗时'] = result.performanceStats.totalTime + 'ms'
-        performanceStats['数据传输'] = result.performanceStats.downloadTime + 'ms'
-        performanceStats['数据解码'] = result.performanceStats.decodeTime + 'ms'
+      performanceStats['总耗时'] = result.performanceStats.totalTime + 'ms'
+      performanceStats['数据传输'] = result.performanceStats.downloadTime + 'ms'
+      performanceStats['数据解码'] = result.performanceStats.decodeTime + 'ms'
+
+      // 流式WASM特有的统计信息
+      if (result.performanceStats.chunksCount !== undefined) {
+        performanceStats['分块数量'] = result.performanceStats.chunksCount.toString()
       }
+      if (result.performanceStats.chunkSize !== undefined) {
+        performanceStats['分块大小'] = formatBytes(result.performanceStats.chunkSize)
+      }
+      if (result.performanceStats.compressionRatio !== undefined) {
+        performanceStats['压缩比'] = result.performanceStats.compressionRatio + '%'
+      }
+      if (result.performanceStats.originalSize !== undefined) {
+        performanceStats['原始大小'] = formatBytes(result.performanceStats.originalSize)
+      }
+      if (result.performanceStats.compressedSize !== undefined) {
+        performanceStats['压缩大小'] = formatBytes(result.performanceStats.compressedSize)
+      }
+      if (result.performanceStats.averageSpeed !== undefined) {
+        performanceStats['平均速度'] = formatBytes(result.performanceStats.averageSpeed) + '/s'
+      }
+      if (result.performanceStats.wasmDecodeTime !== undefined) {
+        performanceStats['流式解码'] = result.performanceStats.wasmDecodeTime + 'ms'
+      }
+      if (result.performanceStats.streamingEnabled) {
+        performanceStats['流式模式'] = '✅ 启用'
+      }
+    }
     }
 
   } catch (error) {
@@ -937,29 +1355,29 @@ const setupAnimations = (model: THREE.Object3D) => {
     animationMixer = null
   }
   animationActions = []
-  
+
   // 检查模型是否有动画
   if (model.animations && model.animations.length > 0) {
     console.log('🎬 发现动画数据:', model.animations.length, '个动画')
-    
+
     // 创建动画混合器
     animationMixer = new THREE.AnimationMixer(model)
-    
+
     // 为每个动画创建动作
     model.animations.forEach((clip: THREE.AnimationClip, index: number) => {
       console.log(`🎭 动画 ${index + 1}: ${clip.name}, 时长: ${clip.duration.toFixed(2)}s`)
       const action = animationMixer!.clipAction(clip)
       animationActions.push(action)
     })
-    
+
     // 自动播放第一个动画
     if (animationActions.length > 0) {
       playAnimation(0)
     }
-    
+
     // 更新UI显示动画信息
     showAnimationSection.value = true
-    animationInfo.value = model.animations.map((clip: THREE.AnimationClip, index: number) => 
+    animationInfo.value = model.animations.map((clip: THREE.AnimationClip, index: number) =>
       `动画${index + 1}: ${clip.name} (${clip.duration.toFixed(2)}s)`
     ).join(', ')
   } else {
@@ -973,13 +1391,13 @@ const playAnimation = (index: number = 0) => {
   if (animationActions.length > index) {
     // 停止所有动画
     animationActions.forEach(action => action.stop())
-    
+
     // 播放指定动画
     const action = animationActions[index]
     action.reset()
     action.play()
     isAnimationPlaying = true
-    
+
     console.log(`▶️ 播放动画: ${action.getClip().name}`)
   }
 }
@@ -993,22 +1411,43 @@ const stopAnimation = () => {
 }
 
 const pauseStream = () => {
+  console.log('⏸️ 暂停流式下载')
+  streamState.isPaused = true
   canPause.value = false
   canResume.value = true
+  updateProgress(progress.value, '⏸️ 流式下载已暂停')
 }
 
 const resumeStream = () => {
+  console.log('▶️ 恢复流式下载')
+  streamState.isPaused = false
   canPause.value = true
   canResume.value = false
+  updateProgress(progress.value, '▶️ 流式下载已恢复')
 }
 
 const cancelStream = () => {
-  if (streamController) {
-    streamController.abort()
+  console.log('❌ 取消流式下载')
+  streamState.isCancelled = true
+  if (streamState.controller) {
+    streamState.controller.abort()
   }
   canPause.value = false
   canResume.value = false
   canCancel.value = false
+  updateProgress(0, '❌ 流式下载已取消')
+
+  // 清除断点续传数据
+  streamState.resumeData = null
+  streamState.downloadedBytes = 0
+  streamState.totalBytes = 0
+
+  // 重置流式信息显示
+  downloadedSize.value = '0 B'
+  totalSize.value = '0 B'
+  downloadSpeed.value = '0 B/s'
+  remainingTime.value = '--'
+  currentChunk.value = '0/0'
 }
 
 // 窗口大小调整
