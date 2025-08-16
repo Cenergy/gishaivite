@@ -848,6 +848,9 @@ const loadModel = async () => {
           }
         })
       scene.add(currentModel)
+      
+      // 处理动画
+      setupAnimations(currentModel)
 
       // 自动调整相机位置
       const box = new THREE.Box3().setFromObject(currentModel)
@@ -926,17 +929,66 @@ const toggleInfo = () => {
   showInfo.value = !showInfo.value
 }
 
-const playAnimation = () => {
-  if (animationActions.length > 0) {
-    animationActions.forEach(action => action.play())
+// 设置动画
+const setupAnimations = (model: THREE.Object3D) => {
+  // 清理之前的动画
+  if (animationMixer) {
+    animationMixer.stopAllAction()
+    animationMixer = null
+  }
+  animationActions = []
+  
+  // 检查模型是否有动画
+  if (model.animations && model.animations.length > 0) {
+    console.log('🎬 发现动画数据:', model.animations.length, '个动画')
+    
+    // 创建动画混合器
+    animationMixer = new THREE.AnimationMixer(model)
+    
+    // 为每个动画创建动作
+    model.animations.forEach((clip: THREE.AnimationClip, index: number) => {
+      console.log(`🎭 动画 ${index + 1}: ${clip.name}, 时长: ${clip.duration.toFixed(2)}s`)
+      const action = animationMixer!.clipAction(clip)
+      animationActions.push(action)
+    })
+    
+    // 自动播放第一个动画
+    if (animationActions.length > 0) {
+      playAnimation(0)
+    }
+    
+    // 更新UI显示动画信息
+    showAnimationSection.value = true
+    animationInfo.value = model.animations.map((clip: THREE.AnimationClip, index: number) => 
+      `动画${index + 1}: ${clip.name} (${clip.duration.toFixed(2)}s)`
+    ).join(', ')
+  } else {
+    console.log('📝 该模型没有动画数据')
+    showAnimationSection.value = false
+    animationInfo.value = '无动画'
+  }
+}
+
+const playAnimation = (index: number = 0) => {
+  if (animationActions.length > index) {
+    // 停止所有动画
+    animationActions.forEach(action => action.stop())
+    
+    // 播放指定动画
+    const action = animationActions[index]
+    action.reset()
+    action.play()
     isAnimationPlaying = true
+    
+    console.log(`▶️ 播放动画: ${action.getClip().name}`)
   }
 }
 
 const stopAnimation = () => {
-  if (animationActions.length > 0) {
+  if (animationMixer) {
     animationActions.forEach(action => action.stop())
     isAnimationPlaying = false
+    console.log('⏹️ 停止动画')
   }
 }
 
