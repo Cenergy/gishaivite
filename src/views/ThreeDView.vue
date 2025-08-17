@@ -136,7 +136,7 @@
             <span class="info-value">{{ animationInfo }}</span>
           </div>
           <div class="animation-controls">
-            <button @click="playAnimation">▶️ 播放</button>
+            <button @click="playAnimation(0)">▶️ 播放</button>
             <button @click="stopAnimation">⏹️ 停止</button>
           </div>
         </div>
@@ -244,7 +244,7 @@ let currentModel: THREE.Object3D | null = null
 let animationMixer: THREE.AnimationMixer | null = null
 let animationActions: THREE.AnimationAction[] = []
 const clock = new THREE.Clock()
-let isAnimationPlaying = false
+const isAnimationPlaying = ref(false)
 
 // 模型加载器和解码器
 interface WASMDecoder {
@@ -369,7 +369,7 @@ const animate = () => {
   requestAnimationFrame(animate)
 
   // 更新动画
-  if (animationMixer && isAnimationPlaying) {
+  if (animationMixer && isAnimationPlaying.value) {
     animationMixer.update(clock.getDelta())
   }
 
@@ -1394,6 +1394,7 @@ const setupAnimations = (model: THREE.Object3D) => {
 }
 
 const playAnimation = (index: number = 0) => {
+  console.log(`🎬 尝试播放动画，索引: ${index}, 可用动画数量: ${animationActions.length}`)
   if (animationActions.length > index) {
     // 停止所有动画
     animationActions.forEach(action => action.stop())
@@ -1402,16 +1403,18 @@ const playAnimation = (index: number = 0) => {
     const action = animationActions[index]
     action.reset()
     action.play()
-    isAnimationPlaying = true
+    isAnimationPlaying.value = true
 
     console.log(`▶️ 播放动画: ${action.getClip().name}`)
+  } else {
+    console.warn(`⚠️ 无法播放动画：索引 ${index} 超出范围，可用动画数量: ${animationActions.length}`)
   }
 }
 
 const stopAnimation = () => {
   if (animationMixer) {
     animationActions.forEach(action => action.stop())
-    isAnimationPlaying = false
+    isAnimationPlaying.value = false
     console.log('⏹️ 停止动画')
   }
 }
