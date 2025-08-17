@@ -887,13 +887,13 @@ const downloadChunk = async (filename: string, start: number, end: number): Prom
   if (!uuid) throw new Error('无法获取模型UUID')
 
   const headers: Record<string, string> = {}
-  
+
   // 只有在分块模式下才添加Range请求头
   const chunkSizeNum = Number(chunkSize.value)
   if (chunkSizeNum > 0) {
     headers['Range'] = `bytes=${start}-${end}`
   }
-  
+
   if (authToken) {
     headers['Authorization'] = `Bearer ${authToken}`
   }
