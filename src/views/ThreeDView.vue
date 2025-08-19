@@ -170,6 +170,8 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js'
+import FastDogDecoder from '../loaders/wasm-decoder.js'
+import WASMModelLoader from '../loaders/model-loader.js'
 // import type { FastDogWASMDecoder, WASMModelLoader } from '../types/external'
 
 // 响应式数据
@@ -247,13 +249,6 @@ const clock = new THREE.Clock()
 const isAnimationPlaying = ref(false)
 
 // 模型加载器和解码器
-interface WASMDecoder {
-  init(): Promise<void>
-  decode(data: ArrayBuffer): Promise<{ data: ArrayBuffer }>
-  StreamDecoder: new () => StreamDecoder
-  getStreamDecoder(): (new () => StreamDecoder) | null
-}
-
 interface StreamDecoder {
   add_chunk(chunk: Uint8Array): StreamResult
   free(): void
@@ -295,7 +290,7 @@ interface ModelLoader {
 }
 
 let modelLoader: ModelLoader | null = null
-let wasmDecoder: WASMDecoder | null = null
+let wasmDecoder: FastDogDecoder | null = null
 let authToken: string | null = null
 
 // 流式加载相关
@@ -416,12 +411,8 @@ const initThreeJS = async () => {
 const initWASMDecoder = async () => {
   try {
     console.log('🚀 初始化 WASM 解码器...')
-    // 等待外部脚本加载完成后使用全局变量
-    if (typeof (window as unknown as Record<string, unknown>).FastDogWASMDecoder === 'undefined') {
-      throw new Error('FastDogWASMDecoder not loaded')
-    }
-    const FastDogWASMDecoder = (window as unknown as Record<string, unknown>).FastDogWASMDecoder as new () => WASMDecoder
-    wasmDecoder = new FastDogWASMDecoder()
+    // 直接使用导入的类
+    wasmDecoder = new FastDogDecoder()
     await wasmDecoder.init()
     console.log('✅ WASM 解码器初始化成功')
     updateInfo('WASM', '已初始化')
@@ -983,7 +974,7 @@ const loadModelStreamWASMRealtime = async (): Promise<{ model: THREE.Object3D; g
   if (!StreamDecoderClass) {
     throw new Error('StreamDecoder 不可用，可能是因为使用了 JavaScript 备选模式')
   }
-  const streamDecoder = new StreamDecoderClass()
+  const streamDecoder: StreamDecoder = new StreamDecoderClass()
 
   // 启用控制按钮
   canPause.value = true
@@ -1469,52 +1460,14 @@ const handleResize = () => {
 }
 
 // 动态加载外部脚本
-const loadScript = (src: string): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    // 检查脚本是否已经存在
-    const existingScript = document.querySelector(`script[src="${src}"]`)
-    if (existingScript) {
-      resolve()
-      return
-    }
-
-    const script = document.createElement('script')
-    script.src = src
-    script.onload = () => resolve()
-    script.onerror = () => reject(new Error(`Failed to load script: ${src}`))
-    document.head.appendChild(script)
-  })
-}
-
-// 加载必要的脚本
-const loadExternalScripts = async () => {
-  try {
-    // 检查脚本是否已经加载
-    if (typeof (window as unknown as Record<string, unknown>).FastDogWASMDecoder !== 'undefined' &&
-        typeof (window as unknown as Record<string, unknown>).WASMModelLoader !== 'undefined') {
-      return
-    }
-
-    await loadScript('/js/wasm-decoder.js')
-     await loadScript('/js/model-loader.js')
-    console.log('External scripts loaded successfully')
-  } catch (error) {
-    console.error('Failed to load external scripts:', error)
-    throw error
-  }
-}
+// ES6模块已经在顶部导入，不需要动态加载脚本
 
 // 生命周期
 onMounted(async () => {
   try {
     await nextTick()
 
-    // 加载外部脚本
-    await loadExternalScripts()
-
-    // 等待一小段时间确保脚本完全加载
-    await new Promise(resolve => setTimeout(resolve, 100))
-
+    // ES6模块已经导入，直接初始化
     await initThreeJS()
     await initWASMDecoder()
 
@@ -1523,8 +1476,8 @@ onMounted(async () => {
       if (typeof (window as unknown as Record<string, unknown>).WASMModelLoader === 'undefined') {
         throw new Error('WASMModelLoader not loaded')
       }
-      const WASMModelLoaderClass = (window as unknown as Record<string, unknown>).WASMModelLoader as new (baseUrl: string, token: string | null) => ModelLoader
-      modelLoader = new WASMModelLoaderClass('/api/v1/resources', authToken)
+      // 直接使用导入的类
+    modelLoader = new WASMModelLoader('/api/v1/resources', authToken)
       console.log('✅ 模型加载器初始化成功')
     } catch (error) {
       console.error('模型加载器初始化失败:', error)
