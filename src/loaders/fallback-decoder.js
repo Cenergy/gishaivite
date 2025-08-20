@@ -4,6 +4,9 @@
  * 优化版本：增强错误处理、性能监控、缓存机制
  */
 
+// 导入 pako 压缩库
+import * as pako from 'pako'
+
 class FastDogJSDecoder {
     constructor(options = {}) {
         this.isInitialized = false;
@@ -241,12 +244,17 @@ class FastDogJSDecoder {
             }, this.config.compressionTimeout);
             
             try {
-                // 检查是否有 pako 库可用
-                if (typeof window !== 'undefined' && window.pako) {
-                    const result = window.pako.inflate(compressedData);
-                    clearTimeout(timeout);
-                    resolve(result.buffer);
-                    return;
+                // 使用导入的 pako 库进行解压缩
+                if (pako && pako.inflate) {
+                    try {
+                        const result = pako.inflate(compressedData);
+                        clearTimeout(timeout);
+                        resolve(result.buffer);
+                        return;
+                    } catch (pakoError) {
+                        console.warn('Pako 解压缩失败，尝试其他方法:', pakoError);
+                        // 继续执行其他解压缩方法
+                    }
                 }
                 
                 // 使用内置的 CompressionStream API（如果可用）
@@ -532,7 +540,7 @@ class FastDogJSDecoder {
             wasm: false,
             javascript: true,
             streaming: typeof ReadableStream !== 'undefined',
-            compression: typeof CompressionStream !== 'undefined' || (typeof window !== 'undefined' && !!window.pako),
+            compression: typeof CompressionStream !== 'undefined' || (pako && !!pako.inflate),
             workers: typeof Worker !== 'undefined'
         };
     }
