@@ -571,26 +571,49 @@ const loadModelStream = async (): Promise<{ model: THREE.Object3D; geometry: THR
       throw new Error(`HTTP ${response.status}: ${response.statusText}`)
     }
 
-    updateProgress(50, '🌊 流式: 下载完成，解析中...')
+    updateProgress(30, '🌊 流式: 下载完成，开始解码...')
 
     const arrayBuffer = await response.arrayBuffer()
-    const loader = new GLTFLoader()
+    const downloadTime = Date.now() - startTime
 
-    return new Promise((resolve, reject) => {
-      loader.parse(arrayBuffer, '', (gltf: { scene: THREE.Object3D }) => {
-        const endTime = Date.now()
-        const firstChild = gltf.scene.children[0] as THREE.Mesh
-        resolve({
-          model: gltf.scene,
-          geometry: firstChild?.geometry || new THREE.BufferGeometry(),
-          performanceStats: {
-            totalTime: endTime - startTime,
-            downloadTime: endTime - startTime,
-            decodeTime: 0
-          }
-        })
-      }, reject)
-    })
+    // 检查数据格式，如果是FastDog格式则需要解码
+    const magic = new TextDecoder().decode(new Uint8Array(arrayBuffer, 0, 8))
+    
+    let decodedData: ArrayBuffer | string
+    let decodeTime = 0
+    
+    if (magic.startsWith('FASTDOG')) {
+      // FastDog格式，需要解码
+      updateProgress(50, '🌊 流式: 检测到FastDog格式，使用解码器...')
+      
+      if (!wasmDecoder) {
+        throw new Error('WASM解码器未初始化，无法解码FastDog格式')
+      }
+      
+      const decodeStartTime = Date.now()
+      const decodeResult = await wasmDecoder.decode(arrayBuffer, false, { modelId: selectedModel.value, uuid: uuid })
+      decodeTime = Date.now() - decodeStartTime
+      decodedData = decodeResult.data
+    } else {
+      // 标准格式，直接使用
+      decodedData = arrayBuffer
+    }
+
+    updateProgress(80, '🌊 流式: 解码完成，构建模型...')
+
+    // 使用buildModelWithGLTFLoader构建模型
+    const modelResult = await buildModelWithGLTFLoader(decodedData)
+    const endTime = Date.now()
+
+    return {
+      model: modelResult.model,
+      geometry: modelResult.geometry,
+      performanceStats: {
+        totalTime: endTime - startTime,
+        downloadTime: downloadTime,
+        decodeTime: decodeTime
+      }
+    }
   } catch (error) {
     console.error('流式加载失败:', error)
     throw error
