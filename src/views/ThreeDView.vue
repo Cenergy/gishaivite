@@ -314,9 +314,9 @@ const streamState = reactive({
 
 // 模型选项数组
 const modelOptions = [
-  { name: 'merge.gltf', uuid: '521bb78a08164f8d976ca35f9a02bc25' },
-  { name: 'Bee.glb', uuid: 'be4c2a1dfc4d4c0abfa6b0762a9087f8' },
-  { name: 'SambaDancing.fbx', uuid: 'a9166bff140b49908405e7befeff6350' },
+  { name: 'merge.gltf', uuid: '326868cfb53e44f1a9b418a05044fc2f' },
+  { name: 'Bee.glb', uuid: 'f2c992a231c74dcc86e5e7c63b8b1eb5' },
+  { name: 'SambaDancing.fbx', uuid: '73e872d4b0f54075859cefb9eda2eb54' },
 ];
 
 // DOM 引用
@@ -804,7 +804,8 @@ const loadModelWASM = async (): Promise<{ model: THREE.Object3D; geometry: THREE
     updateProgress(50, 'WASM: 使用 WASM 解码中...')
 
     const decodeStartTime = Date.now()
-    const decodeResult = await wasmDecoder.decode(binaryData)
+    // 传入模型标识符以避免缓存冲突
+    const decodeResult = await wasmDecoder.decode(binaryData, false, { modelId: selectedModel.value, uuid: uuid })
     const decodeTime = Date.now() - decodeStartTime
 
     updateProgress(80, 'WASM: 解码完成，构建模型...')
@@ -1196,6 +1197,11 @@ const loadModel = async () => {
     loadBtn.disabled = true
   }
   isLoading.value = true
+
+  // 清除WASM解码器缓存以避免模型混淆
+  if (wasmDecoder) {
+    wasmDecoder.clearCache()
+  }
 
   try {
     updateProgress(0, '开始加载...')
