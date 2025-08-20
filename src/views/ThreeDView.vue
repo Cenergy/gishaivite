@@ -462,7 +462,7 @@ const loadOriginModel = async () => {
   updateProgress(0, '开始直接加载...')
 
   try {
-    const url = `/static/models/${selectedModel.value}`
+    const url = `/models/${selectedModel.value}`
 
     // 根据文件扩展名选择加载器
     const extension = selectedModel.value.split('.').pop()?.toLowerCase()
