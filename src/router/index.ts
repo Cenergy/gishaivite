@@ -37,6 +37,11 @@ const router = createRouter({
       component: () => import(/* webpackChunkName: "threed" */ '@/views/ThreeDView.vue')
     },
     {
+      path: '/test',
+      name: 'test',
+      component: () => import(/* webpackChunkName: "threed" */ '@/views/TestView.vue')
+    },
+    {
       path: '/geo-worker-demo',
       name: 'GeoWorkerDemo',
       component: () => import('@/components/demo/GeoWorkerDemo.vue')
