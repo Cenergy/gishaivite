@@ -9,9 +9,9 @@
         <div class="form-group">
           <label for="modelSelect">选择模型:</label>
           <select id="modelSelect" v-model="selectedModel">
-            <option value="merge.gltf">merge.gltf</option>
-            <option value="Bee.glb">Bee.glb</option>
-            <option value="SambaDancing.fbx">SambaDancing.fbx</option>
+            <option v-for="model in modelOptions" :key="model.id" :value="model.name">
+              {{ model.name }}
+            </option>
           </select>
         </div>
       </div>
@@ -172,11 +172,13 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js'
 import FastDogDecoder from '../loaders/wasm-decoder.js'
 import WASMModelLoader from '../loaders/model-loader.js'
+import { streamModelByUuid,getModel3Ds } from '../api/resources'
 // import type { FastDogWASMDecoder, WASMModelLoader } from '../types/external'
 
 // 响应式数据
-const selectedModel = ref('merge.gltf')
+const selectedModel = ref('')
 const loadMethod = ref('realtime-wasm')
+const modelOptions = ref([])
 // const selectedLoadMethod = ref('stream') // 使用 loadMethod 替代
 const progress = ref(0)
 const progressText = ref('等待加载...')
@@ -187,6 +189,8 @@ const wireframeMode = ref(false)
 const showInfo = ref(false)
 const showAnimationSection = ref(false)
 const animationInfo = ref('无动画')
+
+
 
 // 计算属性
 const showStreamControls = computed(() => {
@@ -312,12 +316,21 @@ const streamState = reactive({
   } | null
 })
 
-// 模型选项数组
-const modelOptions = [
+// 加载模型数据
+getModel3Ds({is_active:true}).then(res => {
+  console.log(res)
+  if (res && res.length > 0) {
+    modelOptions.value = res
+    selectedModel.value = res[0].name
+  }
+}).catch(err => {
+  console.log(err)
+  modelOptions.value=[
   { name: 'merge.gltf', uuid: '326868cfb53e44f1a9b418a05044fc2f' },
   { name: 'Bee.glb', uuid: 'f2c992a231c74dcc86e5e7c63b8b1eb5' },
   { name: 'SambaDancing.fbx', uuid: '73e872d4b0f54075859cefb9eda2eb54' },
-];
+]
+})
 
 // DOM 引用
 const viewerContainer = ref<HTMLElement>()
@@ -328,7 +341,7 @@ const setLoadMethod = (method: string) => {
 }
 
 const getUuidByName = (modelName: string) => {
-  const model = modelOptions.find(option => option.name === modelName)
+  const model = modelOptions.value.find(option => option.name === modelName)
   return model ? model.uuid : null
 }
 
@@ -452,9 +465,9 @@ const login = async () => {
 }
 
 const loadOriginModel = async () => {
-  const uuid = getUuidByName(selectedModel.value)
-  if (!uuid) {
-    console.error('未找到模型UUID')
+  const model = modelOptions.value.find(option => option.name === selectedModel.value)
+  if (!model || !model.model_file_url) {
+    console.error('未找到模型或模型文件URL')
     return
   }
 
@@ -462,7 +475,7 @@ const loadOriginModel = async () => {
   updateProgress(0, '开始直接加载...')
 
   try {
-    const url = `/models/${selectedModel.value}`
+    const url = model.model_file_url
 
     // 根据文件扩展名选择加载器
     const extension = selectedModel.value.split('.').pop()?.toLowerCase()
@@ -563,33 +576,34 @@ const loadModelStream = async (): Promise<{ model: THREE.Object3D; geometry: THR
       headers['Authorization'] = `Bearer ${authToken}`
     }
 
-    const response = await fetch(`/api/v1/resources/models/uuid/${uuid}`, {
-      headers
-    })
+    const response = await streamModelByUuid(uuid)
+    if ('error' in response) {
+      throw new Error(`API Error: ${response.error}`)
+    }
 
-    if (!response.ok) {
+    if (response.status !== 200) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`)
     }
 
     updateProgress(30, '🌊 流式: 下载完成，开始解码...')
 
-    const arrayBuffer = await response.arrayBuffer()
+    const arrayBuffer = await response.data.arrayBuffer()
     const downloadTime = Date.now() - startTime
 
     // 检查数据格式，如果是FastDog格式则需要解码
     const magic = new TextDecoder().decode(new Uint8Array(arrayBuffer, 0, 8))
-    
+
     let decodedData: ArrayBuffer | string
     let decodeTime = 0
-    
+
     if (magic.startsWith('FASTDOG')) {
       // FastDog格式，需要解码
       updateProgress(50, '🌊 流式: 检测到FastDog格式，使用解码器...')
-      
+
       if (!wasmDecoder) {
         throw new Error('WASM解码器未初始化，无法解码FastDog格式')
       }
-      
+
       const decodeStartTime = Date.now()
       const decodeResult = await wasmDecoder.decode(arrayBuffer, false, { modelId: selectedModel.value, uuid: uuid })
       decodeTime = Date.now() - decodeStartTime
@@ -811,17 +825,18 @@ const loadModelWASM = async (): Promise<{ model: THREE.Object3D; geometry: THREE
       headers['Authorization'] = `Bearer ${authToken}`
     }
 
-    const response = await fetch(`/api/v1/resources/models/uuid/${uuid}`, {
-      headers
-    })
+    const response = await streamModelByUuid(uuid)
+    if ('error' in response) {
+      throw new Error(`API Error: ${response.error}`)
+    }
 
-    if (!response.ok) {
+    if (response.status !== 200) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`)
     }
 
     updateProgress(30, 'WASM: 下载完成，开始解码...')
 
-    const binaryData = await response.arrayBuffer()
+    const binaryData = await response.data.arrayBuffer()
     const downloadTime = Date.now() - startTime
 
     updateProgress(50, 'WASM: 使用 WASM 解码中...')
@@ -878,17 +893,17 @@ const getFileInfo = async (filename: string): Promise<{ size: number; supportsRa
     headers['Authorization'] = `Bearer ${authToken}`
   }
 
-  const response = await fetch(`/api/v1/resources/models/uuid/${uuid}`, {
-    method: 'HEAD',
-    headers
-  })
+  const response = await streamModelByUuid(uuid)
+  if ('error' in response) {
+    throw new Error(`API Error: ${response.error}`)
+  }
 
-  if (!response.ok) {
+  if (response.status !== 200) {
     throw new Error(`HTTP ${response.status}: ${response.statusText}`)
   }
 
-  const contentLength = response.headers.get('content-length')
-  const acceptRanges = response.headers.get('accept-ranges')
+  const contentLength = response.headers['content-length']
+  const acceptRanges = response.headers['accept-ranges']
 
   return {
     size: contentLength ? parseInt(contentLength) : 0,
@@ -913,16 +928,17 @@ const downloadChunk = async (filename: string, start: number, end: number): Prom
     headers['Authorization'] = `Bearer ${authToken}`
   }
 
-  const response = await fetch(`/api/v1/resources/models/uuid/${uuid}`, {
-    headers,
-    signal: streamState.controller?.signal
-  })
+  const rangeHeader = chunkSizeNum > 0 ? `bytes=${start}-${end}` : undefined
+  const response = await streamModelByUuid(uuid, rangeHeader)
+  if ('error' in response) {
+    throw new Error(`API Error: ${response.error}`)
+  }
 
-  if (!response.ok) {
+  if (response.status !== 200) {
     throw new Error(`HTTP ${response.status}: ${response.statusText}`)
   }
 
-  return await response.arrayBuffer()
+  return await response.data.arrayBuffer()
 }
 
 // 辅助函数：计算下载速度

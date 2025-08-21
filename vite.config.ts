@@ -81,11 +81,12 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path,
       },
-      // '/static': {
-      //   target: 'https://api2.gishai.top',
-      //   changeOrigin: true,
-      //   rewrite: (path) => path,
-      // },
+      '/static': {
+        target: 'http://127.0.0.1:8008',
+        // target: 'https://api2.gishai.top',
+        changeOrigin: true,
+        rewrite: (path) => path,
+      },
       // '/resources': {
       //   target: 'https://api2.gishai.top',
       //   changeOrigin: true,
