@@ -173,16 +173,16 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js'
 import FastDogDecoder from '../loaders/wasm-decoder.js'
 import WASMModelLoader from '../loaders/model-loader.js'
 import { streamModelByUuid,getModel3Ds } from '../api/resources'
+import LoadingStateMachine from '../utils/LoadingStateMachine.js'
 // import type { FastDogWASMDecoder, WASMModelLoader } from '../types/external'
+
+// 创建状态机实例
+const loadingStateMachine = new LoadingStateMachine()
 
 // 响应式数据
 const selectedModel = ref('')
 const loadMethod = ref('realtime-wasm')
 const modelOptions = ref([])
-// const selectedLoadMethod = ref('stream') // 使用 loadMethod 替代
-const progress = ref(0)
-const progressText = ref('等待加载...')
-const isLoading = ref(false)
 const chunkSize = ref(0)
 const enableResume = ref(true)
 const wireframeMode = ref(false)
@@ -190,7 +190,34 @@ const showInfo = ref(false)
 const showAnimationSection = ref(false)
 const animationInfo = ref('无动画')
 
+// 从状态机获取的响应式数据
+const progress = ref(0)
+const progressText = ref('等待加载...')
+const isLoading = ref(false)
+const loadingError = ref(null)
 
+// 控制按钮状态
+const canPause = ref(false)
+const canResume = ref(false)
+const canCancel = ref(false)
+
+// 设置状态机事件监听器
+loadingStateMachine.on('stateChange', ({ context }) => {
+  isLoading.value = loadingStateMachine.isLoading()
+  progress.value = context.progress
+  progressText.value = context.message
+  loadingError.value = context.error
+
+  // 更新控制按钮状态
+  canPause.value = loadingStateMachine.canPause()
+  canResume.value = loadingStateMachine.canResume()
+  canCancel.value = loadingStateMachine.canCancel()
+})
+
+loadingStateMachine.on('progress', (context) => {
+  progress.value = context.progress
+  progressText.value = context.message
+})
 
 // 计算属性
 const showStreamControls = computed(() => {
@@ -200,10 +227,6 @@ const showStreamControls = computed(() => {
 const showStreamProgress = computed(() => {
   return showStreamControls.value && isLoading.value
 })
-
-const canPause = ref(false)
-const canResume = ref(false)
-const canCancel = ref(false)
 
 // 流式进度数据
 const downloadedSize = ref('0 MB')
@@ -467,12 +490,12 @@ const login = async () => {
 const loadOriginModel = async () => {
   const model = modelOptions.value.find(option => option.name === selectedModel.value)
   if (!model || !model.model_file_url) {
-    console.error('未找到模型或模型文件URL')
+    loadingStateMachine.error('未找到模型或模型文件URL')
     return
   }
 
-  isLoading.value = true
-  updateProgress(0, '开始直接加载...')
+  // 使用状态机开始加载
+  loadingStateMachine.startLoading('开始直接加载...')
 
   try {
     const url = model.model_file_url
@@ -489,7 +512,7 @@ const loadOriginModel = async () => {
       throw new Error('不支持的文件格式')
     }
 
-    updateProgress(50, '正在解析模型...')
+    loadingStateMachine.startBuilding('正在解析模型...')
 
     loader.load(
         url,
@@ -537,28 +560,27 @@ const loadOriginModel = async () => {
         controls.target.copy(center)
         controls.update()
 
-        updateProgress(100, '加载完成')
+        loadingStateMachine.success(model, '加载完成')
         updateInfo('状态', '加载成功')
         updateInfo('顶点数', model.children.length.toString())
-
-        isLoading.value = false
       },
       (progress: { loaded: number; total: number }) => {
         const percent = (progress.loaded / progress.total) * 100
-        updateProgress(percent, `加载中... ${percent.toFixed(1)}%`)
+        loadingStateMachine.emit('progress', {
+          progress: percent,
+          message: `加载中... ${percent.toFixed(1)}%`
+        })
       },
       (error: Error) => {
         console.error('模型加载失败:', error)
-        updateProgress(0, '加载失败')
+        loadingStateMachine.error(error.message, '加载失败')
         updateInfo('状态', '加载失败')
-        isLoading.value = false
       }
     )
   } catch (error) {
     console.error('加载失败:', error)
-    updateProgress(0, '加载失败')
+    loadingStateMachine.error(error.message, '加载失败')
     updateInfo('状态', '加载失败')
-    isLoading.value = false
   }
 }
 
@@ -898,7 +920,7 @@ const getFileInfo = async (filename: string): Promise<{ size: number; supportsRa
     throw new Error(`API Error: ${response.error}`)
   }
 
-  if (response.status !== 200) {
+  if (response.status !== 200 && response.status !== 206) {
     throw new Error(`HTTP ${response.status}: ${response.statusText}`)
   }
 
@@ -934,7 +956,7 @@ const downloadChunk = async (filename: string, start: number, end: number): Prom
     throw new Error(`API Error: ${response.error}`)
   }
 
-  if (response.status !== 200) {
+  if (response.status !== 200 && response.status !== 206) {
     throw new Error(`HTTP ${response.status}: ${response.statusText}`)
   }
 
@@ -995,11 +1017,18 @@ const loadModelStreamWASMRealtime = async (): Promise<{ model: THREE.Object3D; g
   console.log('⚡ 开始实时流式WASM加载...')
 
   if (!wasmDecoder) {
+    loadingStateMachine.error('WASM 解码器未初始化')
     throw new Error('WASM 解码器未初始化')
   }
 
   const uuid = getUuidByName(selectedModel.value)
-  if (!uuid) throw new Error('无法获取模型UUID')
+  if (!uuid) {
+    loadingStateMachine.error('无法获取模型UUID')
+    throw new Error('无法获取模型UUID')
+  }
+
+  // 使用状态机开始加载
+  loadingStateMachine.startLoading('⚡ 开始实时流式WASM加载...')
 
   const startTime = Date.now()
   streamState.downloadStartTime = startTime
@@ -1012,24 +1041,28 @@ const loadModelStreamWASMRealtime = async (): Promise<{ model: THREE.Object3D; g
   // 创建流式解码器实例
   const StreamDecoderClass = wasmDecoder.getStreamDecoder()
   if (!StreamDecoderClass) {
-    throw new Error('StreamDecoder 不可用，可能是因为使用了 JavaScript 备选模式')
+    const errorMsg = 'StreamDecoder 不可用，可能是因为使用了 JavaScript 备选模式'
+    loadingStateMachine.error(errorMsg)
+    throw new Error(errorMsg)
   }
   const streamDecoder: StreamDecoder = new StreamDecoderClass()
 
-  // 启用控制按钮
-  canPause.value = true
-  canResume.value = false
-  canCancel.value = true
-
   try {
-    updateProgress(5, '⚡ 实时流式WASM: 获取文件信息...')
+    loadingStateMachine.emit('progress', {
+      progress: 5,
+      message: '⚡ 实时流式WASM: 获取文件信息...'
+    })
 
     // 获取文件大小和支持的范围请求
     const fileInfo = await getFileInfo(selectedModel.value)
     streamState.totalBytes = fileInfo.size
 
     updateStreamInfo(0, streamState.totalBytes, 0, '计算中...', 0, 0)
-    updateProgress(10, '⚡ 实时流式WASM: 开始边下载边解码...')
+    loadingStateMachine.startDownloading('⚡ 实时流式WASM: 开始边下载边解码...')
+    loadingStateMachine.emit('progress', {
+      progress: 10,
+      message: '⚡ 实时流式WASM: 开始边下载边解码...'
+    })
 
     // 检查是否有断点续传数据
     let startByte = 0
@@ -1107,7 +1140,11 @@ const loadModelStreamWASMRealtime = async (): Promise<{ model: THREE.Object3D; g
 
         // 更新UI显示
         if (streamResult.is_complete) {
-          updateProgress(90, '⚡ 实时流式WASM: 解码完成，构建模型...')
+          loadingStateMachine.startBuilding('⚡ 实时流式WASM: 解码完成，构建模型...')
+          loadingStateMachine.emit('progress', {
+            progress: 90,
+            message: '⚡ 实时流式WASM: 解码完成，构建模型...'
+          })
           decodeResult = streamResult
           isDecodeComplete = true
 
@@ -1117,10 +1154,10 @@ const loadModelStreamWASMRealtime = async (): Promise<{ model: THREE.Object3D; g
             final_progress: streamResult.progress
           })
         } else {
-          updateProgress(
-            totalProgress,
-            `⚡ 实时流式WASM: 下载并解码中... ${formatBytes(streamState.downloadedBytes)}/${formatBytes(streamState.totalBytes)} (解码进度: ${(streamResult.progress * 100).toFixed(1)}%)`
-          )
+          loadingStateMachine.emit('progress', {
+            progress: totalProgress,
+            message: `⚡ 实时流式WASM: 下载并解码中... ${formatBytes(streamState.downloadedBytes)}/${formatBytes(streamState.totalBytes)} (解码进度: ${(streamResult.progress * 100).toFixed(1)}%)`
+          })
         }
 
         updateStreamInfo(
@@ -1177,15 +1214,8 @@ const loadModelStreamWASMRealtime = async (): Promise<{ model: THREE.Object3D; g
      const modelResult = await buildModelWithGLTFLoader(parsedData as string | ArrayBuffer | Record<string, unknown> || decodeResult.data as string | ArrayBuffer)
     const totalTime = Date.now() - startTime
 
-    updateProgress(100, '⚡ 实时流式WASM: 加载完成!')
-
     // 清除断点续传数据
     streamState.resumeData = null
-
-    // 禁用控制按钮
-    canPause.value = false
-    canResume.value = false
-    canCancel.value = false
 
     const stats = decodeResult.stats || {
        originalSize: streamState.totalBytes,
@@ -1196,7 +1226,7 @@ const loadModelStreamWASMRealtime = async (): Promise<{ model: THREE.Object3D; g
 
      const averageSpeed = streamState.totalBytes / (totalTime / 1000) // bytes per second
 
-     return {
+     const result = {
        model: modelResult.model,
        geometry: modelResult.geometry,
        performanceStats: {
@@ -1214,11 +1244,12 @@ const loadModelStreamWASMRealtime = async (): Promise<{ model: THREE.Object3D; g
        }
      }
 
+     loadingStateMachine.success(result, '⚡ 实时流式WASM: 加载完成!')
+     return result
+
   } catch (error) {
     console.error('实时流式WASM 模型加载失败:', error)
-    canPause.value = false
-    canResume.value = false
-    canCancel.value = false
+    loadingStateMachine.error(error.message, '实时流式WASM 模型加载失败')
     throw error
   } finally {
     // 清理流式解码器
@@ -1235,7 +1266,10 @@ const loadModel = async () => {
   if (loadBtn) {
     loadBtn.disabled = true
   }
-  isLoading.value = true
+
+  // 重置状态机
+  loadingStateMachine.reset()
+  loadingStateMachine.startLoading('开始加载...')
 
   // 清除WASM解码器缓存以避免模型混淆
   if (wasmDecoder) {
@@ -1243,8 +1277,6 @@ const loadModel = async () => {
   }
 
   try {
-    updateProgress(0, '开始加载...')
-
     let result: { model: THREE.Object3D; geometry: THREE.BufferGeometry; performanceStats?: ExtendedPerformanceStats }
 
     switch (loadMethod.value) {
@@ -1263,8 +1295,6 @@ const loadModel = async () => {
       default:
         throw new Error('未知的加载方式')
     }
-
-    updateProgress(100, '加载完成!')
 
     // 移除旧模型
     if (currentModel) {
@@ -1338,10 +1368,9 @@ const loadModel = async () => {
 
   } catch (error) {
     console.error('加载失败:', error)
-    updateProgress(0, '加载失败')
+    loadingStateMachine.error(error.message, '加载失败')
     updateInfo('状态', '加载失败')
   } finally {
-    isLoading.value = false
     if (loadBtn) {
       loadBtn.disabled = false
     }
@@ -1458,17 +1487,13 @@ const stopAnimation = () => {
 const pauseStream = () => {
   console.log('⏸️ 暂停流式下载')
   streamState.isPaused = true
-  canPause.value = false
-  canResume.value = true
-  updateProgress(progress.value, '⏸️ 流式下载已暂停')
+  loadingStateMachine.pause('⏸️ 流式下载已暂停')
 }
 
 const resumeStream = () => {
   console.log('▶️ 恢复流式下载')
   streamState.isPaused = false
-  canPause.value = true
-  canResume.value = false
-  updateProgress(progress.value, '▶️ 流式下载已恢复')
+  loadingStateMachine.startDownloading('▶️ 流式下载已恢复')
 }
 
 const cancelStream = () => {
@@ -1477,10 +1502,7 @@ const cancelStream = () => {
   if (streamState.controller) {
     streamState.controller.abort()
   }
-  canPause.value = false
-  canResume.value = false
-  canCancel.value = false
-  updateProgress(0, '❌ 流式下载已取消')
+  loadingStateMachine.cancel('❌ 流式下载已取消')
 
   // 清除断点续传数据
   streamState.resumeData = null
