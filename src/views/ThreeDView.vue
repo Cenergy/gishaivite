@@ -172,6 +172,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js'
 import FastDogDecoder from '../loaders/wasm-decoder.js'
 import WASMModelLoader from '../loaders/model-loader.js'
+import HttpDataProvider from '../loaders/HttpDataProvider.js'
 import { streamModelByUuid,getModel3Ds } from '../api/resources'
 import LoadingStateMachine from '../utils/LoadingStateMachine.js'
 // import type { FastDogWASMDecoder, WASMModelLoader } from '../types/external'
@@ -317,6 +318,7 @@ interface ModelLoader {
 }
 
 let modelLoader: ModelLoader | null = null
+let dataProvider: any = null
 let wasmDecoder: FastDogDecoder | null = null
 let authToken: string | null = null
 
@@ -473,8 +475,8 @@ const login = async () => {
     if (response.ok) {
       const data = await response.json()
       authToken = data.access_token
-      if (modelLoader && authToken) {
-        modelLoader.authToken = authToken
+      if (dataProvider && authToken) {
+        dataProvider.authToken = authToken
       }
       updateInfo('认证', '已登录')
       console.log('✅ 登录成功')
@@ -494,7 +496,8 @@ const loadOriginModel = async () => {
     return
   }
 
-  // 使用状态机开始加载
+  // 重置状态机并开始加载
+  loadingStateMachine.reset()
   loadingStateMachine.startLoading('开始直接加载...')
 
   try {
@@ -1244,7 +1247,6 @@ const loadModelStreamWASMRealtime = async (): Promise<{ model: THREE.Object3D; g
        }
      }
 
-     loadingStateMachine.success(result, '⚡ 实时流式WASM: 加载完成!')
      return result
 
   } catch (error) {
@@ -1333,6 +1335,9 @@ const loadModel = async () => {
       updateInfo('状态', '加载完成')
       updateInfo('顶点数', result.geometry && result.geometry.attributes && result.geometry.attributes.position ? result.geometry.attributes.position.count.toString() : '未知')
 
+      // 标记加载完成
+      loadingStateMachine.success(result, '模型加载完成')
+
       if (result.performanceStats) {
       performanceStats['总耗时'] = result.performanceStats.totalTime + 'ms'
       performanceStats['数据传输'] = result.performanceStats.downloadTime + 'ms'
@@ -1379,13 +1384,13 @@ const loadModel = async () => {
 
 const getModelInfo = async () => {
   const uuid = getUuidByName(selectedModel.value)
-  if (!uuid || !modelLoader) {
+  if (!uuid || !dataProvider) {
     console.error('无法获取模型信息')
     return
   }
 
   try {
-    const info = await modelLoader.getModelInfo(uuid)
+    const info = await dataProvider.getModelInfo(uuid)
     updateInfo('文件大小', (info.size / 1024 / 1024).toFixed(2) + ' MB')
     updateInfo('创建时间', new Date(info.created_at).toLocaleString())
     updateInfo('文件类型', info.content_type)
@@ -1543,8 +1548,9 @@ onMounted(async () => {
       if (typeof (window as unknown as Record<string, unknown>).WASMModelLoader === 'undefined') {
         throw new Error('WASMModelLoader not loaded')
       }
-      // 直接使用导入的类
-    modelLoader = new WASMModelLoader('/api/v1/resources', authToken)
+      // 创建数据提供者和模型加载器
+      dataProvider = new HttpDataProvider('/api/v1/resources', authToken)
+      modelLoader = new WASMModelLoader(dataProvider)
       console.log('✅ 模型加载器初始化成功')
     } catch (error) {
       console.error('模型加载器初始化失败:', error)

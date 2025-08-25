@@ -1,18 +1,12 @@
-
-
 /**
  * WASM模型加载器 - ES6模块版本
  * 使用WebAssembly + 自定义二进制格式加载3D模型
- * 
- * @param {object} dataProvider - 数据提供者，负责网络请求
  */
 
 class WASMModelLoader {
-    constructor(dataProvider) {
-        if (!dataProvider) {
-            throw new Error('dataProvider is required');
-        }
-        this.dataProvider = dataProvider;
+    constructor(baseUrl = '/api/v1/resources', authToken = null) {
+        this.baseUrl = baseUrl;
+        this.authToken = authToken;
         this.wasmModule = null;
         this.isWasmReady = false;
         
@@ -234,7 +228,18 @@ class WASMModelLoader {
         }
     }
 
-
+    /**
+     * 获取请求头
+     */
+    getHeaders() {
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        if (this.authToken) {
+            headers['Authorization'] = `Bearer ${this.authToken}`;
+        }
+        return headers;
+    }
 
     /**
      * 性能监控工具
@@ -392,7 +397,39 @@ class WASMModelLoader {
         }
     }
 
+    /**
+     * 获取模型信息
+     */
+    async getModelInfo(filename) {
+        try {
+            const response = await fetch(`${this.baseUrl}/models/${filename}/info`, {
+                headers: this.getHeaders()
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return await response.json();
+        } catch (error) {
+            this.handleError('获取模型信息', error);
+        }
+    }
 
+    /**
+     * 获取模型清单
+     */
+    async getModelManifest(filename) {
+        try {
+            const response = await fetch(`${this.baseUrl}/models/${filename}/manifest`, {
+                headers: this.getHeaders()
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return await response.json();
+        } catch (error) {
+            this.handleError('获取模型清单', error);
+        }
+    }
 
     /**
      * 加载模型Blob数据
@@ -414,9 +451,22 @@ class WASMModelLoader {
                 return cached;
             }
 
-            // 通过数据提供者获取模型数据
-            const { arrayBuffer, headers } = await this.dataProvider.fetchModelBlob(filename, onProgress);
-            tracker.step('数据获取');
+            const response = await fetch(`${this.baseUrl}/models/${filename}/blob`, {
+                headers: this.getHeaders()
+            });
+            tracker.step('网络请求');
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            // 获取响应头信息
+            const headers = {
+                originalSize: response.headers.get('X-Original-Size'),
+                compressedSize: response.headers.get('X-Compressed-Size'),
+                compressionRatio: response.headers.get('X-Compression-Ratio'),
+                format: response.headers.get('X-Format')
+            };
 
             if (this.performanceConfig.enableLogging) {
                 console.log(`📊 模型信息:`);
@@ -426,7 +476,36 @@ class WASMModelLoader {
                 console.log(`   格式: ${headers.format}`);
             }
 
-            console.log(`✅ 数据获取完成: ${arrayBuffer.byteLength} bytes`);
+            const contentLength = parseInt(response.headers.get('content-length') || '0');
+            const reader = response.body?.getReader();
+            
+            if (!reader) {
+                throw new Error('无法获取响应流');
+            }
+
+            const chunks = [];
+            let receivedLength = 0;
+
+            while (true) {
+                const { done, value } = await reader.read();
+                
+                if (done) break;
+                
+                chunks.push(value);
+                receivedLength += value.length;
+                
+                if (onProgress && contentLength > 0) {
+                    onProgress({
+                        loaded: receivedLength,
+                        total: contentLength,
+                        percentage: (receivedLength / contentLength) * 100
+                    });
+                }
+            }
+
+            const arrayBuffer = this.mergeChunks(chunks, receivedLength);
+            tracker.step('数据下载');
+            console.log(`✅ 数据下载完成: ${arrayBuffer.byteLength} bytes`);
             
             // 解码二进制数据
             const decodedData = await this.decodeBinaryData(arrayBuffer);
@@ -456,7 +535,20 @@ class WASMModelLoader {
         }
     }
 
-
+    /**
+     * 合并数据块
+     */
+    mergeChunks(chunks, totalLength) {
+        const result = new Uint8Array(totalLength);
+        let position = 0;
+        
+        for (const chunk of chunks) {
+            result.set(chunk, position);
+            position += chunk.length;
+        }
+        
+        return result.buffer;
+    }
 
     /**
      * 流式加载模型
@@ -472,20 +564,55 @@ class WASMModelLoader {
                 if (this.performanceConfig.enableLogging) {
                     console.log(`📦 从缓存加载流式模型: ${filename}`);
                 }
-                tracker.finish();
+                tracker.end();
                 return cached;
             }
 
-            // 通过数据提供者获取流式数据
-            const result = await this.dataProvider.fetchModelStream(filename, onProgress);
-            tracker.step('流式数据获取');
+            const response = await fetch(`${this.baseUrl}/models/${filename}/stream`, {
+                headers: this.getHeaders()
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const contentLength = parseInt(response.headers.get('content-length') || '0');
+            const reader = response.body?.getReader();
+            
+            if (!reader) {
+                throw new Error('无法获取响应流');
+            }
+
+            const chunks = [];
+            let receivedLength = 0;
+
+            while (true) {
+                const { done, value } = await reader.read();
+                
+                if (done) break;
+                
+                chunks.push(value);
+                receivedLength += value.length;
+                
+                if (onProgress && contentLength > 0) {
+                    onProgress({
+                        loaded: receivedLength,
+                        total: contentLength,
+                        percentage: (receivedLength / contentLength) * 100,
+                        chunk: value
+                    });
+                }
+            }
+
+            const result = this.mergeChunks(chunks, receivedLength);
             
             // 缓存结果
             this.setCached(cacheKey, result);
             
-            const performanceStats = tracker.finish();
-            return { ...result, performanceStats };
+            tracker.end();
+            return result;
         } catch (error) {
+            tracker.end();
             this.handleError('流式加载模型', error);
         }
     }
@@ -876,7 +1003,7 @@ class WASMModelLoader {
                 // 自动选择最佳方法
                 try {
                     // 首先尝试获取模型信息来决定加载策略
-                    const info = await this.dataProvider.getModelInfo(filename);
+                    const info = await this.getModelInfo(filename);
                     tracker.step('获取模型信息');
                     
                     // 根据文件大小选择加载方法
