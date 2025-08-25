@@ -8,13 +8,15 @@
  */
 
 class WASMModelLoader {
-    constructor(dataProvider) {
+    constructor(dataProvider, decoder) {
         if (!dataProvider) {
             throw new Error('dataProvider is required');
         }
+        if (!decoder) {
+            throw new Error('decoder is required');
+        }
         this.dataProvider = dataProvider;
-        this.wasmModule = null;
-        this.isWasmReady = false;
+        this.decoder = decoder;
         
         // 性能监控配置
         this.performanceConfig = {
@@ -172,67 +174,7 @@ class WASMModelLoader {
     /**
      * 初始化WASM解码器
      */
-    async initWASM() {
-        if (this.isWasmReady) return true;
-        
-        try {
-            // 动态导入WASM模块
-            const wasmModule = await import('../wasm/fastdog_decoder.js');
-            await wasmModule.default(); // 初始化WASM
-            
-            this.wasmModule = {
-                // WASM解码接口
-                decodeBinary: (data) => {
-                    return wasmModule.decode_fastdog_binary(data);
-                }
-            };
-            
-            this.isWasmReady = true;
-            console.log('✅ 解码器初始化成功');
-            return true;
-        } catch {
-            console.warn('⚠️ WASM模块未找到，使用JavaScript解码器');
-            this.wasmModule = {
-                // 模拟WASM接口
-                decodeBinary: (data, version = 1) => {
-                    // 简单的解压缩实现
-                    return this.fallbackDecode(data, version);
-                }
-            };
-            this.isWasmReady = true;
-            return true;
-        }
-    }
 
-    /**
-     * 备用JavaScript解码器
-     */
-    fallbackDecode(arrayBuffer) {
-        try {
-            // 使用统一的解析方法
-            const header = this.parseBinaryHeader(arrayBuffer);
-            
-            if (this.performanceConfig.enableLogging) {
-                console.log(`📋 解码信息: 版本=${header.version}, 压缩长度=${header.compressedLength}`);
-                console.log(`📋 总数据长度: ${arrayBuffer.byteLength}`);
-                console.log(`📋 原始长度: ${header.originalLength}`);
-                console.log(`📋 压缩数据实际长度: ${header.compressedData.byteLength}`);
-            }
-            
-            // 使用统一的解压缩方法
-            const result = this.decompressWithPako(header.compressedData, header.version);
-            
-            // 对于版本1，返回字符串而不是解析后的JSON
-            if (header.version === 1 && typeof result === 'object') {
-                return JSON.stringify(result);
-            }
-            
-            return result;
-            
-        } catch (error) {
-            this.handleError('备用解码', error);
-        }
-    }
 
 
 
@@ -316,81 +258,7 @@ class WASMModelLoader {
     /**
      * 解析二进制数据头部信息
      */
-    parseBinaryHeader(arrayBuffer) {
-        const uint8Array = new Uint8Array(arrayBuffer);
-        
-        // 验证魔数
-        const magicBytes = uint8Array.slice(0, 8);
-        const magic = new TextDecoder().decode(magicBytes);
-        
-        if (magic !== 'FASTDOG1') {
-            throw new Error('无效的二进制格式');
-        }
 
-        // 读取版本号
-        const version = new DataView(arrayBuffer, 8, 4).getUint32(0, true);
-        
-        // 读取压缩数据长度
-        const compressedLength = new DataView(arrayBuffer, 12, 4).getUint32(0, true);
-        
-        // 提取压缩数据
-        const compressedData = arrayBuffer.slice(16, 16 + compressedLength);
-        
-        // 读取原始数据长度
-        const originalLength = new DataView(arrayBuffer, 16 + compressedLength, 4).getUint32(0, true);
-        
-        return {
-            version,
-            compressedLength,
-            compressedData,
-            originalLength,
-            magic
-        };
-    }
-
-    /**
-     * 使用pako解压缩数据
-     */
-    decompressWithPako(compressedData, version) {
-        if (typeof pako === 'undefined') {
-            throw new Error('pako库不可用');
-        }
-
-        try {
-            const uint8Data = new Uint8Array(compressedData);
-            
-            // 调试信息
-            if (this.performanceConfig.enableLogging) {
-                const firstBytes = Array.from(uint8Data.slice(0, 16))
-                    .map(b => b.toString(16).padStart(2, '0')).join(' ');
-                console.log(`🔍 压缩数据前16字节: ${firstBytes}`);
-                
-                if (uint8Data.length >= 2) {
-                    const header = (uint8Data[0] << 8) | uint8Data[1];
-                    console.log(`🔍 压缩头部: 0x${header.toString(16)}`);
-                }
-            }
-            
-            // 解压缩
-            const decompressed = pako.inflate(uint8Data);
-            console.log('✅ 标准zlib解压成功');
-            
-            if (version === 1) {
-                // 版本1是GLTF JSON格式
-                const result = new TextDecoder().decode(decompressed);
-                console.log(`✅ 解压缩完成，得到 ${result.length} 字符的JSON数据`);
-                return JSON.parse(result);
-            } else if (version === 2) {
-                // 版本2是GLB二进制格式
-                console.log(`✅ 解压缩完成，得到 ${decompressed.byteLength} 字节的GLB数据`);
-                return decompressed.buffer;
-            } else {
-                throw new Error(`不支持的版本号: ${version}`);
-            }
-        } catch (error) {
-            throw new Error(`解压缩失败: ${error.message}`);
-        }
-    }
 
 
 
@@ -497,26 +365,13 @@ class WASMModelLoader {
         const tracker = this.createPerformanceTracker('解码二进制数据');
         
         try {
-            // 确保WASM已初始化
-            await this.initWASM();
+            // 使用注入的解码器服务
+            const decodedData = await this.decoder.decodeBinaryData(arrayBuffer);
             
-            // 解析头部信息
-            const header = this.parseBinaryHeader(arrayBuffer);
-            if (!header.isValid) {
-                throw new Error('无效的二进制格式');
-            }
-            
-            // 提取数据部分（跳过头部）
-            const dataStart = 12; // 头部大小
-            const compressedData = arrayBuffer.slice(dataStart);
-            
-            // 使用WASM解码
-            const decodedData = this.wasmModule.decodeBinary(compressedData, header.version);
-            
-            tracker.end();
+            tracker.finish();
             return decodedData;
         } catch (error) {
-            tracker.end();
+            tracker.finish();
             this.handleError('解码二进制数据', error);
         }
     }

@@ -1550,7 +1550,7 @@ onMounted(async () => {
       }
       // 创建数据提供者和模型加载器
       dataProvider = new HttpDataProvider('/api/v1/resources', authToken)
-      modelLoader = new WASMModelLoader(dataProvider)
+      modelLoader = new WASMModelLoader(dataProvider, wasmDecoder)
       console.log('✅ 模型加载器初始化成功')
     } catch (error) {
       console.error('模型加载器初始化失败:', error)
