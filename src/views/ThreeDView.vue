@@ -64,16 +64,13 @@
           </template>
           <el-space direction="vertical" style="width: 100%" :size="15">
             <el-form-item label="分块大小:">
-              <el-select v-model="chunkSize" style="width: 100%">
-                <el-option label="不分块" :value="0" />
-                <el-option label="64KB" :value="65536" />
-                <el-option label="128KB" :value="131072" />
-                <el-option label="256KB" :value="262144" />
-                <el-option label="512KB" :value="524288" />
-                <el-option label="1MB" :value="1048576" />
-                <el-option label="2MB" :value="2097152" />
-                <el-option label="3MB" :value="3145728" />
-                <el-option label="5MB" :value="5242880" />
+              <el-select v-model="chunkSize" style="width: 180px">
+                <el-option 
+                  v-for="option in chunkSizeOptions" 
+                  :key="option.value" 
+                  :label="option.label" 
+                  :value="option.value" 
+                />
               </el-select>
             </el-form-item>
             <el-checkbox v-model="enableResume">
@@ -208,6 +205,19 @@ const loadMethod = ref('realtime-wasm')
 const modelOptions = ref([])
 const chunkSize = ref(0)
 const enableResume = ref(true)
+
+// 分块大小选项
+const chunkSizeOptions = [
+  { label: '不分块', value: 0 },
+  { label: '64KB', value: 65536 },
+  { label: '128KB', value: 131072 },
+  { label: '256KB', value: 262144 },
+  { label: '512KB', value: 524288 },
+  { label: '1MB', value: 1048576 },
+  { label: '2MB', value: 2097152 },
+  { label: '3MB', value: 3145728 },
+  { label: '5MB', value: 5242880 }
+]
 const wireframeMode = ref(false)
 const showInfo = ref(false)
 const showAnimationSection = ref(false)
@@ -1739,13 +1749,13 @@ onUnmounted(() => {
   .threeContainer {
     flex-direction: column;
   }
-  
+
   .sidebar {
     width: 100%;
     height: auto;
     max-height: 40vh;
   }
-  
+
   .main-content {
     height: 60vh;
   }
