@@ -1,165 +1,187 @@
 <template>
   <div class="threeContainer">
     <div class="sidebar">
-      <div class="title">🚀 WASM模型查看器</div>
+      <el-card class="title-card" shadow="never">
+        <h2>🚀 WASM模型查看器</h2>
+      </el-card>
 
       <!-- 模型选择 -->
-      <div class="section">
-        <div class="section-title">📁 模型选择</div>
-        <div class="form-group">
-          <label for="modelSelect">选择模型:</label>
-          <select id="modelSelect" v-model="selectedModel">
-            <option v-for="model in modelOptions" :key="model.id" :value="model.name">
-              {{ model.name }}
-            </option>
-          </select>
-        </div>
-      </div>
+      <el-card class="section-card" shadow="hover">
+        <template #header>
+          <div class="section-title">📁 模型选择</div>
+        </template>
+        <el-form-item label="选择模型:">
+          <el-select v-model="selectedModel" placeholder="请选择模型" style="width: 100%">
+            <el-option
+              v-for="model in modelOptions"
+              :key="model.id"
+              :label="model.name"
+              :value="model.name"
+            />
+          </el-select>
+        </el-form-item>
+      </el-card>
 
       <!-- 传输方式选择 -->
-      <div class="section">
-        <div class="section-title">📡 传统方式</div>
-        <div class="form-group">
-          <button @click="loadOriginModel">直接加载</button>
-        </div>
-      </div>
+      <el-card class="section-card" shadow="hover">
+        <template #header>
+          <div class="section-title">📡 传统方式</div>
+        </template>
+        <el-button type="primary" @click="loadOriginModel" style="width: 100%">
+          直接加载
+        </el-button>
+      </el-card>
 
-      <div class="section">
-        <div class="section-title">🔄 传输方式</div>
+      <el-card class="section-card" shadow="hover">
+        <template #header>
+          <div class="section-title">🔄 传输方式</div>
+        </template>
         <div class="method-selector">
-          <button
+          <el-button
             v-for="method in loadMethods"
             :key="method.value"
-            class="method-btn"
-            :class="{ active: loadMethod === method.value }"
+            :type="loadMethod === method.value ? 'primary' : 'default'"
+            size="small"
             @click="setLoadMethod(method.value)"
+            style="margin: 2px; flex: 1"
           >
             {{ method.label }}
-          </button>
+          </el-button>
         </div>
-        <div class="form-group">
-          <button @click="loadModel">🚀 加载模型</button>
-          <button @click="getModelInfo">📋 获取信息</button>
-        </div>
+        <el-space direction="vertical" style="width: 100%" :size="10">
+          <el-button type="success" @click="loadModel" style="width: 100%">
+            🚀 加载模型
+          </el-button>
+          <el-button type="info" @click="getModelInfo" style="width: 100%">
+            📋 获取信息
+          </el-button>
+        </el-space>
 
         <!-- 流式加载控制面板 -->
-        <div class="section" id="streamControls" v-show="showStreamControls">
-          <div class="section-title">🌊 流式加载控制</div>
-          <div class="form-group">
-            <label>分块大小:</label>
-            <select v-model="chunkSize">
-              <option value="0">不分块</option>
-              <option value="65536">64KB</option>
-              <option value="131072">128KB</option>
-              <option value="262144">256KB</option>
-              <option value="524288">512KB</option>
-              <option value="1048576">1MB</option>
-              <option value="2097152">2MB</option>
-              <option value="3145728">3MB</option>
-              <option value="5242880">5MB</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>
-              <input type="checkbox" v-model="enableResume">
+        <el-card v-show="showStreamControls" class="stream-controls" shadow="never">
+          <template #header>
+            <div class="section-title">🌊 流式加载控制</div>
+          </template>
+          <el-space direction="vertical" style="width: 100%" :size="15">
+            <el-form-item label="分块大小:">
+              <el-select v-model="chunkSize" style="width: 100%">
+                <el-option label="不分块" :value="0" />
+                <el-option label="64KB" :value="65536" />
+                <el-option label="128KB" :value="131072" />
+                <el-option label="256KB" :value="262144" />
+                <el-option label="512KB" :value="524288" />
+                <el-option label="1MB" :value="1048576" />
+                <el-option label="2MB" :value="2097152" />
+                <el-option label="3MB" :value="3145728" />
+                <el-option label="5MB" :value="5242880" />
+              </el-select>
+            </el-form-item>
+            <el-checkbox v-model="enableResume">
               启用断点续传
-            </label>
-          </div>
-          <div class="form-group">
-            <button @click="pauseStream" :disabled="!canPause">⏸️ 暂停</button>
-            <button @click="resumeStream" :disabled="!canResume">▶️ 继续</button>
-            <button @click="cancelStream" :disabled="!canCancel">❌ 取消</button>
-          </div>
-        </div>
-      </div>
+            </el-checkbox>
+            <el-space wrap>
+              <el-button size="small" :disabled="!canPause" @click="pauseStream">
+                ⏸️ 暂停
+              </el-button>
+              <el-button size="small" :disabled="!canResume" @click="resumeStream">
+                ▶️ 继续
+              </el-button>
+              <el-button size="small" :disabled="!canCancel" @click="cancelStream">
+                ❌ 取消
+              </el-button>
+            </el-space>
+          </el-space>
+        </el-card>
+      </el-card>
 
       <!-- 渲染控制 -->
-      <div class="section">
-        <div class="section-title">🎮 渲染控制</div>
-        <button @click="resetCamera">🔄 重置相机</button>
-        <button @click="toggleWireframe">📐 线框模式</button>
-        <button @click="toggleInfo">📊 显示信息</button>
-      </div>
+      <el-card class="section-card" shadow="hover">
+        <template #header>
+          <div class="section-title">🎮 渲染控制</div>
+        </template>
+        <el-space wrap style="width: 100%">
+          <el-button size="small" @click="resetCamera">🔄 重置相机</el-button>
+          <el-button size="small" @click="toggleWireframe">📐 线框模式</el-button>
+          <el-button size="small" @click="toggleInfo">📊 显示信息</el-button>
+        </el-space>
+      </el-card>
 
       <!-- 进度显示 -->
-      <div class="section">
-        <div class="section-title">📈 加载进度</div>
-        <div class="progress-container">
-          <div class="progress-bar">
-            <div class="progress-fill" :style="{ width: progress + '%' }"></div>
-          </div>
+      <el-card class="section-card" shadow="hover">
+        <template #header>
+          <div class="section-title">📈 加载进度</div>
+        </template>
+        <el-space direction="vertical" style="width: 100%" :size="10">
+          <el-progress :percentage="progress" :status="isLoading ? 'active' : 'success'" />
           <div class="progress-text">{{ progressText }}</div>
-        </div>
+        </el-space>
 
         <!-- 流式加载详细进度 -->
-        <div id="streamProgress" v-show="showStreamProgress">
-          <div class="info-item">
-            <span class="info-label">已下载:</span>
-            <span class="info-value">{{ downloadedSize }}</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">总大小:</span>
-            <span class="info-value">{{ totalSize }}</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">下载速度:</span>
-            <span class="info-value">{{ downloadSpeed }}</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">剩余时间:</span>
-            <span class="info-value">{{ remainingTime }}</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">当前分块:</span>
-            <span class="info-value">{{ currentChunk }}</span>
-          </div>
-        </div>
-      </div>
+        <el-card v-show="showStreamProgress" class="stream-progress" shadow="never">
+          <el-descriptions :column="1" size="small" border>
+            <el-descriptions-item label="已下载">{{ downloadedSize }}</el-descriptions-item>
+            <el-descriptions-item label="总大小">{{ totalSize }}</el-descriptions-item>
+            <el-descriptions-item label="下载速度">{{ downloadSpeed }}</el-descriptions-item>
+            <el-descriptions-item label="剩余时间">{{ remainingTime }}</el-descriptions-item>
+            <el-descriptions-item label="当前分块">{{ currentChunk }}</el-descriptions-item>
+          </el-descriptions>
+        </el-card>
+      </el-card>
 
       <!-- 信息面板 -->
-      <div class="section">
-        <div class="section-title">📊 模型信息</div>
-        <div class="info-panel">
-          <div class="info-item" v-for="(value, key) in modelInfo" :key="key">
-            <span class="info-label">{{ key }}:</span>
-            <span class="info-value">{{ value }}</span>
-          </div>
-        </div>
-      </div>
+      <el-card class="section-card" shadow="hover">
+        <template #header>
+          <div class="section-title">📊 模型信息</div>
+        </template>
+        <el-descriptions :column="1" size="small" border>
+          <el-descriptions-item v-for="(value, key) in modelInfo" :key="key" :label="key">
+            {{ value }}
+          </el-descriptions-item>
+        </el-descriptions>
+      </el-card>
 
       <!-- 动画控制面板 -->
-      <div class="section" v-show="showAnimationSection">
-        <div class="section-title">🎬 动画控制</div>
-        <div class="info-panel">
-          <div class="info-item">
-            <span class="info-label">动画信息:</span>
-            <span class="info-value">{{ animationInfo }}</span>
-          </div>
-          <div class="animation-controls">
-            <button @click="playAnimation(0)">▶️ 播放</button>
-            <button @click="stopAnimation">⏹️ 停止</button>
-          </div>
-        </div>
-      </div>
+      <el-card v-show="showAnimationSection" class="section-card" shadow="hover">
+        <template #header>
+          <div class="section-title">🎬 动画控制</div>
+        </template>
+        <el-space direction="vertical" style="width: 100%" :size="10">
+          <el-descriptions :column="1" size="small" border>
+            <el-descriptions-item label="动画信息">{{ animationInfo }}</el-descriptions-item>
+          </el-descriptions>
+          <el-space wrap style="width: 100%">
+            <el-button type="primary" size="small" @click="playAnimation(0)">
+              ▶️ 播放
+            </el-button>
+            <el-button size="small" @click="stopAnimation">
+              ⏹️ 停止
+            </el-button>
+          </el-space>
+        </el-space>
+      </el-card>
 
       <!-- 性能统计面板 -->
-      <div class="section">
-        <div class="section-title">⚡ 性能统计</div>
-        <div class="info-panel">
-          <div class="info-item" v-for="(value, key) in performanceStats" :key="key">
-            <span class="info-label">{{ key }}:</span>
-            <span class="info-value">{{ value }}</span>
-          </div>
-        </div>
-      </div>
+      <el-card class="section-card" shadow="hover">
+        <template #header>
+          <div class="section-title">⚡ 性能统计</div>
+        </template>
+        <el-descriptions :column="1" size="small" border>
+          <el-descriptions-item v-for="(value, key) in performanceStats" :key="key" :label="key">
+            {{ value }}
+          </el-descriptions-item>
+        </el-descriptions>
+      </el-card>
     </div>
 
     <div class="main-content">
       <div ref="viewerContainer" id="viewer"></div>
-      <div class="loading" v-show="isLoading">
-        <div class="spinner"></div>
-        <div>正在加载模型...</div>
-      </div>
+      <el-loading
+        v-loading="isLoading"
+        element-loading-text="正在加载模型..."
+        element-loading-spinner="el-icon-loading"
+        element-loading-background="rgba(0, 0, 0, 0.8)"
+        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%"
+      />
     </div>
   </div>
 </template>
@@ -171,7 +193,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js'
 import FastDogDecoder from '../loaders/wasm-decoder.js'
-import WASMModelLoader from '../loaders/model-loader.js'
+// import WASMModelLoader from '../loaders/model-loader.js'
 import HttpDataProvider from '../loaders/HttpDataProvider.js'
 import { streamModelByUuid,getModel3Ds } from '../api/resources'
 import LoadingStateMachine from '../utils/LoadingStateMachine.js'
@@ -312,13 +334,12 @@ interface ExtendedPerformanceStats {
   streamingEnabled?: boolean
 }
 
-interface ModelLoader {
-  authToken: string
-  getModelInfo(uuid: string): Promise<{ size: number; created_at: string; content_type: string }>
+interface DataProvider {
+  authToken: string | null
+  getModelInfo?(uuid: string): Promise<{ size: number; created_at: string; content_type: string }>
 }
 
-let modelLoader: ModelLoader | null = null
-let dataProvider: any = null
+let dataProvider: DataProvider | null = null
 let wasmDecoder: FastDogDecoder | null = null
 let authToken: string | null = null
 
@@ -1390,10 +1411,16 @@ const getModelInfo = async () => {
   }
 
   try {
-    const info = await dataProvider.getModelInfo(uuid)
-    updateInfo('文件大小', (info.size / 1024 / 1024).toFixed(2) + ' MB')
-    updateInfo('创建时间', new Date(info.created_at).toLocaleString())
-    updateInfo('文件类型', info.content_type)
+    if (dataProvider && dataProvider.getModelInfo) {
+      const info = await dataProvider.getModelInfo(uuid)
+      updateInfo('文件大小', (info.size / 1024 / 1024).toFixed(2) + ' MB')
+      updateInfo('创建时间', new Date(info.created_at).toLocaleString())
+      updateInfo('文件类型', info.content_type)
+    } else {
+      updateInfo('文件大小', '未知')
+      updateInfo('创建时间', '未知')
+      updateInfo('文件类型', '未知')
+    }
   } catch (error) {
     console.error('获取模型信息失败:', error)
   }
@@ -1548,10 +1575,9 @@ onMounted(async () => {
       if (typeof (window as unknown as Record<string, unknown>).WASMModelLoader === 'undefined') {
         throw new Error('WASMModelLoader not loaded')
       }
-      // 创建数据提供者和模型加载器
-      dataProvider = new HttpDataProvider('/api/v1/resources', authToken)
-      modelLoader = new WASMModelLoader(dataProvider, wasmDecoder)
-      console.log('✅ 模型加载器初始化成功')
+      // 创建数据提供者
+      dataProvider = new HttpDataProvider('/api/v1/resources', authToken) as DataProvider
+      console.log('✅ 数据提供者初始化成功')
     } catch (error) {
       console.error('模型加载器初始化失败:', error)
     }
@@ -1578,186 +1604,76 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
 .threeContainer {
   display: flex;
   height: 100vh;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #333;
-  overflow: hidden;
+  background: #f5f7fa;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .sidebar {
   width: 300px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
+  background: #ffffff;
+  border-right: 1px solid #e4e7ed;
   padding: 20px;
   overflow-y: auto;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
 }
 
-.main-content {
-  flex: 1;
-  position: relative;
-}
-
-.title {
-  font-size: 24px;
-  font-weight: bold;
+.title-card {
   margin-bottom: 20px;
-  color: #4a5568;
-  text-align: center;
 }
 
-.section {
-  margin-bottom: 25px;
-  padding: 15px;
-  background: rgba(255, 255, 255, 0.8);
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+.title-card h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  color: #303133;
+}
+
+.section-card {
+  margin-bottom: 20px;
 }
 
 .section-title {
-  font-size: 16px;
-  font-weight: bold;
-  margin-bottom: 10px;
-  color: #2d3748;
-  border-bottom: 2px solid #e2e8f0;
-  padding-bottom: 5px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #606266;
 }
 
-.form-group {
+.method-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
   margin-bottom: 15px;
 }
 
-label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: 500;
-  color: #4a5568;
+.stream-controls {
+  margin-top: 15px;
+  border: 2px solid #409eff;
+  background: linear-gradient(135deg, #ecf5ff 0%, #d9ecff 100%);
 }
 
-select,
-input,
-button {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  font-size: 14px;
-  transition: all 0.3s ease;
+.stream-controls .section-title {
+  color: #409eff;
 }
 
-select:focus,
-input:focus {
-  outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-
-button {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  cursor: pointer;
-  font-weight: 500;
-  margin-bottom: 10px;
-}
-
-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-}
-
-button:disabled {
-  background: #a0aec0;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-.progress-container {
+.stream-progress {
   margin-top: 10px;
-}
-
-.progress-bar {
-  width: 100%;
-  height: 8px;
-  background: #e2e8f0;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #667eea, #764ba2);
-  width: 0%;
-  transition: width 0.3s ease;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e7ed 100%);
 }
 
 .progress-text {
   font-size: 12px;
-  color: #718096;
-  margin-top: 5px;
+  color: #909399;
+  text-align: center;
 }
 
-.info-panel {
-  background: #f7fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  padding: 10px;
-  font-size: 12px;
-  color: #4a5568;
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-.info-item {
-  margin-bottom: 5px;
-  display: flex;
-  justify-content: space-between;
-}
-
-.info-label {
-  font-weight: 500;
-}
-
-.info-value {
-  color: #667eea;
-}
-
-.animation-controls {
-  margin-top: 10px;
-  display: flex;
-  gap: 10px;
-}
-
-.animation-controls button {
+.main-content {
   flex: 1;
-  padding: 8px 12px;
-  background: #4a5568;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 12px;
-  transition: background-color 0.2s;
-}
-
-.animation-controls button:hover {
-  background: #2d3748;
-}
-
-.animation-controls button:disabled {
-  background: #2d3748;
-  cursor: not-allowed;
-  opacity: 0.6;
+  position: relative;
+  background: #f5f7fa;
 }
 
 #viewer {
@@ -1766,156 +1682,72 @@ button:disabled {
   background: radial-gradient(circle, #1a202c 0%, #2d3748 100%);
 }
 
-.loading {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: white;
-  font-size: 18px;
-  text-align: center;
+/* Element Plus 组件样式覆盖 */
+:deep(.el-card__header) {
+  padding: 12px 16px;
+  background: #fafafa;
+  border-bottom: 1px solid #e4e7ed;
 }
 
-.spinner {
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-top: 3px solid white;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 10px;
+:deep(.el-card__body) {
+  padding: 16px;
 }
 
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+:deep(.el-form-item) {
+  margin-bottom: 15px;
 }
 
-.method-selector {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-bottom: 10px;
-}
-
-.method-btn {
-  flex: 1;
-  padding: 8px;
+:deep(.el-form-item__label) {
   font-size: 12px;
-  margin-bottom: 0;
-}
-
-.method-btn.active {
-  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-}
-
-.status-indicator {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-right: 5px;
-}
-
-.status-success {
-  background: #48bb78;
-}
-
-.status-error {
-  background: #f56565;
-}
-
-.status-loading {
-  background: #ed8936;
-  animation: pulse 1s infinite;
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-/* 流式加载控制面板样式 */
-#streamControls {
-  border: 2px solid #4299e1;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%);
-}
-
-#streamControls .section-title {
-  color: #2b6cb0;
-  border-bottom-color: #4299e1;
-}
-
-#streamControls select {
-  background: white;
-  border: 1px solid #cbd5e0;
-  border-radius: 4px;
-  padding: 4px 8px;
-  width: 100%;
-}
-
-#streamControls label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  color: #2d3748;
-}
-
-#streamControls input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-}
-
-#streamControls button {
-  padding: 6px 12px;
-  margin: 2px;
-  border-radius: 4px;
-  font-size: 12px;
-  min-width: 70px;
-}
-
-/* 流式进度详细信息样式 */
-#streamProgress {
-  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  padding: 10px;
-  margin-top: 10px;
-}
-
-#streamProgress .info-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 4px 0;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-#streamProgress .info-item:last-child {
-  border-bottom: none;
-}
-
-#streamProgress .info-label {
-  font-size: 12px;
-  color: #4a5568;
+  color: #606266;
   font-weight: 500;
 }
 
-#streamProgress .info-value {
+:deep(.el-select) {
+  width: 100%;
+}
+
+:deep(.el-button) {
   font-size: 12px;
-  color: #2d3748;
-  font-weight: 600;
+}
+
+:deep(.el-button--small) {
+  padding: 6px 12px;
+  font-size: 11px;
+}
+
+:deep(.el-descriptions__label) {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+:deep(.el-descriptions__content) {
+  font-size: 12px;
   font-family: 'Courier New', monospace;
+}
+
+:deep(.el-progress__text) {
+  font-size: 12px;
+}
+
+:deep(.el-checkbox__label) {
+  font-size: 12px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .threeContainer {
+    flex-direction: column;
+  }
+  
+  .sidebar {
+    width: 100%;
+    height: auto;
+    max-height: 40vh;
+  }
+  
+  .main-content {
+    height: 60vh;
+  }
 }
 </style>
