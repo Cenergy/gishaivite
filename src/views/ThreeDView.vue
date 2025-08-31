@@ -48,7 +48,7 @@
             {{ method.label }}
           </el-button>
         </div>
-        <el-space direction="vertical" style="width: 100%" :size="10">
+        <el-space direction="horizontal" style="width: 100%" :size="10">
           <el-button type="success" @click="loadModel" style="width: 100%">
             🚀 加载模型
           </el-button>
@@ -65,11 +65,11 @@
           <el-space direction="vertical" style="width: 100%" :size="15">
             <el-form-item label="分块大小:">
               <el-select v-model="chunkSize" style="width: 180px">
-                <el-option 
-                  v-for="option in chunkSizeOptions" 
-                  :key="option.value" 
-                  :label="option.label" 
-                  :value="option.value" 
+                <el-option
+                  v-for="option in chunkSizeOptions"
+                  :key="option.value"
+                  :label="option.label"
+                  :value="option.value"
                 />
               </el-select>
             </el-form-item>
@@ -96,7 +96,7 @@
         <template #header>
           <div class="section-title">🎮 渲染控制</div>
         </template>
-        <el-space wrap style="width: 100%">
+        <el-space  style="width: 100%">
           <el-button size="small" @click="resetCamera">🔄 重置相机</el-button>
           <el-button size="small" @click="toggleWireframe">📐 线框模式</el-button>
           <el-button size="small" @click="toggleInfo">📊 显示信息</el-button>
@@ -1625,7 +1625,7 @@ onUnmounted(() => {
   width: 300px;
   background: #ffffff;
   border-right: 1px solid #e4e7ed;
-  padding: 20px;
+  padding: 5px;
   overflow-y: auto;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
 }
