@@ -109,7 +109,7 @@
           <div class="section-title">📈 加载进度</div>
         </template>
         <el-space direction="vertical" style="width: 100%" :size="10">
-          <el-progress :percentage="progress" :status="isLoading ? 'active' : 'success'" />
+          <el-progress :percentage="progress" :status="isLoading ? '' : 'success'" />
           <div class="text-12px text-#909399 text-center">{{ progressText }}</div>
         </el-space>
 
@@ -170,15 +170,14 @@
       </el-card>
     </div>
 
-    <div class="flex-1 relative bg-#f5f7fa md:h-60vh-768">
+    <div
+      v-loading="isLoading"
+      element-loading-text="正在加载模型..."
+      element-loading-spinner="el-icon-loading"
+      element-loading-background="rgba(0, 0, 0, 0.8)"
+      class="flex-1 relative bg-#f5f7fa md:h-60vh-768"
+    >
       <div ref="viewerContainer" id="viewer" class="w-full h-full bg-gradient-to-br from-#1a202c to-#2d3748"></div>
-      <el-loading
-        v-loading="isLoading"
-        element-loading-text="正在加载模型..."
-        element-loading-spinner="el-icon-loading"
-        element-loading-background="rgba(0, 0, 0, 0.8)"
-        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%"
-      />
     </div>
   </div>
 </template>
@@ -1582,9 +1581,6 @@ onMounted(async () => {
 
     // 初始化模型加载器
     try {
-      if (typeof (window as unknown as Record<string, unknown>).WASMModelLoader === 'undefined') {
-        throw new Error('WASMModelLoader not loaded')
-      }
       // 创建数据提供者
       dataProvider = new HttpDataProvider('/api/v1/resources', authToken) as DataProvider
       console.log('✅ 数据提供者初始化成功')
