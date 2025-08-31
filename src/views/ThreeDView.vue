@@ -1,14 +1,14 @@
 <template>
-  <div class="threeContainer">
-    <div class="sidebar">
-      <el-card class="title-card" shadow="never">
-        <h2>🚀 WASM模型查看器</h2>
+  <div class="flex h-screen bg-#f5f7fa font-['Segoe_UI',Tahoma,Geneva,Verdana,sans-serif] md:flex-col-768">
+    <div class="w-300px bg-white border-r-1 border-r-solid border-r-#e4e7ed p-5px overflow-y-auto shadow-lg md:w-full-768 md:h-auto-768 md:max-h-40vh-768">
+      <el-card class="mb-20px" shadow="never">
+        <h2 class="m-0 text-18px font-bold text-center text-#303133">🚀 WASM模型查看器</h2>
       </el-card>
 
       <!-- 模型选择 -->
-      <el-card class="section-card" shadow="hover">
+      <el-card class="mb-20px" shadow="hover">
         <template #header>
-          <div class="section-title">📁 模型选择</div>
+          <div class="text-14px font-600 text-#606266">📁 模型选择</div>
         </template>
         <el-form-item label="选择模型:">
           <el-select v-model="selectedModel" placeholder="请选择模型" style="width: 100%">
@@ -36,7 +36,7 @@
         <template #header>
           <div class="section-title">🔄 传输方式</div>
         </template>
-        <div class="method-selector">
+        <div class="flex flex-wrap gap-5px mb-15px">
           <el-button
             v-for="method in loadMethods"
             :key="method.value"
@@ -58,7 +58,7 @@
         </el-space>
 
         <!-- 流式加载控制面板 -->
-        <el-card v-show="showStreamControls" class="stream-controls" shadow="never">
+        <el-card v-show="showStreamControls" class="mt-15px border-2 border-solid border-#409eff bg-gradient-to-br from-#ecf5ff to-#d9ecff" shadow="never">
           <template #header>
             <div class="section-title">🌊 流式加载控制</div>
           </template>
@@ -76,7 +76,7 @@
             <el-checkbox v-model="enableResume">
               启用断点续传
             </el-checkbox>
-            <el-space wrap>
+            <el-space direction="horizontal" style="width: 100%" :size="10">
               <el-button size="small" :disabled="!canPause" @click="pauseStream">
                 ⏸️ 暂停
               </el-button>
@@ -110,11 +110,11 @@
         </template>
         <el-space direction="vertical" style="width: 100%" :size="10">
           <el-progress :percentage="progress" :status="isLoading ? 'active' : 'success'" />
-          <div class="progress-text">{{ progressText }}</div>
+          <div class="text-12px text-#909399 text-center">{{ progressText }}</div>
         </el-space>
 
         <!-- 流式加载详细进度 -->
-        <el-card v-show="showStreamProgress" class="stream-progress" shadow="never">
+        <el-card v-show="showStreamProgress" class="mt-10px bg-gradient-to-br from-#f5f7fa to-#e4e7ed" shadow="never">
           <el-descriptions :column="1" size="small" border>
             <el-descriptions-item label="已下载">{{ downloadedSize }}</el-descriptions-item>
             <el-descriptions-item label="总大小">{{ totalSize }}</el-descriptions-item>
@@ -170,8 +170,8 @@
       </el-card>
     </div>
 
-    <div class="main-content">
-      <div ref="viewerContainer" id="viewer"></div>
+    <div class="flex-1 relative bg-#f5f7fa md:h-60vh-768">
+      <div ref="viewerContainer" id="viewer" class="w-full h-full bg-gradient-to-br from-#1a202c to-#2d3748"></div>
       <el-loading
         v-loading="isLoading"
         element-loading-text="正在加载模型..."
@@ -1612,152 +1612,3 @@ onUnmounted(() => {
   }
 })
 </script>
-
-<style scoped>
-.threeContainer {
-  display: flex;
-  height: 100vh;
-  background: #f5f7fa;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-.sidebar {
-  width: 300px;
-  background: #ffffff;
-  border-right: 1px solid #e4e7ed;
-  padding: 5px;
-  overflow-y: auto;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-}
-
-.title-card {
-  margin-bottom: 20px;
-}
-
-.title-card h2 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: bold;
-  text-align: center;
-  color: #303133;
-}
-
-.section-card {
-  margin-bottom: 20px;
-}
-
-.section-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #606266;
-}
-
-.method-selector {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-bottom: 15px;
-}
-
-.stream-controls {
-  margin-top: 15px;
-  border: 2px solid #409eff;
-  background: linear-gradient(135deg, #ecf5ff 0%, #d9ecff 100%);
-}
-
-.stream-controls .section-title {
-  color: #409eff;
-}
-
-.stream-progress {
-  margin-top: 10px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e4e7ed 100%);
-}
-
-.progress-text {
-  font-size: 12px;
-  color: #909399;
-  text-align: center;
-}
-
-.main-content {
-  flex: 1;
-  position: relative;
-  background: #f5f7fa;
-}
-
-#viewer {
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle, #1a202c 0%, #2d3748 100%);
-}
-
-/* Element Plus 组件样式覆盖 */
-:deep(.el-card__header) {
-  padding: 12px 16px;
-  background: #fafafa;
-  border-bottom: 1px solid #e4e7ed;
-}
-
-:deep(.el-card__body) {
-  padding: 16px;
-}
-
-:deep(.el-form-item) {
-  margin-bottom: 15px;
-}
-
-:deep(.el-form-item__label) {
-  font-size: 12px;
-  color: #606266;
-  font-weight: 500;
-}
-
-:deep(.el-select) {
-  width: 100%;
-}
-
-:deep(.el-button) {
-  font-size: 12px;
-}
-
-:deep(.el-button--small) {
-  padding: 6px 12px;
-  font-size: 11px;
-}
-
-:deep(.el-descriptions__label) {
-  font-size: 12px;
-  font-weight: 500;
-}
-
-:deep(.el-descriptions__content) {
-  font-size: 12px;
-  font-family: 'Courier New', monospace;
-}
-
-:deep(.el-progress__text) {
-  font-size: 12px;
-}
-
-:deep(.el-checkbox__label) {
-  font-size: 12px;
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .threeContainer {
-    flex-direction: column;
-  }
-
-  .sidebar {
-    width: 100%;
-    height: auto;
-    max-height: 40vh;
-  }
-
-  .main-content {
-    height: 60vh;
-  }
-}
-</style>
