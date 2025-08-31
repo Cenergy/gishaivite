@@ -1,6 +1,25 @@
 <template>
-  <div class="flex h-screen bg-#f5f7fa font-['Segoe_UI',Tahoma,Geneva,Verdana,sans-serif] md:flex-col-768">
-    <div class="w-300px bg-white border-r-1 border-r-solid border-r-#e4e7ed p-5px overflow-y-auto shadow-lg md:w-full-768 md:h-auto-768 md:max-h-40vh-768">
+  <div class="relative h-screen bg-#f5f7fa font-['Segoe_UI',Tahoma,Geneva,Verdana,sans-serif]">
+    <!-- 抽屉开关按钮 -->
+    <el-button
+      type="primary"
+      @click="drawerVisible = true"
+      class="fixed top-20px left-20px z-1000 shadow-lg md:top-10px-768 md:left-10px-768"
+      circle
+      size="large"
+    >
+      <el-icon><Menu /></el-icon>
+    </el-button>
+
+    <!-- 抽屉组件 -->
+    <el-drawer
+      v-model="drawerVisible"
+      title="🚀 WASM模型查看器"
+      :size="320"
+      direction="ltr"
+      class="md:!w-90vw-768"
+    >
+      <div class="p-5px overflow-y-auto h-full">
       <el-card class="mb-20px" shadow="never">
         <h2 class="m-0 text-18px font-bold text-center text-#303133">🚀 WASM模型查看器</h2>
       </el-card>
@@ -168,14 +187,15 @@
           </el-descriptions-item>
         </el-descriptions>
       </el-card>
-    </div>
+      </div>
+    </el-drawer>
 
     <div
       v-loading="isLoading"
       element-loading-text="正在加载模型..."
       element-loading-spinner="el-icon-loading"
       element-loading-background="rgba(0, 0, 0, 0.8)"
-      class="flex-1 relative bg-#f5f7fa md:h-60vh-768"
+      class="w-full h-full absolute top-0 left-0 bg-#f5f7fa"
     >
       <div ref="viewerContainer" id="viewer" class="w-full h-full bg-gradient-to-br from-#1a202c to-#2d3748"></div>
     </div>
@@ -184,6 +204,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, onUnmounted, computed, nextTick } from 'vue'
+import { Menu } from '@element-plus/icons-vue'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
@@ -199,6 +220,7 @@ import LoadingStateMachine from '../utils/LoadingStateMachine.js'
 const loadingStateMachine = new LoadingStateMachine()
 
 // 响应式数据
+const drawerVisible = ref(false)
 const selectedModel = ref('')
 const loadMethod = ref('realtime-wasm')
 const modelOptions = ref([])
@@ -450,7 +472,7 @@ const initThreeJS = async () => {
   // 创建相机
   camera = new THREE.PerspectiveCamera(
     75,
-    (window.innerWidth - 300) / window.innerHeight,
+    (window.innerWidth ) / window.innerHeight,
     0.1,
     1000
   )
@@ -458,7 +480,7 @@ const initThreeJS = async () => {
 
   // 创建渲染器
   renderer = new THREE.WebGLRenderer({ antialias: true })
-  renderer.setSize(window.innerWidth - 300, window.innerHeight)
+  renderer.setSize(window.innerWidth , window.innerHeight)
   renderer.shadowMap.enabled = true
   renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
@@ -1561,9 +1583,9 @@ const cancelStream = () => {
 // 窗口大小调整
 const handleResize = () => {
   if (camera && renderer) {
-    camera.aspect = (window.innerWidth - 300) / window.innerHeight
+    camera.aspect = (window.innerWidth ) / window.innerHeight
     camera.updateProjectionMatrix()
-    renderer.setSize(window.innerWidth - 300, window.innerHeight)
+    renderer.setSize(window.innerWidth , window.innerHeight)
   }
 }
 
