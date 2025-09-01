@@ -19,7 +19,7 @@
       direction="ltr"
       class="md:!w-90vw-768"
     >
-      <div class="overflow-y-auto h-full">
+      <div class="overflow-y-auto">
       <el-card class="mb-20px" shadow="never">
         <h2 class="m-0 text-18px font-bold text-center text-#303133">🚀 WASM模型查看器</h2>
       </el-card>
@@ -339,8 +339,7 @@ getModel3Ds({is_active:true}).then(res => {
       name: model.name,
       uuid: model.uuid || model.id, // 使用uuid字段，如果没有则使用id字段
       id: model.id,
-      file_path: model.file_path,
-      description: model.description
+      ...model
     }))
     selectedModel.value = modelOptions.value[0].name
     console.log('转换后的模型选项:', modelOptions.value)
@@ -473,6 +472,7 @@ const login = async () => {
 
 const loadOriginModel = async () => {
   try {
+    console.log("🚀 ~ loadOriginModel ~ modelOptions:", modelOptions,selectedModel);
     const result = await modelLoader.loadOriginModel(modelOptions.value, selectedModel.value)
     
     // 清除之前的模型
