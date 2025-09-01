@@ -18,6 +18,7 @@
       :size="320"
       direction="ltr"
       class="md:!w-90vw-768"
+      :modal="false"
     >
       <div class="overflow-y-auto">
       <el-card class="mb-20px" shadow="never">
