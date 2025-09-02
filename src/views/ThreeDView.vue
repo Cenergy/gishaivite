@@ -193,7 +193,7 @@
 
     <div
       v-loading="isLoading"
-      element-loading-text="正在加载模型..."
+      :element-loading-text="loadingText"
       element-loading-spinner="el-icon-loading"
       element-loading-background="rgba(0, 0, 0, 0.8)"
       class="w-full h-full absolute top-0 left-0 bg-#f5f7fa"
@@ -246,6 +246,15 @@ const progress = ref(0)
 const progressText = ref('等待加载...')
 const isLoading = ref(false)
 const loadingError = ref(null)
+const currentState = ref('idle') // 响应式的状态机状态
+
+// 动态加载文本 - 根据状态显示不同文本
+const loadingText = computed(() => {
+  if (currentState.value === 'paused') {
+    return '暂停中'
+  }
+  return progressText.value || '正在加载模型...'
+})
 
 // 控制按钮状态
 const canPause = ref(false)
@@ -253,8 +262,10 @@ const canResume = ref(false)
 const canCancel = ref(false)
 
 // 设置状态机事件监听器
-loadingStateMachine.on('stateChange', ({ context }) => {
-  isLoading.value = loadingStateMachine.isLoading()
+loadingStateMachine.on('stateChange', ({ from, to, context }) => {
+  currentState.value = to // 更新响应式状态
+  // 暂停状态也应该显示loading遮罩
+  isLoading.value = loadingStateMachine.isLoading() || to === 'paused'
   progress.value = context.progress
   progressText.value = context.message
   loadingError.value = context.error
@@ -728,11 +739,17 @@ const stopAnimation = () => {
 const pauseStream = () => {
   console.log('⏸️ 暂停流式下载')
   modelLoader.pauseStream()
+  // 只有在可以暂停的状态下才更新状态机
+  if (loadingStateMachine.canPause()) {
+    loadingStateMachine.pause('暂停中')
+  }
 }
 
 const resumeStream = () => {
   console.log('▶️ 恢复流式下载')
   modelLoader.resumeStream()
+  // 恢复下载状态
+  loadingStateMachine.startDownloading('继续下载...')
 }
 
 const cancelStream = () => {
