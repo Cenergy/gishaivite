@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js'
 import FastDogDecoder from './wasm-decoder.js'
-import HttpDataProvider from './HttpDataProvider.js'
+// import HttpDataProvider from './HttpDataProvider.js'
 import { streamModelByUuid } from '../api/resources'
 import LoadingStateMachine from '../utils/LoadingStateMachine.js'
 
@@ -60,8 +60,6 @@ export class AdvancedModelLoader {
         this.setAuthToken(authToken)
       }
       
-      // 初始化数据提供者
-      this.initDataProvider()
       
       // 初始化WASM解码器
       await this.initWASMDecoder()
@@ -79,23 +77,6 @@ export class AdvancedModelLoader {
    */
   setAuthToken(token) {
     this.authToken = token
-    if (this.dataProvider) {
-      this.dataProvider.authToken = token
-    }
-  }
-
-  /**
-   * 初始化数据提供者
-   */
-  initDataProvider(baseUrl = '/api/v1/resources') {
-    try {
-      this.dataProvider = new HttpDataProvider(baseUrl, this.authToken)
-      console.log('✅ 数据提供者初始化成功')
-      return true
-    } catch (error) {
-      console.error('❌ 数据提供者初始化失败:', error)
-      return false
-    }
   }
 
   /**
@@ -955,26 +936,6 @@ export class AdvancedModelLoader {
     this.streamState.resumeData = null
     this.streamState.downloadedBytes = 0
     this.streamState.totalBytes = 0
-  }
-
-  /**
-   * 获取模型信息
-   */
-  async getModelInfo(uuid) {
-    try {
-      if (this.dataProvider && this.dataProvider.getModelInfo) {
-        return await this.dataProvider.getModelInfo(uuid)
-      } else {
-        return {
-          size: 0,
-          created_at: new Date().toISOString(),
-          content_type: 'unknown'
-        }
-      }
-    } catch (error) {
-      console.error('获取模型信息失败:', error)
-      throw error
-    }
   }
 
   /**

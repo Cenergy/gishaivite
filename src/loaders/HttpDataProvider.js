@@ -2,24 +2,11 @@
  * HTTP数据提供者 - 负责处理所有网络请求
  * 实现数据获取与业务逻辑的分离
  */
+import * as resources from "@/api/resources"
 
 class HttpDataProvider {
-    constructor(baseUrl = '/api/v1/resources', authToken = null) {
-        this.baseUrl = baseUrl;
-        this.authToken = authToken;
-    }
-
-    /**
-     * 获取请求头
-     */
-    getHeaders() {
-        const headers = {
-            'Content-Type': 'application/json'
-        };
-        if (this.authToken) {
-            headers['Authorization'] = `Bearer ${this.authToken}`;
-        }
-        return headers;
+    constructor() {
+        // 所有网络请求都通过 resources API 处理
     }
 
     /**
@@ -36,13 +23,7 @@ class HttpDataProvider {
      */
     async getModelInfo(filename) {
         try {
-            const response = await fetch(`${this.baseUrl}/models/${filename}/info`, {
-                headers: this.getHeaders()
-            });
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            return await response.json();
+            return await resources.getModelInfo(filename);
         } catch (error) {
             this.handleError('获取模型信息', error);
         }
@@ -53,13 +34,7 @@ class HttpDataProvider {
      */
     async getModelManifest(filename) {
         try {
-            const response = await fetch(`${this.baseUrl}/models/${filename}/manifest`, {
-                headers: this.getHeaders()
-            });
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            return await response.json();
+            return await resources.getModelManifest(filename);
         } catch (error) {
             this.handleError('获取模型清单', error);
         }
@@ -70,53 +45,7 @@ class HttpDataProvider {
      */
     async fetchModelBlob(filename, onProgress = null) {
         try {
-            const response = await fetch(`${this.baseUrl}/models/${filename}/blob`, {
-                headers: this.getHeaders()
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-
-            // 获取响应头信息
-            const headers = {
-                originalSize: response.headers.get('X-Original-Size'),
-                compressedSize: response.headers.get('X-Compressed-Size'),
-                compressionRatio: response.headers.get('X-Compression-Ratio'),
-                format: response.headers.get('X-Format')
-            };
-
-            const contentLength = parseInt(response.headers.get('content-length') || '0');
-            const reader = response.body?.getReader();
-            
-            if (!reader) {
-                throw new Error('无法获取响应流');
-            }
-
-            const chunks = [];
-            let receivedLength = 0;
-
-            while (true) {
-                const { done, value } = await reader.read();
-                
-                if (done) break;
-                
-                chunks.push(value);
-                receivedLength += value.length;
-                
-                if (onProgress && contentLength > 0) {
-                    onProgress({
-                        loaded: receivedLength,
-                        total: contentLength,
-                        percentage: (receivedLength / contentLength) * 100
-                    });
-                }
-            }
-
-            return {
-                arrayBuffer: this.mergeChunks(chunks, receivedLength),
-                headers
-            };
+            return await resources.fetchModelBlob(filename, onProgress);
         } catch (error) {
             this.handleError('获取模型Blob数据', error);
         }
@@ -127,86 +56,13 @@ class HttpDataProvider {
      */
     async fetchModelStream(filename, onProgress = null) {
         try {
-            const response = await fetch(`${this.baseUrl}/models/${filename}/stream`, {
-                headers: this.getHeaders()
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-
-            const contentLength = parseInt(response.headers.get('content-length') || '0');
-            const reader = response.body?.getReader();
-            
-            if (!reader) {
-                throw new Error('无法获取响应流');
-            }
-
-            const chunks = [];
-            let receivedLength = 0;
-
-            while (true) {
-                const { done, value } = await reader.read();
-                
-                if (done) break;
-                
-                chunks.push(value);
-                receivedLength += value.length;
-                
-                if (onProgress && contentLength > 0) {
-                    onProgress({
-                        loaded: receivedLength,
-                        total: contentLength,
-                        percentage: (receivedLength / contentLength) * 100,
-                        chunk: value
-                    });
-                }
-            }
-
-            return this.mergeChunks(chunks, receivedLength);
+            return await resources.fetchModelStream(filename, onProgress);
         } catch (error) {
             this.handleError('获取模型流数据', error);
         }
     }
 
-    /**
-     * 合并数据块为ArrayBuffer
-     */
-    mergeChunks(chunks, totalLength) {
-        const result = new Uint8Array(totalLength);
-        let position = 0;
-        
-        for (const chunk of chunks) {
-            result.set(chunk, position);
-            position += chunk.length;
-        }
-        
-        return result.buffer;
-    }
 
-    /**
-     * 设置认证令牌
-     */
-    setAuthToken(token) {
-        this.authToken = token;
-    }
-
-    /**
-     * 设置基础URL
-     */
-    setBaseUrl(url) {
-        this.baseUrl = url;
-    }
-
-    /**
-     * 获取当前配置
-     */
-    getConfig() {
-        return {
-            baseUrl: this.baseUrl,
-            hasAuthToken: !!this.authToken
-        };
-    }
 }
 
 export default HttpDataProvider;

@@ -72,9 +72,6 @@
           <el-button type="success" @click="loadModel" style="width: 100%">
             🚀 加载模型
           </el-button>
-          <el-button type="info" @click="getModelInfo" style="width: 100%">
-            📋 获取信息
-          </el-button>
         </el-space>
 
         <!-- 流式加载控制面板 -->
@@ -629,20 +626,6 @@ const loadModel = async () => {
     if (loadBtn) {
       loadBtn.disabled = false
     }
-  }
-}
-
-const getModelInfo = async () => {
-  try {
-    const info = await modelLoader.getModelInfo(selectedModel.value)
-    updateInfo('文件大小', (info.size / 1024 / 1024).toFixed(2) + ' MB')
-    updateInfo('创建时间', new Date(info.created_at).toLocaleString())
-    updateInfo('文件类型', info.content_type)
-  } catch (error) {
-    console.error('获取模型信息失败:', error)
-    updateInfo('文件大小', '未知')
-    updateInfo('创建时间', '未知')
-    updateInfo('文件类型', '未知')
   }
 }
 
