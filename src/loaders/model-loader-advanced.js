@@ -80,18 +80,6 @@ export class AdvancedModelLoader {
   }
 
   /**
-   * 获取UUID通过模型名称
-   */
-  getUuidByName(modelName, modelOptions) {
-    const model = modelOptions.find(option => option.name === modelName)
-    return model ? model.uuid : null
-  }
-
-  getSelectedModel(modelOptions, selectedModel) {
-    return modelOptions?.find(option => option.name === selectedModel) || { name: '未选择模型'}
-  }
-
-  /**
    * 通用的错误处理方法
    */
   _handleError(error, context = '加载') {
@@ -199,9 +187,9 @@ export class AdvancedModelLoader {
   /**
    * 统一的模型加载方法
    */
-  async loadModel(selectedModel, loadMethod, options = {}) {
-    const { chunkSize, enableResume, authToken, modelOptions } = options
-    const model = this.getSelectedModel(modelOptions, selectedModel)
+  async loadModel(model, loadMethod, options = {}) {
+    console.log("🚀 ~ AdvancedModelLoader ~ loadModel ~ model:", model);
+    const { chunkSize, enableResume, authToken } = options
     
     // 设置认证令牌
     if (authToken) {
