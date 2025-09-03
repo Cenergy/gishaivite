@@ -219,128 +219,17 @@ export class AdvancedModelLoader {
         console.log('📊 传入数据类型:', typeof modelData)
         console.log('📊 传入数据内容:', modelData)
 
-        // 检测数据格式
-        // 首先检查是否包含原始格式数据（FBX等）
-        if (typeof modelData === 'object' && modelData !== null &&
-            'extensions' in modelData &&
-            typeof modelData.extensions === 'object' &&
-            modelData.extensions !== null &&
-            'FASTDOG_ORIGINAL_FORMAT' in modelData.extensions) {
-          const originalFormat = modelData.extensions.FASTDOG_ORIGINAL_FORMAT
-          console.log(`🔧 检测到原始格式: ${originalFormat.format}`)
-
-          if (originalFormat.format === '.fbx') {
-            console.log('📊 检测到FBX格式，使用FBXLoader')
-            try {
-              const binaryString = atob(originalFormat.data)
-              const arrayBuffer = new ArrayBuffer(binaryString.length)
-              const uint8Array = new Uint8Array(arrayBuffer)
-              for (let i = 0; i < binaryString.length; i++) {
-                uint8Array[i] = binaryString.charCodeAt(i)
-              }
-
-              const loader = new FBXLoader()
-              const fbxModel = loader.parse(arrayBuffer, '')
-
-              console.log('✅ FBXLoader解析成功')
-
-              // 提取第一个几何体用于向后兼容
-              let geometry = null
-              fbxModel.traverse((child) => {
-                if (child.isMesh && child.geometry && !geometry) {
-                  geometry = child.geometry
-                }
-              })
-
-              if (!geometry) {
-                geometry = new THREE.BoxGeometry(1, 1, 1)
-              }
-
-              resolve({
-                model: fbxModel,
-                geometry: geometry
-              })
-              return
-            } catch (error) {
-              throw new Error('FBX数据解析失败: ' + error.message)
-            }
-          } else {
-            throw new Error(`不支持的原始格式: ${originalFormat.format}`)
-          }
-        }
-
-        // 检查直接的FBX格式标识
-        if (typeof modelData === 'object' && modelData !== null && modelData.type === 'fbx' && modelData.data) {
-          // FBX格式处理
-          console.log('📊 检测到直接FBX格式，使用FBXLoader')
-          try {
-            const binaryString = atob(modelData.data)
-            const arrayBuffer = new ArrayBuffer(binaryString.length)
-            const uint8Array = new Uint8Array(arrayBuffer)
-            for (let i = 0; i < binaryString.length; i++) {
-              uint8Array[i] = binaryString.charCodeAt(i)
-            }
-
-            const loader = new FBXLoader()
-            const fbxModel = loader.parse(arrayBuffer, '')
-
-            console.log('✅ FBXLoader解析成功')
-
-            // 提取第一个几何体用于向后兼容
-            let geometry = null
-            fbxModel.traverse((child) => {
-              if (child.isMesh && child.geometry && !geometry) {
-                geometry = child.geometry
-              }
-            })
-
-            if (!geometry) {
-              geometry = new THREE.BoxGeometry(1, 1, 1)
-            }
-
-            resolve({
-              model: fbxModel,
-              geometry: geometry
-            })
-            return
-          } catch (error) {
-            throw new Error('FBX数据解析失败: ' + error.message)
-          }
+        // 检测并处理特殊格式（FBX等）
+        const specialFormatResult = this._detectAndProcessFormat(modelData)
+        if (specialFormatResult) {
+          resolve(specialFormatResult)
+          return
         }
 
         // GLTF/GLB格式处理
         const loader = new GLTFLoader()
-
-        // 确保数据格式正确：GLTFLoader.parse支持JSON字符串、JSON对象或ArrayBuffer（GLB）
-        let dataToParse
-        if (modelData instanceof ArrayBuffer) {
-          // 如果是ArrayBuffer（GLB格式），直接使用
-          dataToParse = modelData
-          console.log('📊 检测到GLB二进制数据，大小:', modelData.byteLength, '字节')
-        } else if (typeof modelData === 'object' && modelData !== null && modelData.type === 'glb' && modelData.data) {
-          // 如果是WASM解码器返回的GLB对象格式，需要将base64数据转换为ArrayBuffer
-          console.log('📊 检测到WASM解码器GLB对象格式，转换base64数据')
-          try {
-            const binaryString = atob(modelData.data)
-            const bytes = new Uint8Array(binaryString.length)
-            for (let i = 0; i < binaryString.length; i++) {
-              bytes[i] = binaryString.charCodeAt(i)
-            }
-            dataToParse = bytes.buffer
-            console.log('📊 GLB数据转换完成，大小:', dataToParse.byteLength, '字节')
-          } catch (error) {
-            throw new Error('GLB base64数据解码失败: ' + error.message)
-          }
-        } else if (typeof modelData === 'string') {
-          // 如果是字符串，直接使用
-          dataToParse = modelData
-        } else if (typeof modelData === 'object' && modelData !== null) {
-          // 如果是普通对象，转换为JSON字符串
-          dataToParse = JSON.stringify(modelData)
-        } else {
-          throw new Error('无效的模型数据格式')
-        }
-
+        const dataToParse = this._prepareGLTFData(modelData)
+        
         console.log('📊 解析数据类型:', typeof dataToParse)
 
         // 直接使用parse方法解析GLTF JSON数据，无需创建Blob URL
@@ -350,20 +239,8 @@ export class AdvancedModelLoader {
           (gltf) => {
             console.log('✅ GLTFLoader直接解析成功，保留完整材质')
 
-            // 提取第一个几何体用于向后兼容
-            let geometry = null
-            if (gltf.scene) {
-              gltf.scene.traverse((child) => {
-                if (child.isMesh && child.geometry && !geometry) {
-                  geometry = child.geometry
-                }
-              })
-            }
-
-            if (!geometry) {
-              // 如果没有找到几何体，创建一个默认的
-              geometry = new THREE.BoxGeometry(1, 1, 1)
-            }
+            // 使用通用的几何体提取方法
+            const geometry = this._extractGeometry(gltf.scene)
 
             // 返回完整的模型和几何体
             resolve({
@@ -373,10 +250,12 @@ export class AdvancedModelLoader {
           },
           (error) => {
             console.error('❌ GLTFLoader直接解析失败:', error)
+            this._handleError(error, 'GLTF解析')
             reject(error)
           }
         )
       } catch (error) {
+        this._handleError(error, '模型构建')
         reject(error)
       }
     })
@@ -385,6 +264,98 @@ export class AdvancedModelLoader {
   /**
    * 直接加载模型（不使用WASM）
    */
+  /**
+   * 将base64字符串转换为ArrayBuffer的通用方法
+   */
+  _base64ToArrayBuffer(base64Data) {
+    try {
+      const binaryString = atob(base64Data)
+      const arrayBuffer = new ArrayBuffer(binaryString.length)
+      const uint8Array = new Uint8Array(arrayBuffer)
+      for (let i = 0; i < binaryString.length; i++) {
+        uint8Array[i] = binaryString.charCodeAt(i)
+      }
+      return arrayBuffer
+    } catch (error) {
+      throw new Error(`Base64数据转换失败: ${error.message}`)
+    }
+  }
+
+  /**
+   * 处理FBX格式数据的通用方法
+   */
+  _processFBXData(fbxData) {
+    try {
+      const arrayBuffer = this._base64ToArrayBuffer(fbxData)
+      const loader = new FBXLoader()
+      const fbxModel = loader.parse(arrayBuffer, '')
+      
+      console.log('✅ FBXLoader解析成功')
+      
+      const geometry = this._extractGeometry(fbxModel)
+      return {
+        model: fbxModel,
+        geometry: geometry
+      }
+    } catch (error) {
+      throw new Error(`FBX数据解析失败: ${error.message}`)
+    }
+  }
+
+  /**
+   * 检测并处理不同的数据格式
+   */
+  _detectAndProcessFormat(modelData) {
+    // 检查是否包含原始格式数据（FBX等）
+    if (typeof modelData === 'object' && modelData !== null &&
+        'extensions' in modelData &&
+        typeof modelData.extensions === 'object' &&
+        modelData.extensions !== null &&
+        'FASTDOG_ORIGINAL_FORMAT' in modelData.extensions) {
+      const originalFormat = modelData.extensions.FASTDOG_ORIGINAL_FORMAT
+      console.log(`🔧 检测到原始格式: ${originalFormat.format}`)
+      
+      if (originalFormat.format === '.fbx') {
+        console.log('📊 检测到FBX格式，使用FBXLoader')
+        return this._processFBXData(originalFormat.data)
+      } else {
+        throw new Error(`不支持的原始格式: ${originalFormat.format}`)
+      }
+    }
+    
+    // 检查直接的FBX格式标识
+    if (typeof modelData === 'object' && modelData !== null && 
+        modelData.type === 'fbx' && modelData.data) {
+      console.log('📊 检测到直接FBX格式，使用FBXLoader')
+      return this._processFBXData(modelData.data)
+    }
+    
+    // 返回null表示不是特殊格式，需要用GLTF处理
+    return null
+  }
+
+  /**
+   * 准备GLTF解析数据
+   */
+  _prepareGLTFData(modelData) {
+    if (modelData instanceof ArrayBuffer) {
+      console.log('📊 检测到GLB二进制数据，大小:', modelData.byteLength, '字节')
+      return modelData
+    } else if (typeof modelData === 'object' && modelData !== null && 
+               modelData.type === 'glb' && modelData.data) {
+      console.log('📊 检测到WASM解码器GLB对象格式，转换base64数据')
+      const arrayBuffer = this._base64ToArrayBuffer(modelData.data)
+      console.log('📊 GLB数据转换完成，大小:', arrayBuffer.byteLength, '字节')
+      return arrayBuffer
+    } else if (typeof modelData === 'string') {
+      return modelData
+    } else if (typeof modelData === 'object' && modelData !== null) {
+      return JSON.stringify(modelData)
+    } else {
+      throw new Error('无效的模型数据格式')
+    }
+  }
+
   /**
    * 提取模型几何体的通用方法
    */

@@ -10,7 +10,7 @@
       circle
       size="large"
     >
-      <el-icon><Menu /></el-icon>
+      <el-icon>&gt;</el-icon>
     </el-button>
 
     <!-- 抽屉组件 -->
@@ -51,14 +51,6 @@
         </el-card>
 
         <!-- 传输方式选择 -->
-        <el-card class="section-card" shadow="hover">
-          <template #header>
-            <div class="section-title">📡 传统方式</div>
-          </template>
-          <el-button type="primary" @click="loadOriginModel" style="width: 100%">
-            直接加载
-          </el-button>
-        </el-card>
 
         <el-card class="section-card" shadow="hover">
           <template #header>
@@ -236,12 +228,9 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, onUnmounted, computed, nextTick } from "vue";
-import { Menu } from "@element-plus/icons-vue";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
-import { streamModelByUuid, getModel3Ds } from "../api/resources";
+import { getModel3Ds } from "../api/resources";
 import modelLoader from "../loaders/model-loader-advanced.js";
 
 // 使用模型加载器的状态机
@@ -250,8 +239,8 @@ const loadingStateMachine = modelLoader.loadingStateMachine;
 // 响应式数据
 const drawerVisible = ref(false);
 const selectedModel = ref("");
-const loadMethod = ref("realtime-wasm");
 const modelOptions = ref([]);
+const loadMethod = ref("realtime-wasm");
 const chunkSize = ref(0);
 const enableResume = ref(true);
 
@@ -351,6 +340,7 @@ const performanceStats = reactive({
 
 // 加载方式选项
 const loadMethods = [
+  { value: "origin", label: "直接加载" },
   { value: "stream", label: "Stream" },
   { value: "wasm", label: "WASM解码" },
   { value: "stream-wasm", label: "🌊 流式WASM" },
@@ -391,12 +381,8 @@ getModel3Ds({ is_active: true })
   })
   .catch((err) => {
     console.log("API调用失败，使用fallback数据:", err);
-    modelOptions.value = [
-      { name: "merge.gltf", uuid: "326868cfb53e44f1a9b418a05044fc2f" },
-      { name: "Bee.glb", uuid: "f2c992a231c74dcc86e5e7c63b8b1eb5" },
-      { name: "SambaDancing.fbx", uuid: "73e872d4b0f54075859cefb9eda2eb54" },
-    ];
-    selectedModel.value = modelOptions.value[0].name;
+    modelOptions.value = [];
+    selectedModel.value ="";
   });
 
 // DOM 引用
@@ -483,92 +469,6 @@ const initThreeJS = async () => {
   animate();
 };
 
-function getSelectedModel(modelOptions, selectedModel) {
-  return (
-    modelOptions?.find((option) => option.name === selectedModel) || {
-      name: "未选择模型",
-    }
-  );
-}
-
-// initWASMDecoder 函数已移至 model-loader-advanced.js
-
-const login = async () => {
-  try {
-    const response = await fetch("/api/v1/auth/login/access-token", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: "username=admin&password=admin123",
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      authToken.value = data.access_token;
-      // 更新模型加载器的认证令牌
-      modelLoader.setAuthToken(authToken.value);
-      updateInfo("认证", "已登录");
-      console.log("✅ 登录成功");
-    } else {
-      throw new Error("登录失败");
-    }
-  } catch (error) {
-    console.error("❌ 登录失败:", error);
-    updateInfo("认证", "登录失败");
-  }
-};
-
-const loadOriginModel = async () => {
-  try {
-    const model = getSelectedModel(modelOptions.value, selectedModel.value);
-    const result = await modelLoader.loadModel(model, "origin");
-
-    // 清除之前的模型
-    if (currentModel) {
-      scene.remove(currentModel);
-    }
-
-    // 添加新模型
-    currentModel = result.model;
-    currentModel.traverse((child: THREE.Object3D) => {
-      const mesh = child as THREE.Mesh;
-      if (mesh.isMesh) {
-        mesh.castShadow = true;
-        mesh.receiveShadow = true;
-      }
-    });
-    scene.add(currentModel);
-
-    // 处理动画
-    setupAnimations(currentModel, result.animations);
-
-    // 自动调整相机位置
-    const box = new THREE.Box3().setFromObject(currentModel);
-    const center = box.getCenter(new THREE.Vector3());
-    const size = box.getSize(new THREE.Vector3());
-    const maxDim = Math.max(size.x, size.y, size.z);
-    const fov = camera.fov * (Math.PI / 180);
-    let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
-    cameraZ *= 1.5;
-
-    camera.position.set(center.x, center.y, center.z + cameraZ);
-    camera.lookAt(center);
-    controls.target.copy(center);
-    controls.update();
-
-    updateInfo("状态", "加载成功");
-    updateInfo(
-      "顶点数",
-      result.geometry && result.geometry.attributes && result.geometry.attributes.position
-        ? result.geometry.attributes.position.count.toString()
-        : "未知"
-    );
-  } catch (error) {
-    console.error("加载失败:", error);
-    updateInfo("状态", "加载失败");
-  }
-};
 const loadModel = async () => {
   console.log("🚀 开始加载模型...");
   const loadBtn = document.getElementById("loadBtn") as HTMLButtonElement | null;
@@ -580,7 +480,7 @@ const loadModel = async () => {
   try {
     // 重置状态机到idle状态，避免状态转换错误
     loadingStateMachine.reset();
-    const model = getSelectedModel(modelOptions.value, selectedModel.value);
+    const model = modelOptions.value?.find(option => option.name === selectedModel.value) || { name: "未选择模型" };
     // 使用 modelLoader 加载模型
     const result = await modelLoader.loadModel(model, loadMethod.value, {
       chunkSize: chunkSize.value,
@@ -831,8 +731,6 @@ onMounted(async () => {
 
     // 初始化模型加载器
     await modelLoader.initialize(authToken.value);
-
-    await login();
 
     window.addEventListener("resize", handleResize);
   } catch (error) {
