@@ -542,7 +542,7 @@ const loadModel = async () => {
           performanceStats["分块数量"] = result.performanceStats.chunksCount.toString();
         }
         if (result.performanceStats.chunkSize !== undefined) {
-          performanceStats["分块大小"] = modelLoader.formatBytes(
+          performanceStats["分块大小"] = modelLoader.downloader.formatBytes(
             result.performanceStats.chunkSize
           );
         }
@@ -550,18 +550,18 @@ const loadModel = async () => {
           performanceStats["压缩比"] = result.performanceStats.compressionRatio + "%";
         }
         if (result.performanceStats.originalSize !== undefined) {
-          performanceStats["原始大小"] = modelLoader.formatBytes(
+          performanceStats["原始大小"] = modelLoader.downloader.formatBytes(
             result.performanceStats.originalSize
           );
         }
         if (result.performanceStats.compressedSize !== undefined) {
-          performanceStats["压缩大小"] = modelLoader.formatBytes(
+          performanceStats["压缩大小"] = modelLoader.downloader.formatBytes(
             result.performanceStats.compressedSize
           );
         }
         if (result.performanceStats.averageSpeed !== undefined) {
           performanceStats["平均速度"] =
-            modelLoader.formatBytes(result.performanceStats.averageSpeed) + "/s";
+            modelLoader.downloader.formatBytes(result.performanceStats.averageSpeed) + "/s";
         }
         if (result.performanceStats.wasmDecodeTime !== undefined) {
           performanceStats["流式解码"] = result.performanceStats.wasmDecodeTime + "ms";
@@ -683,17 +683,11 @@ const stopAnimation = () => {
 const pauseStream = () => {
   console.log("⏸️ 暂停流式下载");
   modelLoader.pauseStream();
-  // 只有在可以暂停的状态下才更新状态机
-  if (loadingStateMachine.canPause()) {
-    loadingStateMachine.pause("暂停中");
-  }
 };
 
 const resumeStream = () => {
   console.log("▶️ 恢复流式下载");
   modelLoader.resumeStream();
-  // 恢复下载状态
-  loadingStateMachine.startDownloading("继续下载...");
 };
 
 const cancelStream = () => {
