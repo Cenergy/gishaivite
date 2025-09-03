@@ -1,7 +1,8 @@
-import { THREE, GLTFLoader, FBXLoader } from '@/utils/three.js';
-import FastDogDecoder from './wasm-decoder.js';
 import downloader from './modelDownloader.js';
+import modelDecoder from './modelDecoder.js';
+import modelBuilder from './modelBuilder.js';
 import LoadingStateMachine from '../utils/LoadingStateMachine.js';
+import { THREE, GLTFLoader, FBXLoader } from '@/utils/three.js';
 
 /**
  * 高级模型加载器类
@@ -12,6 +13,8 @@ export class AdvancedModelLoader {
     this.wasmDecoder = null;
     this.loadingStateMachine = new LoadingStateMachine();
     this.downloader = downloader;
+    this.modelDecoder = modelDecoder;
+    this.modelBuilder = modelBuilder;
   }
 
   /**
@@ -19,13 +22,12 @@ export class AdvancedModelLoader {
    */
   async initWASMDecoder() {
     try {
-      console.log('🚀 初始化 WASM 解码器...');
-      this.wasmDecoder = new FastDogDecoder();
-      await this.wasmDecoder.init();
-      console.log('✅ WASM 解码器初始化成功');
+      await this.modelDecoder.initWASMDecoder();
+      // 保持向后兼容性
+      this.wasmDecoder = this.modelDecoder.wasmDecoder;
       return true;
     } catch (error) {
-      console.error('❌ WASM 解码器初始化失败:', error);
+      console.error('❌ WASM解码器初始化失败:', error);
       return false;
     }
   }
@@ -90,28 +92,7 @@ export class AdvancedModelLoader {
    * 通用的解码方法
    */
   async _decodeData(data, uuid, useWasm = false) {
-    if (!useWasm) {
-      return { data, decodeTime: 0 };
-    }
-
-    if (!this.wasmDecoder) {
-      throw new Error('WASM解码器未初始化，请先初始化WASM解码器');
-    }
-
-    const decodeStartTime = Date.now();
-    const decodeResult = await this.wasmDecoder.decode(data, false, { modelId: uuid, uuid });
-    const decodeTime = Date.now() - decodeStartTime;
-
-    let parsedData = decodeResult.data;
-    if (typeof decodeResult.data === 'string') {
-      try {
-        parsedData = JSON.parse(decodeResult.data);
-      } catch (e) {
-        console.warn('⚠️ 无法解析为JSON:', e);
-      }
-    }
-
-    return { data: parsedData, decodeTime };
+    return await this.modelDecoder.decodeData(data, uuid, useWasm);
   }
 
   /**
@@ -168,172 +149,26 @@ export class AdvancedModelLoader {
    * 使用GLTF/FBX加载器构建模型
    */
   async buildModelWithGLTFLoader(modelData) {
-    return new Promise((resolve, reject) => {
-      try {
-        console.log('🎨 开始解析模型数据');
-        console.log('📊 传入数据类型:', typeof modelData);
-        console.log('📊 传入数据内容:', modelData);
-
-        // 检测并处理特殊格式（FBX等）
-        const specialFormatResult = this._detectAndProcessFormat(modelData);
-        if (specialFormatResult) {
-          resolve(specialFormatResult);
-          return;
-        }
-
-        // GLTF/GLB格式处理
-        const loader = new GLTFLoader();
-        const dataToParse = this._prepareGLTFData(modelData);
-
-        console.log('📊 解析数据类型:', typeof dataToParse);
-
-        // 直接使用parse方法解析GLTF JSON数据，无需创建Blob URL
-        loader.parse(
-          dataToParse, // 传入正确格式的数据
-          '', // 资源路径（空字符串表示无外部资源）
-          (gltf) => {
-            console.log('✅ GLTFLoader直接解析成功，保留完整材质');
-
-            // 使用通用的几何体提取方法
-            const geometry = this._extractGeometry(gltf.scene);
-
-            // 返回完整的模型和几何体
-            resolve({
-              model: gltf.scene || new THREE.Object3D(),
-              geometry: geometry,
-            });
-          },
-          (error) => {
-            console.error('❌ GLTFLoader直接解析失败:', error);
-            this._handleError(error, 'GLTF解析');
-            reject(error);
-          },
-        );
-      } catch (error) {
-        this._handleError(error, '模型构建');
-        reject(error);
-      }
-    });
+    try {
+      return await this.modelBuilder.buildModelWithGLTFLoader(modelData);
+    } catch (error) {
+      this._handleError(error, '模型构建');
+      throw error;
+    }
   }
 
   /**
    * 直接加载模型（不使用WASM）
    */
-  /**
-   * 将base64字符串转换为ArrayBuffer的通用方法
-   */
-  _base64ToArrayBuffer(base64Data) {
-    try {
-      const binaryString = atob(base64Data);
-      const arrayBuffer = new ArrayBuffer(binaryString.length);
-      const uint8Array = new Uint8Array(arrayBuffer);
-      for (let i = 0; i < binaryString.length; i++) {
-        uint8Array[i] = binaryString.charCodeAt(i);
-      }
-      return arrayBuffer;
-    } catch (error) {
-      throw new Error(`Base64数据转换失败: ${error.message}`);
-    }
-  }
 
-  /**
-   * 处理FBX格式数据的通用方法
-   */
-  _processFBXData(fbxData) {
-    try {
-      const arrayBuffer = this._base64ToArrayBuffer(fbxData);
-      const loader = new FBXLoader();
-      const fbxModel = loader.parse(arrayBuffer, '');
 
-      console.log('✅ FBXLoader解析成功');
 
-      const geometry = this._extractGeometry(fbxModel);
-      return {
-        model: fbxModel,
-        geometry: geometry,
-      };
-    } catch (error) {
-      throw new Error(`FBX数据解析失败: ${error.message}`);
-    }
-  }
 
-  /**
-   * 检测并处理不同的数据格式
-   */
-  _detectAndProcessFormat(modelData) {
-    // 检查是否包含原始格式数据（FBX等）
-    if (
-      typeof modelData === 'object' &&
-      modelData !== null &&
-      'extensions' in modelData &&
-      typeof modelData.extensions === 'object' &&
-      modelData.extensions !== null &&
-      'FASTDOG_ORIGINAL_FORMAT' in modelData.extensions
-    ) {
-      const originalFormat = modelData.extensions.FASTDOG_ORIGINAL_FORMAT;
-      console.log(`🔧 检测到原始格式: ${originalFormat.format}`);
 
-      if (originalFormat.format === '.fbx') {
-        console.log('📊 检测到FBX格式，使用FBXLoader');
-        return this._processFBXData(originalFormat.data);
-      } else {
-        throw new Error(`不支持的原始格式: ${originalFormat.format}`);
-      }
-    }
 
-    // 检查直接的FBX格式标识
-    if (
-      typeof modelData === 'object' &&
-      modelData !== null &&
-      modelData.type === 'fbx' &&
-      modelData.data
-    ) {
-      console.log('📊 检测到直接FBX格式，使用FBXLoader');
-      return this._processFBXData(modelData.data);
-    }
 
-    // 返回null表示不是特殊格式，需要用GLTF处理
-    return null;
-  }
 
-  /**
-   * 准备GLTF解析数据
-   */
-  _prepareGLTFData(modelData) {
-    if (modelData instanceof ArrayBuffer) {
-      console.log('📊 检测到GLB二进制数据，大小:', modelData.byteLength, '字节');
-      return modelData;
-    } else if (
-      typeof modelData === 'object' &&
-      modelData !== null &&
-      modelData.type === 'glb' &&
-      modelData.data
-    ) {
-      console.log('📊 检测到WASM解码器GLB对象格式，转换base64数据');
-      const arrayBuffer = this._base64ToArrayBuffer(modelData.data);
-      console.log('📊 GLB数据转换完成，大小:', arrayBuffer.byteLength, '字节');
-      return arrayBuffer;
-    } else if (typeof modelData === 'string') {
-      return modelData;
-    } else if (typeof modelData === 'object' && modelData !== null) {
-      return JSON.stringify(modelData);
-    } else {
-      throw new Error('无效的模型数据格式');
-    }
-  }
 
-  /**
-   * 提取模型几何体的通用方法
-   */
-  _extractGeometry(modelObj) {
-    let geometry = null;
-    modelObj.traverse((child) => {
-      if (child.isMesh && child.geometry && !geometry) {
-        geometry = child.geometry;
-      }
-    });
-    return geometry || new THREE.BoxGeometry(1, 1, 1);
-  }
 
   /**
    * 获取文件加载器
@@ -368,7 +203,7 @@ export class AdvancedModelLoader {
           url,
           (object) => {
             const modelObj = extension === 'gltf' || extension === 'glb' ? object.scene : object;
-            const geometry = this._extractGeometry(modelObj);
+            const geometry = this.modelBuilder._extractGeometry(modelObj);
 
             this.loadingStateMachine.success(modelObj, '加载完成');
 
@@ -733,6 +568,14 @@ export class AdvancedModelLoader {
     // 清理WASM解码器
     if (this.wasmDecoder) {
       this.wasmDecoder = null;
+    }
+
+    // 清理模型解码器
+    if (this.modelDecoder) {
+      this.modelDecoder.dispose();
+    }
+    if (this.modelBuilder) {
+      this.modelBuilder.dispose();
     }
 
     // 清理下载器

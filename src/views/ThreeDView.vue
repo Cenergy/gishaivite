@@ -230,10 +230,10 @@
 import { ref, reactive, onMounted, onUnmounted, computed, nextTick } from "vue";
 import { THREE, OrbitControls } from "@/utils/three.js";
 import { getModel3Ds } from "../api/resources";
-import modelLoader from "../loaders/model-loader-advanced.js";
+import modelManager from "../loaders/modelManager.js";
 
 // 使用模型加载器的状态机
-const loadingStateMachine = modelLoader.loadingStateMachine;
+const loadingStateMachine = modelManager.loadingStateMachine;
 
 // 响应式数据
 const drawerVisible = ref(false);
@@ -360,7 +360,7 @@ const isAnimationPlaying = ref(false);
 // 认证令牌
 const authToken = ref("");
 
-// 流式加载状态现在由modelLoader管理
+// 流式加载状态现在由modelManager管理
 
 // 加载模型数据
 getModel3Ds({ is_active: true })
@@ -480,8 +480,8 @@ const loadModel = async () => {
     // 重置状态机到idle状态，避免状态转换错误
     loadingStateMachine.reset();
     const model = modelOptions.value?.find(option => option.name === selectedModel.value) || { name: "未选择模型" };
-    // 使用 modelLoader 加载模型
-    const result = await modelLoader.loadModel(model, loadMethod.value, {
+    // 使用 modelManager 加载模型
+    const result = await modelManager.loadModel(model, loadMethod.value, {
       chunkSize: chunkSize.value,
       enableResume: enableResume.value,
       authToken: authToken.value,
@@ -542,7 +542,7 @@ const loadModel = async () => {
           performanceStats["分块数量"] = result.performanceStats.chunksCount.toString();
         }
         if (result.performanceStats.chunkSize !== undefined) {
-          performanceStats["分块大小"] = modelLoader.downloader.formatBytes(
+          performanceStats["分块大小"] = modelManager.downloader.formatBytes(
             result.performanceStats.chunkSize
           );
         }
@@ -550,18 +550,18 @@ const loadModel = async () => {
           performanceStats["压缩比"] = result.performanceStats.compressionRatio + "%";
         }
         if (result.performanceStats.originalSize !== undefined) {
-          performanceStats["原始大小"] = modelLoader.downloader.formatBytes(
+          performanceStats["原始大小"] = modelManager.downloader.formatBytes(
             result.performanceStats.originalSize
           );
         }
         if (result.performanceStats.compressedSize !== undefined) {
-          performanceStats["压缩大小"] = modelLoader.downloader.formatBytes(
+          performanceStats["压缩大小"] = modelManager.downloader.formatBytes(
             result.performanceStats.compressedSize
           );
         }
         if (result.performanceStats.averageSpeed !== undefined) {
           performanceStats["平均速度"] =
-            modelLoader.downloader.formatBytes(result.performanceStats.averageSpeed) + "/s";
+            modelManager.downloader.formatBytes(result.performanceStats.averageSpeed) + "/s";
         }
         if (result.performanceStats.wasmDecodeTime !== undefined) {
           performanceStats["流式解码"] = result.performanceStats.wasmDecodeTime + "ms";
@@ -682,17 +682,17 @@ const stopAnimation = () => {
 
 const pauseStream = () => {
   console.log("⏸️ 暂停流式下载");
-  modelLoader.pauseStream();
+  modelManager.pauseStream();
 };
 
 const resumeStream = () => {
   console.log("▶️ 恢复流式下载");
-  modelLoader.resumeStream();
+  modelManager.resumeStream();
 };
 
 const cancelStream = () => {
   console.log("❌ 取消流式下载");
-  modelLoader.cancelStream();
+  modelManager.cancelStream();
 
   // 重置流式信息显示
   downloadedSize.value = "0 B";
@@ -723,7 +723,7 @@ onMounted(async () => {
     await initThreeJS();
 
     // 初始化模型加载器
-    await modelLoader.initialize(authToken.value);
+    await modelManager.initialize(authToken.value);
 
     window.addEventListener("resize", handleResize);
   } catch (error) {
@@ -743,6 +743,6 @@ onUnmounted(() => {
   }
 
   // 清理模型加载器资源
-  modelLoader.cleanup();
+  modelManager.cleanup();
 });
 </script>
