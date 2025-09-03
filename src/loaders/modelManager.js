@@ -7,7 +7,7 @@ import LoadingStateMachine from '../utils/LoadingStateMachine.js';
  * 高级模型加载器类
  * 支持多种加载方式：直接加载、流式加载、WASM解码、实时流式WASM等
  */
-export class AdvancedModelLoader {
+export class ModelManager {
   constructor() {
     this.wasmDecoder = null;
     this.loadingStateMachine = new LoadingStateMachine();
@@ -123,7 +123,7 @@ export class AdvancedModelLoader {
    * 统一的模型加载方法
    */
   async loadModel(model, loadMethod, options = {}) {
-    console.log('🚀 ~ AdvancedModelLoader ~ loadModel ~ model:', model);
+    console.log('🚀 ~ ModelManager ~ loadModel ~ model:', model);
     const { chunkSize, enableResume, authToken } = options;
 
     // 设置认证令牌
@@ -574,4 +574,4 @@ export class AdvancedModelLoader {
 }
 
 // 导出默认实例
-export default new AdvancedModelLoader();
+export default new ModelManager();
