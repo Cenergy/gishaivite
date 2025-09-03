@@ -2,7 +2,6 @@ import downloader from './modelDownloader.js';
 import modelDecoder from './modelDecoder.js';
 import modelBuilder from './modelBuilder.js';
 import LoadingStateMachine from '../utils/LoadingStateMachine.js';
-import { THREE, GLTFLoader, FBXLoader } from '@/utils/three.js';
 
 /**
  * 高级模型加载器类
@@ -170,18 +169,7 @@ export class AdvancedModelLoader {
 
 
 
-  /**
-   * 获取文件加载器
-   */
-  _getFileLoader(extension) {
-    if (extension === 'gltf' || extension === 'glb') {
-      return new GLTFLoader();
-    } else if (extension === 'fbx') {
-      return new FBXLoader();
-    } else {
-      throw new Error(`不支持的文件格式: ${extension}`);
-    }
-  }
+
 
   async loadOriginModel(model) {
     if (!model || !model.model_file_url) {
@@ -194,7 +182,7 @@ export class AdvancedModelLoader {
     try {
       const url = model.model_file_url;
       const extension = url.split('.').pop()?.toLowerCase();
-      const loader = this._getFileLoader(extension);
+      const loader = this.modelBuilder._getFileLoader(extension);
 
       this.loadingStateMachine.startBuilding('正在解析模型...');
 
