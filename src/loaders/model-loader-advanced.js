@@ -1,6 +1,4 @@
-import * as THREE from 'three'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
-import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js'
+import { THREE, GLTFLoader, FBXLoader } from "@/utils/three.js";
 import FastDogDecoder from './wasm-decoder.js'
 // import HttpDataProvider from './HttpDataProvider.js'
 import { streamModelByUuid } from '../api/resources'

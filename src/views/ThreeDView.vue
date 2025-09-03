@@ -228,8 +228,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, onUnmounted, computed, nextTick } from "vue";
-import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { THREE, OrbitControls } from "@/utils/three.js";
 import { getModel3Ds } from "../api/resources";
 import modelLoader from "../loaders/model-loader-advanced.js";
 
