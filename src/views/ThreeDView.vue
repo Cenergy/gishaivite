@@ -481,8 +481,7 @@ const login = async () => {
 
 const loadOriginModel = async () => {
   try {
-    console.log("🚀 ~ loadOriginModel ~ modelOptions:", modelOptions,selectedModel);
-    const result = await modelLoader.loadOriginModel(modelOptions.value, selectedModel.value)
+    const result = await modelLoader.loadModel(selectedModel.value, 'origin',{modelOptions:modelOptions.value})
     
     // 清除之前的模型
     if (currentModel) {

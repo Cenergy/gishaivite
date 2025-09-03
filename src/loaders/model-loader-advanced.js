@@ -87,11 +87,18 @@ export class AdvancedModelLoader {
     return model ? model.uuid : null
   }
 
+  getSelectedModel(modelOptions, selectedModel) {
+    const model = modelOptions.find(option => option.name === selectedModel)
+    return model
+  }
+
   /**
    * 统一的模型加载方法
    */
   async loadModel(selectedModel, loadMethod, options = {}) {
+    console.log("🚀 ~ AdvancedModelLoader ~ loadModel ~ selectedModel:", selectedModel);
     const { chunkSize, enableResume, authToken, modelOptions } = options
+    const model = this.getSelectedModel(modelOptions, selectedModel)
     
     // 设置认证令牌
     if (authToken) {
@@ -105,17 +112,18 @@ export class AdvancedModelLoader {
     
     switch (loadMethod) {
        case 'origin':
-         return await this.loadOriginModel(actualModelOptions, selectedModel)
+         return await this.loadOriginModel(model, selectedModel)
        case 'stream':
-         return await this.loadModelStream(actualModelOptions, selectedModel)
+         return await this.loadModelStream(model, selectedModel)
        case 'wasm':
-         return await this.loadModelWASM(actualModelOptions, selectedModel)
+         return await this.loadModelWASM(model, selectedModel)
        case 'stream_wasm':
        case 'stream-wasm':
-         return await this.loadModelStreamWASM(actualModelOptions, selectedModel)
+         return await this.loadModelStreamWASM(model, selectedModel)
        case 'stream_wasm_realtime':
        case 'realtime-wasm':
-         return await this.loadModelStreamWASMRealtime(actualModelOptions, selectedModel, {
+         return await this.loadModelStreamWASMRealtime({
+           model,
            chunkSize,
            enableResume
          })
@@ -300,8 +308,7 @@ export class AdvancedModelLoader {
   /**
    * 直接加载模型（不使用WASM）
    */
-  async loadOriginModel(modelOptions, selectedModel) {
-    const model = modelOptions.find(option => option.name === selectedModel)
+  async loadOriginModel(model) {
     if (!model || !model.model_file_url) {
       throw new Error('未找到模型或模型文件URL')
     }
@@ -378,9 +385,9 @@ export class AdvancedModelLoader {
   /**
    * 流式加载模型
    */
-  async loadModelStream(modelOptions, selectedModel) {
+  async loadModelStream(model) {
     console.log('🌊 开始流式加载...')
-    const uuid = this.getUuidByName(selectedModel, modelOptions)
+    const {uuid} =model
     if (!uuid) throw new Error('无法获取模型UUID')
 
     const startTime = Date.now()
@@ -422,7 +429,7 @@ export class AdvancedModelLoader {
         }
 
         const decodeStartTime = Date.now()
-        const decodeResult = await this.wasmDecoder.decode(arrayBuffer, false, { modelId: selectedModel, uuid: uuid })
+        const decodeResult = await this.wasmDecoder.decode(arrayBuffer, false, { modelId: uuid, uuid: uuid })
         decodeTime = Date.now() - decodeStartTime
         decodedData = decodeResult.data
       } else {
@@ -461,7 +468,7 @@ export class AdvancedModelLoader {
   /**
    * WASM解码加载模型
    */
-  async loadModelWASM(modelOptions, selectedModel) {
+  async loadModelWASM(model) {
     console.log('🔧 开始WASM解码加载...')
 
     // 检查WASM解码器是否已初始化
@@ -469,7 +476,7 @@ export class AdvancedModelLoader {
       throw new Error('WASM解码器未初始化，请先初始化WASM解码器')
     }
 
-    const uuid = this.getUuidByName(selectedModel, modelOptions)
+    const {uuid} = model
     if (!uuid) throw new Error('无法获取模型UUID')
 
     const startTime = Date.now()
@@ -500,7 +507,7 @@ export class AdvancedModelLoader {
 
       const decodeStartTime = Date.now()
       // 传入模型标识符以避免缓存冲突
-      const decodeResult = await this.wasmDecoder.decode(binaryData, false, { modelId: selectedModel, uuid: uuid })
+      const decodeResult = await this.wasmDecoder.decode(binaryData, false, { modelId: uuid, uuid: uuid })
       const decodeTime = Date.now() - decodeStartTime
 
       this.loadingStateMachine.emit('progress', {
@@ -544,17 +551,17 @@ export class AdvancedModelLoader {
   /**
    * 流式WASM加载模型
    */
-  async loadModelStreamWASM(modelOptions, selectedModel) {
+  async loadModelStreamWASM(model) {
     console.log('🌊🔧 开始流式WASM加载...')
     // 暂时使用普通WASM加载，后续可以实现真正的流式功能
-    return await this.loadModelWASM(modelOptions, selectedModel)
+    return await this.loadModelWASM(model)
   }
 
   /**
    * 获取文件信息
    */
-  async getFileInfo(filename, modelOptions) {
-    const uuid = this.getUuidByName(filename, modelOptions)
+  async getFileInfo(model) {
+    const {uuid} = model;
     if (!uuid) throw new Error('无法获取模型UUID')
 
     const response = await streamModelByUuid(uuid)
@@ -578,8 +585,8 @@ export class AdvancedModelLoader {
   /**
    * 下载分块
    */
-  async downloadChunk(filename, modelOptions, start, end, chunkSize) {
-    const uuid = this.getUuidByName(filename, modelOptions)
+  async downloadChunk(model, start, end, chunkSize) {
+    const {uuid} =model;
     if (!uuid) throw new Error('无法获取模型UUID')
 
     // 只有在分块模式下才添加Range请求头
@@ -601,15 +608,16 @@ export class AdvancedModelLoader {
   /**
    * 实时流式WASM加载模型
    */
-  async loadModelStreamWASMRealtime(modelOptions, selectedModel, options = {}) {
+  async loadModelStreamWASMRealtime(options = {}) {
     console.log('⚡ 开始实时流式WASM加载...')
 
     if (!this.wasmDecoder) {
       this.loadingStateMachine.error('WASM 解码器未初始化')
       throw new Error('WASM 解码器未初始化')
     }
+    const {model={}}=options;
 
-    const uuid = this.getUuidByName(selectedModel, modelOptions)
+    const {uuid,name} = model
     if (!uuid) {
       this.loadingStateMachine.error('无法获取模型UUID')
       throw new Error('无法获取模型UUID')
@@ -649,7 +657,7 @@ export class AdvancedModelLoader {
       })
 
       // 获取文件大小和支持的范围请求
-      const fileInfo = await this.getFileInfo(selectedModel, modelOptions)
+      const fileInfo = await this.getFileInfo(model)
       this.streamState.totalBytes = fileInfo.size
 
       onStreamInfo(0, this.streamState.totalBytes, 0, '计算中...', 0, 0)
@@ -661,7 +669,7 @@ export class AdvancedModelLoader {
 
       // 检查是否有断点续传数据
       let startByte = 0
-      if (enableResume && this.streamState.resumeData && this.streamState.resumeData.filename === selectedModel) {
+      if (enableResume && this.streamState.resumeData && this.streamState.resumeData.filename === name) {
         startByte = this.streamState.resumeData.downloadedBytes
         this.streamState.downloadedBytes = startByte
         console.log(`📥 断点续传: 从字节 ${startByte} 开始下载`)
@@ -705,7 +713,7 @@ export class AdvancedModelLoader {
         try {
           // 下载单个分块
           const chunkStartTime = performance.now()
-          const chunk = await this.downloadChunk(selectedModel, modelOptions, currentByte, endByte, chunkSize)
+          const chunk = await this.downloadChunk(model, currentByte, endByte, chunkSize)
           const chunkDownloadTime = performance.now() - chunkStartTime
 
           // 🔥 关键区别：立即将分块送入流式解码器进行边下载边解码
@@ -769,7 +777,7 @@ export class AdvancedModelLoader {
           // 保存断点续传数据
           if (enableResume) {
             this.streamState.resumeData = {
-              filename: selectedModel,
+              filename: name,
               downloadedBytes: this.streamState.downloadedBytes,
               totalBytes: this.streamState.totalBytes,
               timestamp: Date.now()
