@@ -88,15 +88,118 @@ export class AdvancedModelLoader {
   }
 
   getSelectedModel(modelOptions, selectedModel) {
-    const model = modelOptions.find(option => option.name === selectedModel)
-    return model
+    return modelOptions?.find(option => option.name === selectedModel) || { name: '未选择模型'}
+  }
+
+  /**
+   * 通用的错误处理方法
+   */
+  _handleError(error, context = '加载') {
+    console.error(`${context}失败:`, error)
+    this.loadingStateMachine.error(error.message, `${context}失败`)
+    throw error
+  }
+
+  /**
+   * 通用的API响应验证
+   */
+  _validateApiResponse(response) {
+    if ('error' in response) {
+      throw new Error(`API Error: ${response.error}`)
+    }
+    if (response.status !== 200) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    }
+    return response
+  }
+
+  /**
+   * 通用的模型下载方法
+   */
+  async _downloadModel(uuid, context = '下载') {
+    if (!uuid) throw new Error('无法获取模型UUID')
+    
+    try {
+      const response = await streamModelByUuid(uuid)
+      this._validateApiResponse(response)
+      return response
+    } catch (error) {
+      this._handleError(error, context)
+    }
+  }
+
+  /**
+   * 通用的性能统计和结果构建
+   */
+  _buildResult(model, geometry, startTime, downloadTime = 0, decodeTime = 0, animations = []) {
+    const endTime = Date.now()
+    return {
+      model,
+      geometry,
+      animations,
+      performanceStats: {
+        totalTime: endTime - startTime,
+        downloadTime,
+        decodeTime
+      }
+    }
+  }
+
+  /**
+   * 通用的解码方法
+   */
+  async _decodeData(data, uuid, useWasm = false) {
+    if (!useWasm) {
+      return { data, decodeTime: 0 }
+    }
+
+    if (!this.wasmDecoder) {
+      throw new Error('WASM解码器未初始化，请先初始化WASM解码器')
+    }
+
+    const decodeStartTime = Date.now()
+    const decodeResult = await this.wasmDecoder.decode(data, false, { modelId: uuid, uuid })
+    const decodeTime = Date.now() - decodeStartTime
+
+    let parsedData = decodeResult.data
+    if (typeof decodeResult.data === 'string') {
+      try {
+        parsedData = JSON.parse(decodeResult.data)
+      } catch (e) {
+        console.warn('⚠️ 无法解析为JSON:', e)
+      }
+    }
+
+    return { data: parsedData, decodeTime }
+  }
+
+  /**
+   * 加载策略映射
+   */
+  _getLoadingStrategies() {
+    return {
+      'origin': (model) => this.loadOriginModel(model),
+      'stream': (model) => this.loadModelStream(model),
+      'wasm': (model) => this.loadModelWASM(model),
+      'stream_wasm': (model) => this.loadModelStreamWASM(model),
+      'stream-wasm': (model) => this.loadModelStreamWASM(model),
+      'stream_wasm_realtime': (model, options) => this.loadModelStreamWASMRealtime({
+        model,
+        chunkSize: options.chunkSize,
+        enableResume: options.enableResume
+      }),
+      'realtime-wasm': (model, options) => this.loadModelStreamWASMRealtime({
+        model,
+        chunkSize: options.chunkSize,
+        enableResume: options.enableResume
+      })
+    }
   }
 
   /**
    * 统一的模型加载方法
    */
   async loadModel(selectedModel, loadMethod, options = {}) {
-    console.log("🚀 ~ AdvancedModelLoader ~ loadModel ~ selectedModel:", selectedModel);
     const { chunkSize, enableResume, authToken, modelOptions } = options
     const model = this.getSelectedModel(modelOptions, selectedModel)
     
@@ -105,31 +208,17 @@ export class AdvancedModelLoader {
       this.setAuthToken(authToken)
     }
     
-    // 使用传入的 modelOptions，如果没有则创建默认的
-    const actualModelOptions = modelOptions || [
-      { name: selectedModel, model_file_url: `/models/${selectedModel}`, uuid: selectedModel }
-    ]
+    // 获取加载策略
+    const strategies = this._getLoadingStrategies()
+    const strategy = strategies[loadMethod]
     
-    switch (loadMethod) {
-       case 'origin':
-         return await this.loadOriginModel(model, selectedModel)
-       case 'stream':
-         return await this.loadModelStream(model, selectedModel)
-       case 'wasm':
-         return await this.loadModelWASM(model, selectedModel)
-       case 'stream_wasm':
-       case 'stream-wasm':
-         return await this.loadModelStreamWASM(model, selectedModel)
-       case 'stream_wasm_realtime':
-       case 'realtime-wasm':
-         return await this.loadModelStreamWASMRealtime({
-           model,
-           chunkSize,
-           enableResume
-         })
-       default:
-         throw new Error(`不支持的加载方式: ${loadMethod}`)
-     }
+    if (!strategy) {
+      throw new Error(`不支持的加载方式: ${loadMethod}`)
+    }
+    
+    // 执行对应的加载策略
+    const needsOptions = ['stream_wasm_realtime', 'realtime-wasm'].includes(loadMethod)
+    return needsOptions ? strategy(model, { chunkSize, enableResume }) : strategy(model)
   }
 
   /**
@@ -308,29 +397,44 @@ export class AdvancedModelLoader {
   /**
    * 直接加载模型（不使用WASM）
    */
+  /**
+   * 提取模型几何体的通用方法
+   */
+  _extractGeometry(modelObj) {
+    let geometry = null
+    modelObj.traverse((child) => {
+      if (child.isMesh && child.geometry && !geometry) {
+        geometry = child.geometry
+      }
+    })
+    return geometry || new THREE.BoxGeometry(1, 1, 1)
+  }
+
+  /**
+   * 获取文件加载器
+   */
+  _getFileLoader(extension) {
+    if (extension === 'gltf' || extension === 'glb') {
+      return new GLTFLoader()
+    } else if (extension === 'fbx') {
+      return new FBXLoader()
+    } else {
+      throw new Error(`不支持的文件格式: ${extension}`)
+    }
+  }
+
   async loadOriginModel(model) {
     if (!model || !model.model_file_url) {
       throw new Error('未找到模型或模型文件URL')
     }
 
-    // 重置状态机并开始加载
     this.loadingStateMachine.reset()
     this.loadingStateMachine.startLoading('开始直接加载...')
 
     try {
       const url = model.model_file_url
-
-      // 根据文件扩展名选择加载器
       const extension = url.split('.').pop()?.toLowerCase()
-      let loader
-
-      if (extension === 'gltf' || extension === 'glb') {
-        loader = new GLTFLoader()
-      } else if (extension === 'fbx') {
-        loader = new FBXLoader()
-      } else {
-        throw new Error(`不支持的文件格式: ${extension}`)
-      }
+      const loader = this._getFileLoader(extension)
 
       this.loadingStateMachine.startBuilding('正在解析模型...')
 
@@ -338,26 +442,14 @@ export class AdvancedModelLoader {
         loader.load(
           url,
           (object) => {
-            // 获取模型对象
             const modelObj = extension === 'gltf' || extension === 'glb' ? object.scene : object
-            
-            // 提取几何体
-            let geometry = null
-            modelObj.traverse((child) => {
-              if (child.isMesh && child.geometry && !geometry) {
-                geometry = child.geometry
-              }
-            })
-
-            if (!geometry) {
-              geometry = new THREE.BoxGeometry(1, 1, 1)
-            }
+            const geometry = this._extractGeometry(modelObj)
 
             this.loadingStateMachine.success(modelObj, '加载完成')
             
             resolve({
               model: modelObj,
-              geometry: geometry,
+              geometry,
               animations: object.animations || []
             })
           },
@@ -369,16 +461,13 @@ export class AdvancedModelLoader {
             })
           },
           (error) => {
-            console.error('模型加载失败:', error)
-            this.loadingStateMachine.error(error.message, '加载失败')
+            this._handleError(error, '原始模型加载')
             reject(error)
           }
         )
       })
     } catch (error) {
-      console.error('加载失败:', error)
-      this.loadingStateMachine.error(error.message, '加载失败')
-      throw error
+      this._handleError(error, '原始模型加载')
     }
   }
 
@@ -387,21 +476,14 @@ export class AdvancedModelLoader {
    */
   async loadModelStream(model) {
     console.log('🌊 开始流式加载...')
-    const {uuid} =model
-    if (!uuid) throw new Error('无法获取模型UUID')
-
+    const { uuid } = model
     const startTime = Date.now()
+    
     this.loadingStateMachine.startLoading('🌊 流式加载: 开始下载...')
 
     try {
-      const response = await streamModelByUuid(uuid)
-      if ('error' in response) {
-        throw new Error(`API Error: ${response.error}`)
-      }
-
-      if (response.status !== 200) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-      }
+      // 下载模型数据
+      const response = await this._downloadModel(uuid, '流式下载')
 
       this.loadingStateMachine.emit('progress', {
         progress: 30,
@@ -413,55 +495,31 @@ export class AdvancedModelLoader {
 
       // 检查数据格式，如果是FastDog格式则需要解码
       const magic = new TextDecoder().decode(new Uint8Array(arrayBuffer, 0, 8))
+      const needsDecoding = magic.startsWith('FASTDOG')
 
-      let decodedData
-      let decodeTime = 0
-
-      if (magic.startsWith('FASTDOG')) {
-        // FastDog格式，需要解码
+      if (needsDecoding) {
         this.loadingStateMachine.emit('progress', {
           progress: 50,
           message: '🌊 流式: 检测到FastDog格式，使用解码器...'
         })
-
-        if (!this.wasmDecoder) {
-          throw new Error('WASM解码器未初始化，无法解码FastDog格式')
-        }
-
-        const decodeStartTime = Date.now()
-        const decodeResult = await this.wasmDecoder.decode(arrayBuffer, false, { modelId: uuid, uuid: uuid })
-        decodeTime = Date.now() - decodeStartTime
-        decodedData = decodeResult.data
-      } else {
-        // 标准格式，直接使用
-        decodedData = arrayBuffer
       }
+
+      // 使用通用解码方法
+      const { data: decodedData, decodeTime } = await this._decodeData(arrayBuffer, uuid, needsDecoding)
 
       this.loadingStateMachine.emit('progress', {
         progress: 80,
         message: '🌊 流式: 解码完成，构建模型...'
       })
 
-      // 使用buildModelWithGLTFLoader构建模型
+      // 构建模型
       const modelResult = await this.buildModelWithGLTFLoader(decodedData)
-      const endTime = Date.now()
-
-      const result = {
-        model: modelResult.model,
-        geometry: modelResult.geometry,
-        performanceStats: {
-          totalTime: endTime - startTime,
-          downloadTime: downloadTime,
-          decodeTime: decodeTime
-        }
-      }
+      const result = this._buildResult(modelResult.model, modelResult.geometry, startTime, downloadTime, decodeTime)
       
       this.loadingStateMachine.success(result, '流式加载完成')
       return result
     } catch (error) {
-      console.error('流式加载失败:', error)
-      this.loadingStateMachine.error(error.message, '流式加载失败')
-      throw error
+      this._handleError(error, '流式加载')
     }
   }
 
@@ -470,28 +528,15 @@ export class AdvancedModelLoader {
    */
   async loadModelWASM(model) {
     console.log('🔧 开始WASM解码加载...')
-
-    // 检查WASM解码器是否已初始化
-    if (!this.wasmDecoder) {
-      throw new Error('WASM解码器未初始化，请先初始化WASM解码器')
-    }
-
-    const {uuid} = model
-    if (!uuid) throw new Error('无法获取模型UUID')
-
+    const { uuid } = model
     const startTime = Date.now()
+    
     this.loadingStateMachine.startLoading('🔧 WASM: 开始下载二进制数据...')
 
     try {
-      const response = await streamModelByUuid(uuid)
-      if ('error' in response) {
-        throw new Error(`API Error: ${response.error}`)
-      }
-
-      if (response.status !== 200) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-      }
-
+      // 下载模型数据
+      const response = await this._downloadModel(uuid, 'WASM下载')
+      
       this.loadingStateMachine.emit('progress', {
         progress: 30,
         message: 'WASM: 下载完成，开始解码...'
@@ -505,46 +550,22 @@ export class AdvancedModelLoader {
         message: 'WASM: 使用 WASM 解码中...'
       })
 
-      const decodeStartTime = Date.now()
-      // 传入模型标识符以避免缓存冲突
-      const decodeResult = await this.wasmDecoder.decode(binaryData, false, { modelId: uuid, uuid: uuid })
-      const decodeTime = Date.now() - decodeStartTime
+      // 使用通用解码方法
+      const { data: parsedData, decodeTime } = await this._decodeData(binaryData, uuid, true)
 
       this.loadingStateMachine.emit('progress', {
         progress: 80,
         message: 'WASM: 解码完成，构建模型...'
       })
 
-      // 解析解码结果
-      let parsedData = decodeResult.data
-      if (typeof decodeResult.data === 'string') {
-        try {
-          parsedData = JSON.parse(decodeResult.data)
-        } catch (e) {
-          console.warn('⚠️ 无法解析为JSON:', e)
-        }
-      }
-
-      // 使用buildModelWithGLTFLoader构建模型
+      // 构建模型
       const modelResult = await this.buildModelWithGLTFLoader(parsedData)
-      const endTime = Date.now()
-
-      const result = {
-        model: modelResult.model,
-        geometry: modelResult.geometry,
-        performanceStats: {
-          totalTime: endTime - startTime,
-          downloadTime: downloadTime,
-          decodeTime: decodeTime
-        }
-      }
+      const result = this._buildResult(modelResult.model, modelResult.geometry, startTime, downloadTime, decodeTime)
       
       this.loadingStateMachine.success(result, 'WASM加载完成')
       return result
     } catch (error) {
-      console.error('WASM 模型加载失败:', error)
-      this.loadingStateMachine.error(error.message, 'WASM加载失败')
-      throw error
+      this._handleError(error, 'WASM加载')
     }
   }
 
@@ -553,8 +574,7 @@ export class AdvancedModelLoader {
    */
   async loadModelStreamWASM(model) {
     console.log('🌊🔧 开始流式WASM加载...')
-    // 暂时使用普通WASM加载，后续可以实现真正的流式功能
-    return await this.loadModelWASM(model)
+    return this.loadModelWASM(model)
   }
 
   /**
