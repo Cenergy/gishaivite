@@ -137,20 +137,6 @@ export class ModelHandle {
     return needsOptions ? strategy(model, { chunkSize, enableResume }) : strategy(model);
   }
 
-    /**
-   * 获取文件加载器
-   * @param {string} extension - 文件扩展名
-   * @returns {GLTFLoader|FBXLoader} 对应的加载器实例
-   */
-  _getFileLoader(extension) {
-    if (extension === 'gltf' || extension === 'glb') {
-      return new GLTFLoader();
-    } else if (extension === 'fbx') {
-      return new FBXLoader();
-    } else {
-      throw new Error(`不支持的文件格式: ${extension}`);
-    }
-  }
 
   /**
    * 直接加载模型（不使用WASM）
@@ -167,7 +153,7 @@ export class ModelHandle {
     try {
       const url = model.model_file_url;
       const extension = url.split('.').pop()?.toLowerCase();
-      const loader = this._getFileLoader(extension);
+      const loader = this.modelBuilder._getFileLoader(extension);
 
       this.loadingStateMachine.startBuilding('正在解析模型...');
 
