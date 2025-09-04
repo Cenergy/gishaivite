@@ -1,4 +1,4 @@
-import FastDogDecoder from './wasm-decoder.js';
+import FastDogDecoder from './wasmDecoder.js';
 
 /**
  * ModelDecoder 类 - 负责处理所有模型解码逻辑

@@ -554,6 +554,3 @@ export { FastDogJSDecoder };
 if (typeof window !== 'undefined') {
     window.FastDogJSDecoder = FastDogJSDecoder;
 }
-
-console.log('📦 FastDog JavaScript 解码器已加载');
-console.log('🔧 JavaScript 解码器功能支持:', FastDogJSDecoder.getCapabilities());

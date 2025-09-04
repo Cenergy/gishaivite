@@ -1,4 +1,4 @@
-import { streamModelByUuid } from '../api/resources'
+import * as resources from '@/api/resources'
 
 /**
  * 模型下载器类
@@ -61,6 +61,10 @@ export class ModelDownloader {
     return response
   }
 
+  getModel3Ds() {
+    return resources.getModel3Ds();
+  }
+
   /**
    * 基础下载方法
    */
@@ -68,7 +72,7 @@ export class ModelDownloader {
     if (!uuid) throw new Error('无法获取模型UUID')
     
     try {
-      const response = await streamModelByUuid(uuid)
+      const response = await resources.streamModelByUuid(uuid)
       this._validateApiResponse(response)
       return response
     } catch (error) {
@@ -84,7 +88,7 @@ export class ModelDownloader {
     const { uuid } = model
     if (!uuid) throw new Error('无法获取模型UUID')
 
-    const response = await streamModelByUuid(uuid)
+    const response = await resources.streamModelByUuid(uuid)
     this._validateApiResponse(response)
 
     const contentLength = response.headers['content-length']
@@ -107,7 +111,7 @@ export class ModelDownloader {
     const chunkSizeNum = Number(chunkSize)
     const rangeHeader = chunkSizeNum > 0 ? `bytes=${start}-${end}` : undefined
     
-    const response = await streamModelByUuid(uuid, rangeHeader)
+    const response = await resources.streamModelByUuid(uuid, rangeHeader)
     this._validateApiResponse(response)
 
     return await response.data.arrayBuffer()

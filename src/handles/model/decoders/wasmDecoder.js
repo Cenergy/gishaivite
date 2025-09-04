@@ -12,7 +12,7 @@ import init, {
     get_format_info,
     benchmark_decode,
     StreamDecoder
-} from '../wasm/fastdog_decoder.js';
+} from '@/wasm/fastdog_decoder.js';
 
 class FastDogDecoder {
     constructor(options = {}) {
@@ -305,7 +305,7 @@ class FastDogDecoder {
             }
             
             // 动态导入fallback解码器
-            const fallbackModule = await import('./fallback-decoder.js');
+            const fallbackModule = await import('./fallbackDecoder.js');
             this.jsDecoder = fallbackModule.default || fallbackModule.FastDogJSDecoder;
             
             if (this.config.enableLogging) {
