@@ -88,13 +88,6 @@ export class ModelHandle {
   }
 
   /**
-   * 通用的解码方法
-   */
-  async _decodeData(data, uuid, useWasm = false) {
-    return await this.modelDecoder.decodeData(data, uuid, useWasm);
-  }
-
-  /**
    * 加载策略映射
    */
   _getLoadingStrategies() {
@@ -144,32 +137,24 @@ export class ModelHandle {
     return needsOptions ? strategy(model, { chunkSize, enableResume }) : strategy(model);
   }
 
-  /**
-   * 使用GLTF/FBX加载器构建模型
+    /**
+   * 获取文件加载器
+   * @param {string} extension - 文件扩展名
+   * @returns {GLTFLoader|FBXLoader} 对应的加载器实例
    */
-  async buildModelWithGLTFLoader(modelData) {
-    try {
-      return await this.modelBuilder.buildModelWithGLTFLoader(modelData);
-    } catch (error) {
-      this._handleError(error, '模型构建');
-      throw error;
+  _getFileLoader(extension) {
+    if (extension === 'gltf' || extension === 'glb') {
+      return new GLTFLoader();
+    } else if (extension === 'fbx') {
+      return new FBXLoader();
+    } else {
+      throw new Error(`不支持的文件格式: ${extension}`);
     }
   }
 
   /**
    * 直接加载模型（不使用WASM）
    */
-
-
-
-
-
-
-
-
-
-
-
 
   async loadOriginModel(model) {
     if (!model || !model.model_file_url) {
@@ -182,7 +167,7 @@ export class ModelHandle {
     try {
       const url = model.model_file_url;
       const extension = url.split('.').pop()?.toLowerCase();
-      const loader = this.modelBuilder._getFileLoader(extension);
+      const loader = this._getFileLoader(extension);
 
       this.loadingStateMachine.startBuilding('正在解析模型...');
 
@@ -260,7 +245,7 @@ export class ModelHandle {
       }
 
       // 使用通用解码方法
-      const { data: decodedData, decodeTime } = await this._decodeData(
+      const { data: decodedData, decodeTime } = await this.modelDecoder.decodeData(
         arrayBuffer,
         uuid,
         needsDecoding,
@@ -272,7 +257,7 @@ export class ModelHandle {
       });
 
       // 构建模型
-      const modelResult = await this.buildModelWithGLTFLoader(decodedData);
+      const modelResult = await this.modelBuilder.buildModelWithGLTFLoader(decodedData);
       const result = this._buildResult(
         modelResult.model,
         modelResult.geometry,
@@ -323,7 +308,7 @@ export class ModelHandle {
       });
 
       // 使用通用解码方法
-      const { data: parsedData, decodeTime } = await this._decodeData(binaryData, uuid, true);
+      const { data: parsedData, decodeTime } = await this.modelDecoder.decodeData(binaryData, uuid, true);
 
       this.loadingStateMachine.emit('progress', {
         progress: 80,
@@ -331,7 +316,7 @@ export class ModelHandle {
       });
 
       // 构建模型
-      const modelResult = await this.buildModelWithGLTFLoader(parsedData);
+      const modelResult = await this.modelBuilder.buildModelWithGLTFLoader(parsedData);
       const result = this._buildResult(
         modelResult.model,
         modelResult.geometry,
@@ -468,7 +453,7 @@ export class ModelHandle {
       }
 
       // 构建模型
-      const modelResult = await this.buildModelWithGLTFLoader(
+      const modelResult = await this.modelBuilder.buildModelWithGLTFLoader(
         parsedData || downloadResult.decodeResult.data,
       );
       const totalTime = Date.now() - startTime;

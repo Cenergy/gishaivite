@@ -185,20 +185,6 @@ export class ModelBuilder {
     return geometry || new THREE.BoxGeometry(1, 1, 1);
   }
 
-  /**
-   * 获取文件加载器
-   * @param {string} extension - 文件扩展名
-   * @returns {GLTFLoader|FBXLoader} 对应的加载器实例
-   */
-  _getFileLoader(extension) {
-    if (extension === 'gltf' || extension === 'glb') {
-      return new GLTFLoader();
-    } else if (extension === 'fbx') {
-      return new FBXLoader();
-    } else {
-      throw new Error(`不支持的文件格式: ${extension}`);
-    }
-  }
 
   /**
    * 清理资源
