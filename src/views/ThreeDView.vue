@@ -238,7 +238,7 @@ const loadingStateMachine = modelLoader.loadingStateMachine;
 const drawerVisible = ref(false);
 const selectedModel = ref("");
 const modelOptions = ref([]);
-const loadMethod = ref("realtime-wasm");
+const loadMethod = ref("realtime_wasm");
 const chunkSize = ref(0);
 const enableResume = ref(true);
 
@@ -301,7 +301,7 @@ loadingStateMachine.on("progress", (context) => {
 
 // 计算属性
 const showStreamControls = computed(() => {
-  return loadMethod.value === "stream-wasm" || loadMethod.value === "realtime-wasm";
+  return loadMethod.value === "stream_wasm" || loadMethod.value === "realtime_wasm";
 });
 
 const showStreamProgress = computed(() => {
@@ -341,8 +341,8 @@ const loadMethods = [
   { value: "origin", label: "直接加载" },
   { value: "stream", label: "Stream" },
   { value: "wasm", label: "WASM解码" },
-  { value: "stream-wasm", label: "🌊 流式WASM" },
-  { value: "realtime-wasm", label: "⚡ 实时流式WASM" },
+  { value: "stream_wasm", label: "🌊 流式WASM" },
+  { value: "realtime_wasm", label: "⚡ 实时流式WASM" },
 ];
 
 // Three.js 相关变量

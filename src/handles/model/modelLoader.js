@@ -96,14 +96,13 @@ export class ModelHandle {
       stream: (model) => this.loadModelStream(model),
       wasm: (model) => this.loadModelWASM(model),
       stream_wasm: (model) => this.loadModelStreamWASM(model),
-      'stream-wasm': (model) => this.loadModelStreamWASM(model),
       stream_wasm_realtime: (model, options) =>
         this.loadModelStreamWASMRealtime({
           model,
           chunkSize: options.chunkSize,
           enableResume: options.enableResume,
         }),
-      'realtime-wasm': (model, options) =>
+      'realtime_wasm': (model, options) =>
         this.loadModelStreamWASMRealtime({
           model,
           chunkSize: options.chunkSize,
@@ -133,7 +132,7 @@ export class ModelHandle {
     }
 
     // 执行对应的加载策略
-    const needsOptions = ['stream_wasm_realtime', 'realtime-wasm'].includes(loadMethod);
+    const needsOptions = ['stream_wasm_realtime', 'realtime_wasm'].includes(loadMethod);
     return needsOptions ? strategy(model, { chunkSize, enableResume }) : strategy(model);
   }
 
