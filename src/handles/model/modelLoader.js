@@ -242,7 +242,7 @@ export class ModelHandle {
       });
 
       // 构建模型
-      const modelResult = await this.modelBuilder.buildModelWithGLTFLoader(decodedData);
+      const modelResult = await this.modelBuilder.buildModelWithGLTFLoader(decodedData,model);
       const result = this._buildResult(
         modelResult.model,
         modelResult.geometry,
@@ -301,7 +301,7 @@ export class ModelHandle {
       });
 
       // 构建模型
-      const modelResult = await this.modelBuilder.buildModelWithGLTFLoader(parsedData);
+      const modelResult = await this.modelBuilder.buildModelWithGLTFLoader(parsedData,model);
       const result = this._buildResult(
         modelResult.model,
         modelResult.geometry,
@@ -439,7 +439,7 @@ export class ModelHandle {
 
       // 构建模型
       const modelResult = await this.modelBuilder.buildModelWithGLTFLoader(
-        parsedData || downloadResult.decodeResult.data,
+        parsedData || downloadResult.decodeResult.data,model
       );
       const totalTime = Date.now() - startTime;
 

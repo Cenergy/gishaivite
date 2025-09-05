@@ -12,12 +12,24 @@ export class ModelBuilder {
    * @param {*} modelData - 模型数据
    * @returns {Promise<Object>} 构建结果 { model, geometry }
    */
-  async buildModelWithGLTFLoader(modelData) {
+  async buildModelWithGLTFLoader(modelData,model) {
+    const {model_file_url=""}=model;
+    
+    // 从model_file_url中提取路径部分
+    let resourcePath = ''; // 默认路径
+    if (model_file_url) {
+      const lastSlashIndex = model_file_url.lastIndexOf('/');
+      if (lastSlashIndex !== -1) {
+        resourcePath = model_file_url.substring(0, lastSlashIndex + 1);
+      }
+    }
+    
     return new Promise((resolve, reject) => {
       try {
         console.log('🎨 开始解析模型数据');
         console.log('📊 传入数据类型:', typeof modelData);
         console.log('📊 传入数据内容:', modelData);
+        console.log('📊 资源路径:', resourcePath);
 
         // 检测并处理特殊格式（FBX等）
         const specialFormatResult = this._detectAndProcessFormat(modelData);
@@ -35,7 +47,7 @@ export class ModelBuilder {
         // 直接使用parse方法解析GLTF JSON数据，无需创建Blob URL
         loader.parse(
           dataToParse, // 传入正确格式的数据
-          '', // 资源路径（空字符串表示无外部资源）
+          resourcePath, // 动态设置资源路径
           (gltf) => {
             console.log('✅ GLTFLoader直接解析成功，保留完整材质');
 
