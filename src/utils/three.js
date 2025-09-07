@@ -6,4 +6,5 @@ import * as THREE from 'three';
 export { THREE };
 export { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 export { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
+export { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 export { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';

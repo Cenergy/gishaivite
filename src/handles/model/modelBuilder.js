@@ -1,4 +1,4 @@
-import { THREE, GLTFLoader, FBXLoader } from '@/utils/three.js';
+import { THREE, GLTFLoader, FBXLoader, DRACOLoader } from '@/utils/three.js';
 
 /**
  * ModelBuilder 类 - 负责处理所有模型构建和格式转换逻辑
@@ -40,6 +40,12 @@ export class ModelBuilder {
 
         // GLTF/GLB格式处理
         const loader = new GLTFLoader();
+        
+        // 配置 DRACOLoader 以支持 DRACO 压缩的模型
+        const dracoLoader = new DRACOLoader();
+        dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+        loader.setDRACOLoader(dracoLoader);
+        
         const dataToParse = this._prepareGLTFData(modelData);
 
         console.log('📊 解析数据类型:', typeof dataToParse);
@@ -204,7 +210,14 @@ export class ModelBuilder {
    */
   _getFileLoader(extension) {
     if (extension === 'gltf' || extension === 'glb') {
-      return new GLTFLoader();
+      const loader = new GLTFLoader();
+      
+      // 配置 DRACOLoader 以支持 DRACO 压缩的模型
+      const dracoLoader = new DRACOLoader();
+      dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+      loader.setDRACOLoader(dracoLoader);
+      
+      return loader;
     } else if (extension === 'fbx') {
       return new FBXLoader();
     } else {
