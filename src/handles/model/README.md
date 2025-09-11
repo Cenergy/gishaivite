@@ -126,7 +126,7 @@ src/handles/model/
 1. **性能考虑**：着色器动画会持续运行，确保在不需要时调用 `stopShaderAnimation()`
 2. **资源清理**：使用完毕后调用 `effects.destroy()` 清理资源
 3. **模型格式**：支持 GLB/GLTF 格式的模型文件
-4. **依赖关系**：确保 Three.js 和 tween 库已正确安装
+4. **依赖关系**：确保 Three.js 和 gsap 库已正确安装
 
 ## 故障排除
 

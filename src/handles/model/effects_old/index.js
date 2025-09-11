@@ -1,7 +1,7 @@
 import { THREE, GLTFLoader, DRACOLoader } from '@/utils/three.js';
 import GlobeAnimation from "./animations/GlobeAnimation.js";
 import * as shadermaterial from './shaders.js'
-import * as TWEEN from 'tween'
+import { gsap } from 'gsap'
 
 
 class Visualization {
@@ -600,16 +600,19 @@ class DracoModel extends Visualization {
         this.show = show;
         this.opacity = 0;
         this._setOpacity();
-        let tween = new TWEEN.Tween(this).to({
-          opacity: 1
-        }, time * 1000);
-        tween.onStart(() => {
-        }).onUpdate(() => {
-          this._setOpacity(this.opacity);
-        }).onComplete(() => {
-          this._setOpacity();
-          callback()
-        }).start();
+        gsap.to(this, {
+          opacity: 1,
+          duration: time,
+          onStart: () => {
+          },
+          onUpdate: () => {
+            this._setOpacity(this.opacity);
+          },
+          onComplete: () => {
+            this._setOpacity();
+            callback()
+          }
+        });
       } else if (typeof show === "boolean" && !show) {
         if (time === 0) {
           this.show = show;
@@ -620,16 +623,19 @@ class DracoModel extends Visualization {
         this.show = show;
         this.opacity = 1;
         this._setOpacity();
-        let tween = new TWEEN.Tween(this).to({
-          opacity: 0
-        }, time * 1000);
-        tween.onStart(() => {
-        }).onUpdate(() => {
-          this._setOpacity(this.opacity);
-        }).onComplete(() => {
-          this._setOpacity(0);
-          callback()
-        }).start();
+        gsap.to(this, {
+          opacity: 0,
+          duration: time,
+          onStart: () => {
+          },
+          onUpdate: () => {
+            this._setOpacity(this.opacity);
+          },
+          onComplete: () => {
+            this._setOpacity(0);
+            callback()
+          }
+        });
       }
     } else if (type === 2) {
       if (typeof show === "boolean" && show) {
@@ -643,17 +649,20 @@ class DracoModel extends Visualization {
         this.mesh.scale.set(0, 0, 0);
         GlobeAnimation.removeAnimation(this._rotateY);
         this.rotateYAnimation(-rotationspeed);
-        let tween = new TWEEN.Tween(this).to({
-          _scale: this.scale
-        }, time * 1000);
-        tween.onStart(() => {
-        }).onUpdate(() => {
-          this.mesh.scale.set(this._scale, this._scale, this._scale);
-        }).onComplete(() => {
-          this.setScale(this.scale);
-          GlobeAnimation.removeAnimation(this._rotateY);
-          callback()
-        }).start();
+        gsap.to(this, {
+          _scale: this.scale,
+          duration: time,
+          onStart: () => {
+          },
+          onUpdate: () => {
+            this.mesh.scale.set(this._scale, this._scale, this._scale);
+          },
+          onComplete: () => {
+            this.setScale(this.scale);
+            GlobeAnimation.removeAnimation(this._rotateY);
+            callback()
+          }
+        });
       } else if (typeof show === "boolean" && !show) {
         if (time === 0) {
           this.show = show;
@@ -665,17 +674,20 @@ class DracoModel extends Visualization {
         this.setScale(this.scale);
         GlobeAnimation.removeAnimation(this._rotateY);
         this.rotateYAnimation(rotationspeed);
-        let tween = new TWEEN.Tween(this).to({
-          _scale: 0
-        }, time * 1000);
-        tween.onStart(() => {
-        }).onUpdate(() => {
-          this.mesh.scale.set(this._scale, this._scale, this._scale);
-        }).onComplete(() => {
-          this.mesh.scale.set(0, 0, 0);
-          GlobeAnimation.removeAnimation(this._rotateY);
-          callback();
-        }).start();
+        gsap.to(this, {
+          _scale: 0,
+          duration: time,
+          onStart: () => {
+          },
+          onUpdate: () => {
+            this.mesh.scale.set(this._scale, this._scale, this._scale);
+          },
+          onComplete: () => {
+            this.mesh.scale.set(0, 0, 0);
+            GlobeAnimation.removeAnimation(this._rotateY);
+            callback();
+          }
+        });
       }
     }
   }

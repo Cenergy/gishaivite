@@ -1,12 +1,12 @@
 
 
-import * as TWEEN from 'tween'
+import { gsap } from 'gsap'
 class GlobeAnimation {
     constructor() {
         this.requestId = null
         this.callbacks = []
         this._animation()
-        this.addAnimation(TWEEN.update)
+        // GSAP自动处理更新，不需要手动添加update函数
     }
     addAnimation(callback) {
         if (typeof callback === 'function') {
