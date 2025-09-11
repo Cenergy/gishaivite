@@ -2,6 +2,7 @@ import downloader from './modelDownloader.js';
 import {modelDecoder} from './decoders/index.js';
 import modelBuilder from './modelBuilder.js';
 import LoadingStateMachine from '@/utils/LoadingStateMachine.js';
+import ModelEffects from './ModelEffects.js';
 
 /**
  * 高级模型加载器类
@@ -165,10 +166,28 @@ export class ModelHandle {
 
             this.loadingStateMachine.success(modelObj, '加载完成');
 
+            // 创建模型效果管理器
+            const modelEffects = new ModelEffects(modelObj, {
+              customerShaderConfig: {
+                bottomColor: 'rgb(0,19,39)',
+                topColor: 'rgb(0,50,100)',
+                flowColor: 'rgb(255,103,19)',
+                topGradientDistance: 5,
+                bottomGradientDistance: 50,
+                speed: 100,
+                wireframe: false
+              }
+            });
+            
+            // 应用效果
+            modelEffects.setBloom(true);
+            modelEffects.shaderAnimation('verticalFlow');
+
             resolve({
               model: modelObj,
               geometry,
               animations: object.animations || [],
+              effects: modelEffects // 返回效果管理器实例
             });
           },
           (progress) => {
