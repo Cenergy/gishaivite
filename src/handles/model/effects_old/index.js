@@ -1,6 +1,6 @@
 import { THREE, GLTFLoader, DRACOLoader } from '@/utils/three.js';
 import GlobeAnimation from "./animations/GlobeAnimation.js";
-import * as shadermaterial from './shaders'
+import * as shadermaterial from './shaders.js'
 import * as TWEEN from 'tween'
 
 
