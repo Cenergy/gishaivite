@@ -169,8 +169,8 @@ export class ModelHandle {
             // 创建模型效果管理器
             const modelEffects = new ModelEffects(modelObj, {
               customerShaderConfig: {
-                bottomColor: 'rgb(0,19,39)',
-                topColor: 'rgb(0,50,100)',
+                bottomColor: 'rgb(123, 181, 243)',
+                topColor: 'rgb(31, 110, 188)',
                 flowColor: 'rgb(255,103,19)',
                 topGradientDistance: 5,
                 bottomGradientDistance: 50,
