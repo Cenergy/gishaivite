@@ -1,68 +1,115 @@
-/*
- * @Author: your name
- * @Date: 2020-05-16 09:37:34
- * @LastEditTime: 2020-05-16 11:33:46
- * @LastEditors: Please set LastEditors
- * @Description: In User Settings Edit
- * @FilePath: \AS\webgisvisualization\src\Animation\Animation.js
+import { gsap } from 'gsap';
+
+/**
+ * 基于GSAP的动画工具类
+ * 提供简化的动画接口，保持原有API兼容性的同时提升性能
+ * @author Optimized with GSAP
+ * @date 2024
  */
 class Animation {
     constructor(object) {
+        // 保持构造函数兼容性
+    }
 
-    }
-    //一般如果直接修改shader的uniform值的话就不需要animateCallback同步去操作了,如果是修改height之类的话还是需要animateCallback同步去操作
-    // 修改值大小
-    static animate(objecet, attr, endvalue, time, callback = () => { }) {
-        const starttime = Date.now()
-        const startvalue = objecet[attr]
-        const endtime = Date.now() + time * 1000
+    /**
+     * 动画化对象属性值
+     * @param {Object} object - 要动画的对象
+     * @param {string} attr - 要动画的属性名
+     * @param {number} endvalue - 目标值
+     * @param {number} time - 动画时长（秒）
+     * @param {Function} callback - 完成回调
+     */
+    static animate(object, attr, endvalue, time, callback = () => {}) {
+        // 修正参数名拼写错误
         if (time === 0) {
-            objecet[attr] = endvalue
-            callback()
-        } else {
-            Animation._animation(objecet, attr, startvalue, endvalue, starttime, endtime, callback)
+            object[attr] = endvalue;
+            callback();
+            return;
         }
+
+        // 使用GSAP进行动画，性能更好且支持更多缓动函数
+        gsap.to(object, {
+            [attr]: endvalue,
+            duration: time,
+            ease: "power2.out", // 添加缓动效果，比线性动画更自然
+            onComplete: callback
+        });
     }
-    static _animation(objecet, attr, startvalue, endvalue, starttime, endtime, callback, id) {
-        const currenttime = Date.now()
-        const progress = (currenttime - starttime) / (endtime - starttime)
-        const meaning = startvalue - endvalue
-        if (progress <= 1) {
-            if (meaning > 0) {
-                objecet[attr] = startvalue - progress * Math.abs(meaning)
-            } else if (meaning < 0) {
-                objecet[attr] = startvalue + progress * Math.abs(meaning)
+
+    /**
+     * 执行回调函数动画
+     * @param {Function} callback1 - 每帧执行的回调
+     * @param {number} time - 动画时长（秒）
+     * @param {Function} callback2 - 完成回调
+     */
+    static animateCallback(callback1, time, callback2 = () => {}) {
+        if (time === 0) {
+            callback1();
+            callback2();
+            return;
+        }
+
+        // 使用GSAP的ticker进行更精确的帧回调
+        const startTime = Date.now();
+        const endTime = startTime + time * 1000;
+        
+        const ticker = () => {
+            const currentTime = Date.now();
+            const progress = (currentTime - startTime) / (endTime - startTime);
+            
+            if (progress <= 1) {
+                callback1();
+            } else {
+                gsap.ticker.remove(ticker);
+                callback2();
             }
-            const id = requestAnimationFrame(() => {
-                Animation._animation(objecet, attr, startvalue, endvalue, starttime, endtime, callback, id)
-            })
-        } else if (progress >= 1) {
-            cancelAnimationFrame(id)
-            callback()
-        }
+        };
+        
+        gsap.ticker.add(ticker);
     }
-    // 同步上述animate修改值大小后进行同步操作
-    static animateCallback(callback1, time, callback2 = () => { }) {
-        const starttime = Date.now()
-        const endtime = Date.now() + time * 1000
-        if (time === 0) {
-            callback1()
-        } else {
-            Animation._animationCallback(callback1, starttime, endtime, callback2)
-        }
+
+    /**
+     * 创建更高级的动画序列
+     * @param {Array} animations - 动画配置数组
+     * @returns {gsap.core.Timeline} GSAP时间轴对象
+     */
+    static createTimeline(animations = []) {
+        const tl = gsap.timeline();
+        
+        animations.forEach(config => {
+            const { target, props, duration = 1, delay = 0, ease = "power2.out" } = config;
+            tl.to(target, {
+                ...props,
+                duration,
+                ease
+            }, delay);
+        });
+        
+        return tl;
     }
-    static _animationCallback(callback1, starttime, endtime, callback2, id) {
-        const currenttime = Date.now()
-        const progress = (currenttime - starttime) / (endtime - starttime)
-        if (progress <= 1) {
-            callback1()
-            const id = requestAnimationFrame(() => {
-                Animation._animationCallback(callback1, starttime, endtime, callback2, id)
-            })
-        } else if (progress >= 1) {
-            cancelAnimationFrame(id)
-            callback2()
-        }
+
+    /**
+     * 停止对象的所有动画
+     * @param {Object} object - 要停止动画的对象
+     */
+    static killAnimations(object) {
+        gsap.killTweensOf(object);
+    }
+
+    /**
+     * 暂停对象的所有动画
+     * @param {Object} object - 要暂停动画的对象
+     */
+    static pauseAnimations(object) {
+        gsap.getTweensOf(object).forEach(tween => tween.pause());
+    }
+
+    /**
+     * 恢复对象的所有动画
+     * @param {Object} object - 要恢复动画的对象
+     */
+    static resumeAnimations(object) {
+        gsap.getTweensOf(object).forEach(tween => tween.resume());
     }
 }
 
