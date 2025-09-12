@@ -4,7 +4,7 @@
  */
 
 import { gsap } from 'gsap';
-import GlobeAnimation from './animations/GlobeAnimation.js';
+import GlobeAnimation from '../animations/GlobeAnimation.js';
 
 /**
  * 测试GSAP基本功能

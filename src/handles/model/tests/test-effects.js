@@ -3,7 +3,7 @@
  * 这个文件用于测试ModelLoader和ModelEffects的集成
  */
 
-import { ModelHandle } from './modelLoader.js';
+import { ModelHandle } from '../modelLoader.js';
 
 /**
  * 测试模型加载和效果应用

@@ -3,7 +3,7 @@
  * 展示如何在实际项目中使用集成了效果的模型加载器
  */
 
-import { ModelHandle } from './modelLoader.js';
+import { ModelHandle } from '../modelLoader.js';
 
 /**
  * 示例1: 基本使用 - 加载模型并自动应用效果
