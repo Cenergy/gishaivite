@@ -1,0 +1,121 @@
+<!doctype html>
+<html>
+  <head>
+    <title>model animation</title>
+    <script
+      type="text/javascript"
+      src="https://unpkg.com/dat.gui@0.7.6/build/dat.gui.min.js"
+    ></script>
+    <link type="text/css" rel="stylesheet" href="https://unpkg.com/maptalks/dist/maptalks.css" />
+    <script type="text/javascript" src="https://unpkg.com/maptalks/dist/maptalks.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/@maptalks/gl/dist/maptalksgl.js"></script>
+    <script
+      type="text/javascript"
+      src="https://unpkg.com/three@0.138.0/build/three.min.js"
+    ></script>
+    <script
+      type="text/javascript"
+      src="https://unpkg.com/three@0.138.0/examples/js/loaders/GLTFLoader.js"
+    ></script>
+    <script
+      type="text/javascript"
+      src="https://unpkg.com/maptalks.three@latest/dist/maptalks.three.js"
+    ></script>
+    <script
+      type="text/javascript"
+      src="https://unpkg.com/three@0.138.0/examples/js/libs/stats.min.js"
+    ></script>
+    <style>
+      html,
+      body {
+        margin: 0px;
+        height: 100%;
+        width: 100%;
+      }
+
+      #map {
+        width: 100%;
+        height: 100%;
+        background-color: #000;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="map"></div>
+    <script>
+      var map = new maptalks.Map('map', {
+        center: [19.06325670775459, 42.16842479475318],
+        zoom: 9,
+        pitch: 60,
+        // bearing: 180,
+
+        centerCross: true,
+        doubleClickZoom: false,
+        baseLayer: new maptalks.TileLayer('tile', {
+          // debug: true,
+          urlTemplate:
+            'https://webrd01.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
+          subdomains: ['a', 'b', 'c', 'd'],
+        }),
+      });
+
+      // the ThreeLayer to draw buildings
+      var threeLayer = new maptalks.ThreeLayer('t', {
+        forceRenderOnMoving: true,
+        forceRenderOnRotating: true,
+        // animation: true
+      });
+      threeLayer.prepareToDraw = function (gl, scene, camera) {
+        var light = new THREE.DirectionalLight(0xffffff);
+        light.position.set(0, -10, 10).normalize();
+        scene.add(light);
+        camera.add(new THREE.PointLight('#fff', 4));
+
+        addGltf();
+      };
+      const sceneConfig = {
+        postProcess: {
+          enable: true,
+          antialias: { enable: true },
+          bloom: {
+            enable: true,
+            threshold: 0,
+            factor: 1,
+            radius: 0.02,
+          },
+        },
+      };
+      const groupLayer = new maptalks.GroupGLLayer('group', [threeLayer], {
+        sceneConfig,
+        onlyWebGL1: false,
+      });
+      groupLayer.addTo(map);
+
+      var model, face, baseObjectModel;
+
+      function addGltf() {
+        clock = new THREE.Clock();
+        stats = new Stats();
+        map.getContainer().appendChild(stats.dom);
+        var loader = new THREE.GLTFLoader();
+        loader.load(
+          'https://maptalks.org/maptalks.three/demo/data/RobotExpressive.glb',
+          function (gltf) {
+            model = gltf.scene;
+            model.rotation.x = Math.PI / 2;
+            model.scale.set(100, 100, 100);
+
+            baseObjectModel = threeLayer.toModel(model, { coordinate: map.getCenter() });
+            // model.position.copy(threeLayer.coordinateToVector3(map.getCenter()));
+            threeLayer.addMesh(baseObjectModel);
+          },
+          undefined,
+          function (e) {
+            console.error(e);
+          },
+        );
+      }
+ </script>
+  </body>
+</html>

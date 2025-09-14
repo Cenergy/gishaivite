@@ -29,6 +29,11 @@ const router = createRouter({
     {
       path: '/map',
       name: 'map',
+      component: () => import(/* webpackChunkName: "map" */ '@/views/MapViewTest.vue')
+    },
+    {
+      path: '/mapView',
+      name: 'mapView',
       component: () => import(/* webpackChunkName: "map" */ '@/views/GalleryMapView.vue')
     },
     {

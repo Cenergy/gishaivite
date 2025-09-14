@@ -62,11 +62,18 @@ export default class BaseMapBus {
       postProcess: {
         enable: true,
         antialias: { enable: true },
+        bloom: {
+          enable: true,
+          threshold: 0,
+          factor: 1,
+          radius: 0.02,
+        },
       },
     };
 
     const group = new GroupGLLayer(LAYER_NAMES.BASIC_SCENE_GROUP, layers, {
       sceneConfig,
+      onlyWebGL1: false,
     });
     group.addTo(this.map);
 
