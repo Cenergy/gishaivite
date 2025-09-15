@@ -109,6 +109,13 @@ export class ModelHandle {
           chunkSize: options.chunkSize,
           enableResume: options.enableResume,
         }),
+      'smart_stream_wasm': (model, options) =>
+        this.loadModelSmartStreamWASM({
+          model,
+          smartChunkThreshold: options.smartChunkThreshold || 5242880, // 默认5MB
+          smartChunkSize: options.smartChunkSize || 5242880, // 默认5MB
+          enableResume: options.enableResume,
+        }),
     };
   }
 
@@ -133,8 +140,16 @@ export class ModelHandle {
     }
 
     // 执行对应的加载策略
-    const needsOptions = ['stream_wasm_realtime', 'realtime_wasm'].includes(loadMethod);
-    return needsOptions ? strategy(model, { chunkSize, enableResume }) : strategy(model);
+    const needsOptions = ['stream_wasm_realtime', 'realtime_wasm', 'smart_stream_wasm'].includes(loadMethod);
+    if (needsOptions) {
+      // 为智能流式WASM传递完整的options
+      if (loadMethod === 'smart_stream_wasm') {
+        return strategy(model, options);
+      }
+      // 为其他需要options的方法传递特定参数
+      return strategy(model, { chunkSize, enableResume });
+    }
+    return strategy(model);
   }
 
 
@@ -526,6 +541,75 @@ export class ModelHandle {
     console.log('❌ 取消流式下载');
     this.downloader.cancelStream();
     this.loadingStateMachine.cancel('❌ 流式下载已取消');
+  }
+
+  /**
+   * 智能流式WASM加载模型
+   * 自动根据文件大小判断是否需要分块
+   */
+  async loadModelSmartStreamWASM(options = {}) {
+    console.log('🧠 开始智能流式WASM加载...');
+
+    if (!this.wasmDecoder) {
+      this.loadingStateMachine.error('WASM 解码器未初始化');
+      throw new Error('WASM 解码器未初始化');
+    }
+
+    const { model = {} } = options;
+    const { uuid, name } = model;
+    if (!uuid) {
+      this.loadingStateMachine.error('无法获取模型UUID');
+      throw new Error('无法获取模型UUID');
+    }
+
+    const {
+      smartChunkThreshold = 5242880, // 5MB阈值
+      smartChunkSize = 5242880, // 5MB分块大小
+      enableResume = true,
+    } = options;
+
+    this.loadingStateMachine.startLoading('🧠 智能流式WASM: 检测文件大小...');
+
+    try {
+      // 获取文件信息
+      const fileInfo = await this.downloader.getFileInfo(model);
+      const fileSize = fileInfo.size;
+      
+      console.log(`📊 文件大小: ${this.downloader.formatBytes(fileSize)}, 阈值: ${this.downloader.formatBytes(smartChunkThreshold)}`);
+      
+      // 智能判断是否需要分块
+      const shouldChunk = fileSize > smartChunkThreshold;
+      const actualChunkSize = shouldChunk ? smartChunkSize : 0;
+      
+      const strategy = shouldChunk ? '分块下载' : '整体下载';
+      console.log(`🧠 智能决策: ${strategy} (文件${this.downloader.formatBytes(fileSize)}, ${shouldChunk ? `每块${this.downloader.formatBytes(actualChunkSize)}` : '不分块'})`);
+      
+      this.loadingStateMachine.emit('progress', {
+        progress: 10,
+        message: `🧠 智能流式WASM: ${strategy} - ${this.downloader.formatBytes(fileSize)}`,
+      });
+
+      // 使用实时流式WASM加载，但使用智能决策的分块大小
+      return await this.loadModelStreamWASMRealtime({
+        model,
+        chunkSize: actualChunkSize,
+        enableResume,
+        onProgress: (progressData) => {
+          // 更新进度消息，显示智能决策信息
+          const message = progressData.message.replace('⚡ 实时流式WASM:', `🧠 智能流式WASM(${strategy}):`);
+          this.loadingStateMachine.emit('progress', {
+            ...progressData,
+            message,
+          });
+        },
+        onStreamInfo: options.onStreamInfo,
+      });
+
+    } catch (error) {
+      console.error('智能流式WASM 模型加载失败:', error);
+      this.loadingStateMachine.error(error.message, '智能流式WASM 模型加载失败');
+      throw error;
+    }
   }
 
   /**

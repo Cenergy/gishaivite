@@ -13,7 +13,7 @@ class TerrainLayer extends BaseLayer {
     super.init(map);
     // 注册事件监听器
     this.registerEvents();
-    this.show();
+    // this.show();
   }
 
   registerEvents() {

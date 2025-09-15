@@ -92,15 +92,13 @@
       });
       groupLayer.addTo(map);
 
-      var model, face, baseObjectModel;
+
 
       function addGltf() {
-        clock = new THREE.Clock();
-        stats = new Stats();
-        map.getContainer().appendChild(stats.dom);
+        var model, baseObjectModel;
         var loader = new THREE.GLTFLoader();
         loader.load(
-          'https://maptalks.org/maptalks.three/demo/data/RobotExpressive.glb',
+          '/models/RobotExpressive.glb',
           function (gltf) {
             model = gltf.scene;
             model.rotation.x = Math.PI / 2;

@@ -84,7 +84,41 @@
               <div class="section-title">🌊 流式加载控制</div>
             </template>
             <el-space direction="vertical" style="width: 100%" :size="15">
-              <el-form-item label="分块大小:">
+              <!-- 智能流式WASM配置 -->
+              <div v-if="loadMethod === 'smart_stream_wasm'" class="smart-config">
+                <el-form-item label="自动分块阈值:">
+                  <el-select v-model="smartChunkThreshold" style="width: 180px">
+                    <el-option
+                      v-for="option in smartThresholdOptions"
+                      :key="option.value"
+                      :label="option.label"
+                      :value="option.value"
+                    />
+                  </el-select>
+                </el-form-item>
+                <el-form-item label="分块大小:">
+                  <el-select v-model="smartChunkSize" style="width: 180px">
+                    <el-option
+                      v-for="option in chunkSizeOptions.filter(opt => opt.value > 0)"
+                      :key="option.value"
+                      :label="option.label"
+                      :value="option.value"
+                    />
+                  </el-select>
+                </el-form-item>
+                <el-alert
+                  title="智能分块说明"
+                  type="info"
+                  :closable="false"
+                  show-icon
+                >
+                  <template #default>
+                    文件大于 {{ smartThresholdOptions.find(opt => opt.value === smartChunkThreshold)?.label || '5MB' }} 时自动启用分块下载，每块 {{ chunkSizeOptions.find(opt => opt.value === smartChunkSize)?.label || '5MB' }}
+                  </template>
+                </el-alert>
+              </div>
+              <!-- 普通流式配置 -->
+              <el-form-item v-else label="分块大小:">
                 <el-select v-model="chunkSize" style="width: 180px">
                   <el-option
                     v-for="option in chunkSizeOptions"
@@ -242,6 +276,10 @@ const loadMethod = ref("realtime_wasm");
 const chunkSize = ref(0);
 const enableResume = ref(true);
 
+// 智能流式WASM配置
+const smartChunkThreshold = ref(5242880); // 5MB阈值
+const smartChunkSize = ref(5242880); // 默认5MB分块大小
+
 // 分块大小选项
 const chunkSizeOptions = [
   { label: "不分块", value: 0 },
@@ -253,6 +291,16 @@ const chunkSizeOptions = [
   { label: "2MB", value: 2097152 },
   { label: "3MB", value: 3145728 },
   { label: "5MB", value: 5242880 },
+];
+
+// 智能分块阈值选项
+const smartThresholdOptions = [
+  { label: "1MB", value: 1048576 },
+  { label: "2MB", value: 2097152 },
+  { label: "3MB", value: 3145728 },
+  { label: "5MB", value: 5242880 },
+  { label: "10MB", value: 10485760 },
+  { label: "20MB", value: 20971520 },
 ];
 const wireframeMode = ref(false);
 const showInfo = ref(false);
@@ -301,7 +349,7 @@ loadingStateMachine.on("progress", (context) => {
 
 // 计算属性
 const showStreamControls = computed(() => {
-  return loadMethod.value === "stream_wasm" || loadMethod.value === "realtime_wasm";
+  return loadMethod.value === "stream_wasm" || loadMethod.value === "realtime_wasm" || loadMethod.value === "smart_stream_wasm";
 });
 
 const showStreamProgress = computed(() => {
@@ -343,6 +391,7 @@ const loadMethods = [
   { value: "wasm", label: "WASM解码" },
   { value: "stream_wasm", label: "🌊 流式WASM" },
   { value: "realtime_wasm", label: "⚡ 实时流式WASM" },
+  { value: "smart_stream_wasm", label: "🧠 智能流式WASM" },
 ];
 
 // Three.js 相关变量
@@ -484,6 +533,9 @@ const loadModel = async () => {
       chunkSize: chunkSize.value,
       enableResume: enableResume.value,
       authToken: authToken.value,
+      // 智能流式WASM配置
+      smartChunkThreshold: smartChunkThreshold.value,
+      smartChunkSize: smartChunkSize.value,
     });
 
     // 移除旧模型
