@@ -30,25 +30,25 @@ class TerrainLayer extends BaseLayer {
     if (this._visible) {
       return;
     }
-    var threeLayer = new ThreeLayer('t', {
+    let threeLayer = new ThreeLayer('three-model-layer', {
       // forceRenderOnMoving: true,
       // forceRenderOnRotating: true,
       // animation: true
     });
     threeLayer.prepareToDraw = (gl, scene, camera) => {
-      var light = new THREE.DirectionalLight(0xffffff);
+      let light = new THREE.DirectionalLight(0xffffff);
       light.position.set(0, -10, 10).normalize();
       scene.add(light);
       camera.add(new THREE.PointLight('#fff', 4));
       scene.add(light);
       //...
-      this.addGLTF(threeLayer);
+      this.addGltf(threeLayer);
     };
 
     threeLayer.addTo(this.map);
 
-    var material = new THREE.MeshLambertMaterial({ color: 'red', transparent: true });
-    var highlightmaterial = new THREE.MeshBasicMaterial({ color: 'yellow', transparent: true });
+    let material = new THREE.MeshLambertMaterial({ color: 'red', transparent: true });
+    let highlightmaterial = new THREE.MeshBasicMaterial({ color: 'yellow', transparent: true });
 
     const bar = threeLayer.toBox(
       [113.97790555555555, 22.660430555555557],
@@ -69,11 +69,12 @@ class TerrainLayer extends BaseLayer {
     this._visible = true;
   }
 
-  addGLTF(threeLayer) {
-    var loader = new GLTFLoader();
+  addGltf(threeLayer) {
+    console.log('🚀 ~ addGltf ~ threeLayer:', threeLayer);
     let model, baseObjectModel;
+    let loader = new GLTFLoader();
     loader.load(
-      'https://maptalks.org/maptalks.three/demo/data/RobotExpressive.glb',
+      '/models/RobotExpressive.glb',
       function (gltf) {
         model = gltf.scene;
         model.rotation.x = Math.PI / 2;
@@ -87,7 +88,7 @@ class TerrainLayer extends BaseLayer {
       },
       undefined,
       function (e) {
-        console.error(e);
+        console.log('🚀 ~ addGltf ~ e:', e);
       },
     );
   }
