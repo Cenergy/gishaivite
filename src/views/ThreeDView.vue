@@ -262,8 +262,10 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, onUnmounted, computed, nextTick } from "vue";
+// 导入THREE
 import { THREE, OrbitControls } from "@/utils/three.js";
-import {modelLoader, modelDownloader} from "@/handles/model";
+// 导入模型加载器和下载器
+import {modelLoader, modelDownloader} from "../handles/model";
 
 // 使用模型加载器的状态机
 const loadingStateMachine = modelLoader.loadingStateMachine;
@@ -349,7 +351,8 @@ loadingStateMachine.on("progress", (context) => {
 
 // 计算属性
 const showStreamControls = computed(() => {
-  return loadMethod.value === "stream_wasm" || loadMethod.value === "realtime_wasm" || loadMethod.value === "smart_stream_wasm";
+  const includeList = ["stream_wasm", "realtime_wasm", "smart_stream_wasm"];
+  return includeList.includes(loadMethod.value);
 });
 
 const showStreamProgress = computed(() => {
@@ -442,11 +445,6 @@ const setLoadMethod = (method: string) => {
 
 const updateInfo = (key: string, value: string) => {
   modelInfo[key] = value;
-};
-
-const updateProgress = (percent: number, text: string) => {
-  progress.value = percent;
-  progressText.value = text;
 };
 
 const setupLighting = () => {
