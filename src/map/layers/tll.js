@@ -5,6 +5,9 @@ import { ThreeLayer } from 'maptalks.three';
 import { LAYER_NAMES } from '../constants';
 import { THREE, GLTFLoader, FBXLoader, DRACOLoader } from '@/utils/three.js';
 
+// 导入模型加载器和下载器
+import { modelLoader, modelDownloader, ModelEffects } from '@/handles/model';
+
 class TerrainLayer extends BaseLayer {
   constructor(options = {}) {
     super(options);
@@ -33,7 +36,7 @@ class TerrainLayer extends BaseLayer {
     let threeLayer = new ThreeLayer('three-model-layer', {
       // forceRenderOnMoving: true,
       // forceRenderOnRotating: true,
-      // animation: true
+      animation: true
     });
     threeLayer.prepareToDraw = (gl, scene, camera) => {
       let light = new THREE.DirectionalLight(0xffffff);
@@ -69,28 +72,48 @@ class TerrainLayer extends BaseLayer {
     this._visible = true;
   }
 
-  addGltf(threeLayer) {
+  async addGltf(threeLayer) {
     console.log('🚀 ~ addGltf ~ threeLayer:', threeLayer);
-    let model, baseObjectModel;
-    let loader = new GLTFLoader();
-    loader.load(
-      '/models/RobotExpressive.glb',
-      function (gltf) {
-        model = gltf.scene;
-        model.rotation.x = Math.PI / 2;
-        model.scale.set(100, 100, 100);
+    let baseObjectModel;
+    const modelInfo = {
+      name: 'chunsun',
+      description: null,
+      model_file_url: '/static/uploads/model/7be6db04fc2c4fd19e565337743c33f2/model.glb',
+      binary_file_url: '/static/uploads/model/7be6db04fc2c4fd19e565337743c33f2/chunsun.bin',
+      thumbnail_url: null,
+      is_active: true,
+      is_public: true,
+      id: 18,
+      uuid: '7be6db04fc2c4fd19e565337743c33f2',
+      category_id: null,
+      created_at: '2025-09-11T05:12:07.330174Z',
+      updated_at: '2025-09-11T05:12:07.474479Z',
+    };
+    await modelLoader.initialize();
+    const modelData = await modelLoader.loadModel(modelInfo, 'smart_stream_wasm');
+    modelData.model.rotation.x = Math.PI / 2;
+    baseObjectModel = threeLayer.toModel(modelData.model, {
+      coordinate: [113.97790555555555, 22.660430555555557],
+    });
+    // model.position.copy(threeLayer.coordinateToVector3(map.getCenter()));
+    threeLayer.addMesh(baseObjectModel);
 
-        baseObjectModel = threeLayer.toModel(model, {
-          coordinate: [113.97790555555555, 22.660430555555557],
-        });
-        // model.position.copy(threeLayer.coordinateToVector3(map.getCenter()));
-        threeLayer.addMesh(baseObjectModel);
+    // 创建模型效果管理器
+    const modelEffects = new ModelEffects(modelData.model, {
+      customerShaderConfig: {
+        bottomColor: 'rgb(123, 181, 243)',
+        topColor: 'rgb(31, 110, 188)',
+        flowColor: 'rgb(255,103,19)',
+        topGradientDistance: 5,
+        bottomGradientDistance: 50,
+        speed: 100,
+        wireframe: false,
       },
-      undefined,
-      function (e) {
-        console.log('🚀 ~ addGltf ~ e:', e);
-      },
-    );
+    });
+
+    // 应用效果
+    modelEffects.setBloom(true);
+    modelEffects.shaderAnimation('verticalFlow');
   }
 
   /**
