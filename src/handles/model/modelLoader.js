@@ -1,5 +1,5 @@
 import downloader from './modelDownloader.js';
-import {modelDecoder} from './decoders/index.js';
+import {modelDecoder,workerDecoder,smartDecoder} from './decoders/index.js';
 import modelBuilder from './modelBuilder.js';
 import LoadingStateMachine from '@/utils/LoadingStateMachine.js';
 import ModelEffects from './ModelEffects.js';
@@ -13,7 +13,7 @@ export class ModelHandle {
     this.wasmDecoder = null;
     this.loadingStateMachine = new LoadingStateMachine();
     this.downloader = downloader;
-    this.modelDecoder = modelDecoder;
+    this.modelDecoder = smartDecoder;
     this.modelBuilder = modelBuilder;
   }
 
@@ -550,6 +550,13 @@ export class ModelHandle {
   async loadModelSmartStreamWASM(options = {}) {
     console.log('🧠 开始智能流式WASM加载...');
 
+    // 确保SmartDecoder已初始化
+    if (!this.modelDecoder || !this.modelDecoder.isInitialized) {
+      console.log('🔄 SmartDecoder未初始化，正在初始化...');
+      await this.modelDecoder.init();
+    }
+
+    // 检查WASM解码器是否可用
     if (!this.wasmDecoder) {
       this.loadingStateMachine.error('WASM 解码器未初始化');
       throw new Error('WASM 解码器未初始化');

@@ -99,21 +99,21 @@ class TerrainLayer extends BaseLayer {
     threeLayer.addMesh(baseObjectModel);
 
     // 创建模型效果管理器
-    const modelEffects = new ModelEffects(modelData.model, {
-      customerShaderConfig: {
-        bottomColor: 'rgb(123, 181, 243)',
-        topColor: 'rgb(31, 110, 188)',
-        flowColor: 'rgb(255,103,19)',
-        topGradientDistance: 5,
-        bottomGradientDistance: 50,
-        speed: 100,
-        wireframe: false,
-      },
-    });
+    // const modelEffects = new ModelEffects(modelData.model, {
+    //   customerShaderConfig: {
+    //     bottomColor: 'rgb(123, 181, 243)',
+    //     topColor: 'rgb(31, 110, 188)',
+    //     flowColor: 'rgb(255,103,19)',
+    //     topGradientDistance: 5,
+    //     bottomGradientDistance: 50,
+    //     speed: 100,
+    //     wireframe: false,
+    //   },
+    // });
 
-    // 应用效果
-    modelEffects.setBloom(true);
-    modelEffects.shaderAnimation('verticalFlow');
+    // // 应用效果
+    // modelEffects.setBloom(true);
+    // modelEffects.shaderAnimation('verticalFlow');
   }
 
   /**
