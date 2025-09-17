@@ -6,12 +6,13 @@ import { LAYER_NAMES } from '../constants';
 import { THREE, GLTFLoader, FBXLoader, DRACOLoader } from '@/utils/three.js';
 
 // 导入模型加载器和下载器
-import { modelLoader, modelDownloader, ModelEffects } from '@/handles/model';
+import { modelLoader, modelDownloader, ModelEffects, ModelAnimations } from '@/handles/model';
 
 class TerrainLayer extends BaseLayer {
   constructor(options = {}) {
     super(options);
     this.terrain = [];
+    this.modelAnimations = null;
   }
 
   init(map) {
@@ -76,19 +77,19 @@ class TerrainLayer extends BaseLayer {
     console.log('🚀 ~ addGltf ~ threeLayer:', threeLayer);
     let baseObjectModel;
     const modelInfo = {
-      name: 'chunsun',
-      description: null,
-      model_file_url: '/static/uploads/model/7be6db04fc2c4fd19e565337743c33f2/model.glb',
-      binary_file_url: '/static/uploads/model/7be6db04fc2c4fd19e565337743c33f2/chunsun.bin',
-      thumbnail_url: null,
-      is_active: true,
-      is_public: true,
-      id: 18,
-      uuid: '7be6db04fc2c4fd19e565337743c33f2',
-      category_id: null,
-      created_at: '2025-09-11T05:12:07.330174Z',
-      updated_at: '2025-09-11T05:12:07.474479Z',
-    };
+    "name": "fbx",
+    "description": null,
+    "model_file_url": "/static/uploads/models/9c8f1fc795eb4d69ab1d3d4be862e2ce/model.fbx",
+    "binary_file_url": null,
+    "thumbnail_url": null,
+    "is_active": true,
+    "is_public": false,
+    "id": 19,
+    "uuid": "9c8f1fc795eb4d69ab1d3d4be862e2ce",
+    "category_id": null,
+    "created_at": "2025-09-17T02:07:19.767467Z",
+    "updated_at": "2025-09-17T02:07:20.137290Z"
+};
     await modelLoader.initialize();
     const modelData = await modelLoader.loadModel(modelInfo, 'smart_stream_wasm');
     modelData.model.rotation.x = Math.PI / 2;
@@ -114,6 +115,13 @@ class TerrainLayer extends BaseLayer {
     // // 应用效果
     // modelEffects.setBloom(true);
     // modelEffects.shaderAnimation('verticalFlow');
+    
+    // 创建动画管理器并存储引用
+    // autoStartLoop: true 会自动启动GSAP动画循环
+    this.modelAnimations = new ModelAnimations(modelData.model, {
+      autoPlay: true,
+      autoStartLoop: true
+    });
   }
 
   /**
@@ -131,6 +139,12 @@ class TerrainLayer extends BaseLayer {
     }
   }
   destroy() {
+    // 清理动画资源（ModelAnimations内部会自动停止GSAP循环）
+    if (this.modelAnimations) {
+      this.modelAnimations.destroy();
+      this.modelAnimations = null;
+    }
+    
     const groupLayer = this.map.getLayer(LAYER_NAMES.BASIC_SCENE_GROUP);
     groupLayer.setTerrain(null);
     // 基类会自动清理事件监听器，无需手动调用

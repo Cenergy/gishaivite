@@ -265,7 +265,7 @@ import { ref, reactive, onMounted, onUnmounted, computed, nextTick } from "vue";
 // 导入THREE
 import { THREE, OrbitControls } from "@/utils/three.js";
 // 导入模型加载器和下载器
-import {modelLoader, modelDownloader} from "../handles/model";
+import {modelLoader, modelDownloader, ModelAnimations} from "../handles/model";
 
 // 使用模型加载器的状态机
 const loadingStateMachine = modelLoader.loadingStateMachine;
@@ -403,9 +403,7 @@ let camera: THREE.PerspectiveCamera;
 let renderer: THREE.WebGLRenderer;
 let controls: OrbitControls;
 let currentModel: THREE.Object3D | null = null;
-let animationMixer: THREE.AnimationMixer | null = null;
-let animationActions: THREE.AnimationAction[] = [];
-const clock = new THREE.Clock();
+let modelAnimations: ModelAnimations | null = null;
 const isAnimationPlaying = ref(false);
 
 // 认证令牌
@@ -470,8 +468,8 @@ const animate = () => {
   requestAnimationFrame(animate);
 
   // 更新动画
-  if (animationMixer && isAnimationPlaying.value) {
-    animationMixer.update(clock.getDelta());
+  if (modelAnimations) {
+    modelAnimations.update();
   }
 
   controls.update();
@@ -657,75 +655,47 @@ const toggleInfo = () => {
 // 设置动画
 const setupAnimations = (model: THREE.Object3D) => {
   // 清理之前的动画
-  if (animationMixer) {
-    animationMixer.stopAllAction();
-    animationMixer = null;
+  if (modelAnimations) {
+    modelAnimations.destroy();
+    modelAnimations = null;
   }
-  animationActions = [];
 
-  // 检查模型是否有动画
-  if (model.animations && model.animations.length > 0) {
-    console.log("🎬 发现动画数据:", model.animations.length, "个动画");
+  // 创建新的动画管理器
+  modelAnimations = new ModelAnimations(model, {
+    autoPlay: true,
+    loop: true
+  });
 
-    // 创建动画混合器
-    animationMixer = new THREE.AnimationMixer(model);
-
-    // 为每个动画创建动作
-    model.animations.forEach((clip: THREE.AnimationClip, index: number) => {
-      console.log(
-        `🎭 动画 ${index + 1}: ${clip.name}, 时长: ${clip.duration.toFixed(2)}s`
-      );
-      const action = animationMixer!.clipAction(clip);
-      animationActions.push(action);
-    });
-
-    // 自动播放第一个动画
-    if (animationActions.length > 0) {
-      playAnimation(0);
-    }
-
-    // 更新UI显示动画信息
+  // 获取动画信息并更新UI
+  const animInfo = modelAnimations.getAnimationInfo();
+  
+  if (animInfo.hasAnimations) {
     showAnimationSection.value = true;
-    animationInfo.value = model.animations
-      .map(
-        (clip: THREE.AnimationClip, index: number) =>
-          `动画${index + 1}: ${clip.name} (${clip.duration.toFixed(2)}s)`
-      )
-      .join(", ");
+    animationInfo.value = animInfo.info;
+    
+    // 更新播放状态
+    const playbackState = modelAnimations.getPlaybackState();
+    isAnimationPlaying.value = playbackState.isPlaying;
   } else {
-    console.log("📝 该模型没有动画数据");
     showAnimationSection.value = false;
     animationInfo.value = "无动画";
+    isAnimationPlaying.value = false;
   }
 };
 
 const playAnimation = (index: number = 0) => {
-  console.log(
-    `🎬 尝试播放动画，索引: ${index}, 可用动画数量: ${animationActions.length}`
-  );
-  if (animationActions.length > index) {
-    // 停止所有动画
-    animationActions.forEach((action) => action.stop());
-
-    // 播放指定动画
-    const action = animationActions[index];
-    action.reset();
-    action.play();
-    isAnimationPlaying.value = true;
-
-    console.log(`▶️ 播放动画: ${action.getClip().name}`);
-  } else {
-    console.warn(
-      `⚠️ 无法播放动画：索引 ${index} 超出范围，可用动画数量: ${animationActions.length}`
-    );
+  if (modelAnimations) {
+    const success = modelAnimations.play(index);
+    if (success) {
+      isAnimationPlaying.value = true;
+    }
   }
 };
 
 const stopAnimation = () => {
-  if (animationMixer) {
-    animationActions.forEach((action) => action.stop());
+  if (modelAnimations) {
+    modelAnimations.stop();
     isAnimationPlaying.value = false;
-    console.log("⏹️ 停止动画");
   }
 };
 
@@ -782,6 +752,11 @@ onMounted(async () => {
 
 onUnmounted(() => {
   window.removeEventListener("resize", handleResize);
+
+  // 清理动画资源
+  if (modelAnimations) {
+    modelAnimations.destroy();
+  }
 
   // 清理Three.js资源
   if (renderer) {
