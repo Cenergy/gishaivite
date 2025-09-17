@@ -293,8 +293,15 @@ import { THREE, OrbitControls } from "@/utils/three.js";
 // 导入模型加载器和下载器
 import {modelLoader, modelDownloader, ModelAnimations} from "../handles/model";
 
-// 使用模型加载器的状态机
-const loadingStateMachine = modelLoader.loadingStateMachine;
+// 当前加载的模型状态机
+let currentLoadingStateMachine = null;
+
+// 获取或创建模型状态机的辅助函数
+const getModelStateMachine = (model) => {
+  if (!model) return null;
+  const modelId = model.uuid || model.id || model.name;
+  return modelLoader.getOrCreateStateMachine(modelId);
+};
 
 // 响应式数据
 const drawerVisible = ref(false);
@@ -355,25 +362,38 @@ const canPause = ref(false);
 const canResume = ref(false);
 const canCancel = ref(false);
 
-// 设置状态机事件监听器
-loadingStateMachine.on("stateChange", ({ from, to, context }) => {
-  currentState.value = to; // 更新响应式状态
-  // 暂停状态也应该显示loading遮罩
-  isLoading.value = loadingStateMachine.isLoading() || to === "paused";
-  progress.value = context.progress;
-  progressText.value = context.message;
-  loadingError.value = context.error;
+// 设置状态机事件监听器的函数
+const setupStateMachineListeners = (stateMachine) => {
+  if (!stateMachine) return;
+  
+  // 移除之前的监听器（如果存在）
+  if (currentLoadingStateMachine) {
+    currentLoadingStateMachine.removeAllListeners();
+  }
+  
+  currentLoadingStateMachine = stateMachine;
+  
+  stateMachine.on("stateChange", ({ from, to, context }) => {
+    currentState.value = to; // 更新响应式状态
+    // 暂停状态也应该显示loading遮罩
+    isLoading.value = stateMachine.isLoading() || to === "paused";
+    progress.value = context.progress;
+    progressText.value = context.message;
+    loadingError.value = context.error;
 
-  // 更新控制按钮状态
-  canPause.value = loadingStateMachine.canPause();
-  canResume.value = loadingStateMachine.canResume();
-  canCancel.value = loadingStateMachine.canCancel();
-});
+    // 更新控制按钮状态
+    canPause.value = stateMachine.canPause();
+    canResume.value = stateMachine.canResume();
+    canCancel.value = stateMachine.canCancel();
+  });
 
-loadingStateMachine.on("progress", (context) => {
-  progress.value = context.progress;
-  progressText.value = context.message;
-});
+  stateMachine.on("progress", (context) => {
+    progress.value = context.progress;
+    progressText.value = context.message;
+  });
+};
+
+// progress监听器已在setupStateMachineListeners函数中设置
 
 // 计算属性
 const showStreamControls = computed(() => {
@@ -545,9 +565,15 @@ const loadModel = async () => {
   }
 
   try {
-    // 重置状态机到idle状态，避免状态转换错误
-    loadingStateMachine.reset();
     const model = modelOptions.value?.find(option => option.name === selectedModel.value) || { name: "未选择模型" };
+    
+    // 获取模型对应的状态机并设置监听器
+    const stateMachine = getModelStateMachine(model);
+    if (stateMachine) {
+      setupStateMachineListeners(stateMachine);
+      // 重置状态机到idle状态，避免状态转换错误
+      stateMachine.reset();
+    }
     // 使用 modelLoader 加载模型
     const result = await modelLoader.loadModel(model, loadMethod.value, {
       chunkSize: chunkSize.value,

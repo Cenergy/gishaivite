@@ -11,10 +11,64 @@ import ModelEffects from './ModelEffects.js';
 export class ModelHandle {
   constructor() {
     this.wasmDecoder = null;
-    this.loadingStateMachine = new LoadingStateMachine();
+    // 使用Map存储每个模型的独立状态机，支持多模型并发加载
+    this.modelStates = new Map();
     this.downloader = downloader;
     this.modelDecoder = smartDecoder;
     this.modelBuilder = modelBuilder;
+  }
+
+  /**
+   * 获取或创建指定模型的状态机
+   * 支持多模型并发加载，每个模型都有独立的加载状态
+   * 
+   * @param {string} modelId - 模型的唯一标识符（通常是uuid或id）
+   * @returns {LoadingStateMachine} 模型对应的状态机实例
+   */
+  getOrCreateStateMachine(modelId) {
+    if (!modelId) {
+      throw new Error('模型ID不能为空');
+    }
+    
+    if (!this.modelStates.has(modelId)) {
+      this.modelStates.set(modelId, new LoadingStateMachine());
+    }
+    
+    return this.modelStates.get(modelId);
+  }
+
+  /**
+   * 清理指定模型的状态机
+   * 在模型加载完成或失败后调用，释放内存
+   * 
+   * @param {string} modelId - 模型的唯一标识符
+   */
+  clearModelState(modelId) {
+    if (this.modelStates.has(modelId)) {
+      const stateMachine = this.modelStates.get(modelId);
+      // 清理状态机的事件监听器
+      stateMachine.listeners.clear();
+      this.modelStates.delete(modelId);
+    }
+  }
+
+  /**
+   * 获取所有模型的加载状态
+   * 用于调试和监控多模型加载情况
+   * 
+   * @returns {Object} 包含所有模型状态的对象
+   */
+  getAllModelStates() {
+    const states = {};
+    for (const [modelId, stateMachine] of this.modelStates) {
+      states[modelId] = {
+        currentState: stateMachine.currentState,
+        progress: stateMachine.context.progress,
+        message: stateMachine.context.message,
+        isLoading: stateMachine.isLoading()
+      };
+    }
+    return states;
   }
 
   /**
@@ -65,9 +119,14 @@ export class ModelHandle {
   /**
    * 通用的错误处理方法
    */
-  _handleError(error, context = '加载') {
+  _handleError(error, context = '加载', stateMachine = null) {
     console.error(`${context}失败:`, error);
-    this.loadingStateMachine.error(error.message, `${context}失败`);
+    if (stateMachine) {
+      stateMachine.error(error.message, `${context}失败`);
+    } else {
+      // 兼容旧代码，如果没有传入状态机，使用默认行为
+      console.warn('_handleError: 未提供状态机实例，错误处理可能不完整');
+    }
     throw error;
   }
 
@@ -121,10 +180,17 @@ export class ModelHandle {
 
   /**
    * 统一的模型加载方法
+   * 支持多模型并发加载，每个模型使用独立的状态机
    */
   async loadModel(model, loadMethod, options = {}) {
     console.log('🚀 ~ ModelHandle ~ loadModel ~ model:', model);
     const { chunkSize, enableResume, authToken } = options;
+    
+    // 获取模型ID，优先使用uuid，其次使用id，最后使用name
+    const modelId = model.uuid || model.id || model.name;
+    if (!modelId) {
+      throw new Error('模型必须包含uuid、id或name字段作为唯一标识符');
+    }
 
     // 设置认证令牌
     if (authToken) {
@@ -139,17 +205,32 @@ export class ModelHandle {
       throw new Error(`不支持的加载方式: ${loadMethod}`);
     }
 
-    // 执行对应的加载策略
-    const needsOptions = ['stream_wasm_realtime', 'realtime_wasm', 'smart_stream_wasm'].includes(loadMethod);
-    if (needsOptions) {
-      // 为智能流式WASM传递完整的options
-      if (loadMethod === 'smart_stream_wasm') {
-        return strategy(model, options);
+    try {
+      // 执行对应的加载策略
+      const needsOptions = ['stream_wasm_realtime', 'realtime_wasm', 'smart_stream_wasm'].includes(loadMethod);
+      let result;
+      
+      if (needsOptions) {
+        // 为智能流式WASM传递完整的options
+        if (loadMethod === 'smart_stream_wasm') {
+          result = await strategy(model, options);
+        } else {
+          // 为其他需要options的方法传递特定参数
+          result = await strategy(model, { chunkSize, enableResume });
+        }
+      } else {
+        result = await strategy(model);
       }
-      // 为其他需要options的方法传递特定参数
-      return strategy(model, { chunkSize, enableResume });
+      
+      // 加载成功后清理状态机（可选，也可以保留用于后续操作）
+      // this.clearModelState(modelId);
+      
+      return result;
+    } catch (error) {
+      // 加载失败时也清理状态机
+      this.clearModelState(modelId);
+      throw error;
     }
-    return strategy(model);
   }
 
 
@@ -162,15 +243,19 @@ export class ModelHandle {
       throw new Error('未找到模型或模型文件URL');
     }
 
-    this.loadingStateMachine.reset();
-    this.loadingStateMachine.startLoading('开始直接加载...');
+    // 获取模型ID和对应的状态机
+    const modelId = model.uuid || model.id || model.name;
+    const loadingStateMachine = this.getOrCreateStateMachine(modelId);
+    
+    loadingStateMachine.reset();
+    loadingStateMachine.startLoading('开始直接加载...');
 
     try {
       const url = model.model_file_url;
       const extension = url.split('.').pop()?.toLowerCase();
       const loader = this.modelBuilder._getFileLoader(extension);
 
-      this.loadingStateMachine.startBuilding('正在解析模型...');
+      loadingStateMachine.startBuilding('正在解析模型...');
 
       return new Promise((resolve, reject) => {
         loader.load(
@@ -179,7 +264,7 @@ export class ModelHandle {
             const modelObj = extension === 'gltf' || extension === 'glb' ? object.scene : object;
             const geometry = this.modelBuilder._extractGeometry(modelObj);
 
-            this.loadingStateMachine.success(modelObj, '加载完成');
+            loadingStateMachine.success(modelObj, '加载完成');
 
             // 创建模型效果管理器
             const modelEffects = new ModelEffects(modelObj, {
@@ -207,13 +292,13 @@ export class ModelHandle {
           },
           (progress) => {
             const percent = (progress.loaded / progress.total) * 100;
-            this.loadingStateMachine.emit('progress', {
+            loadingStateMachine.emit('progress', {
               progress: percent,
               message: `加载中... ${percent.toFixed(1)}%`,
             });
           },
           (error) => {
-            this._handleError(error, '原始模型加载');
+            this._handleError(error, '原始模型加载', loadingStateMachine);
             reject(error);
           },
         );
@@ -231,20 +316,25 @@ export class ModelHandle {
     const { uuid } = model;
     const startTime = Date.now();
 
-    this.loadingStateMachine.startLoading('🌊 流式加载: 开始下载...');
+    // 获取模型ID和对应的状态机
+    const modelId = model.uuid || model.id || model.name;
+    const loadingStateMachine = this.getOrCreateStateMachine(modelId);
+    
+    loadingStateMachine.reset();
+    loadingStateMachine.startLoading('🌊 流式加载: 开始下载...');
 
     try {
       // 使用下载器下载模型数据
       const downloadResult = await this.downloader.downloadModelStream(model, {
         onProgress: (progress) => {
-          this.loadingStateMachine.emit('progress', {
+          loadingStateMachine.emit('progress', {
             progress: progress.progress * 0.3, // 下载占30%
             message: '🌊 流式: 下载中...',
           });
         },
       });
 
-      this.loadingStateMachine.emit('progress', {
+      loadingStateMachine.emit('progress', {
         progress: 30,
         message: '🌊 流式: 下载完成，开始解码...',
       });
@@ -257,7 +347,7 @@ export class ModelHandle {
       const needsDecoding = magic.startsWith('FASTDOG');
 
       if (needsDecoding) {
-        this.loadingStateMachine.emit('progress', {
+        loadingStateMachine.emit('progress', {
           progress: 50,
           message: '🌊 流式: 检测到FastDog格式，使用解码器...',
         });
@@ -270,7 +360,7 @@ export class ModelHandle {
         needsDecoding,
       );
 
-      this.loadingStateMachine.emit('progress', {
+      loadingStateMachine.emit('progress', {
         progress: 80,
         message: '🌊 流式: 解码完成，构建模型...',
       });
@@ -285,10 +375,10 @@ export class ModelHandle {
         decodeTime,
       );
 
-      this.loadingStateMachine.success(result, '流式加载完成');
+      loadingStateMachine.success(result, '流式加载完成');
       return result;
     } catch (error) {
-      this._handleError(error, '流式加载');
+      this._handleError(error, '流式加载', loadingStateMachine);
     }
   }
 
@@ -300,20 +390,25 @@ export class ModelHandle {
     const { uuid } = model;
     const startTime = Date.now();
 
-    this.loadingStateMachine.startLoading('🔧 WASM: 开始下载二进制数据...');
+    // 获取模型ID和对应的状态机
+    const modelId = model.uuid || model.id || model.name;
+    const loadingStateMachine = this.getOrCreateStateMachine(modelId);
+    
+    loadingStateMachine.reset();
+    loadingStateMachine.startLoading('🔧 WASM: 开始下载二进制数据...');
 
     try {
       // 使用下载器下载模型数据
       const downloadResult = await this.downloader.downloadModelStream(model, {
         onProgress: (progress) => {
-          this.loadingStateMachine.emit('progress', {
+          loadingStateMachine.emit('progress', {
             progress: progress.progress * 0.3, // 下载占30%
             message: '🔧 WASM: 下载中...',
           });
         },
       });
 
-      this.loadingStateMachine.emit('progress', {
+      loadingStateMachine.emit('progress', {
         progress: 30,
         message: 'WASM: 下载完成，开始解码...',
       });
@@ -321,7 +416,7 @@ export class ModelHandle {
       const binaryData = downloadResult.data;
       const downloadTime = downloadResult.downloadTime;
 
-      this.loadingStateMachine.emit('progress', {
+      loadingStateMachine.emit('progress', {
         progress: 50,
         message: 'WASM: 使用 WASM 解码中...',
       });
@@ -329,7 +424,7 @@ export class ModelHandle {
       // 使用通用解码方法
       const { data: parsedData, decodeTime } = await this.modelDecoder.decodeData(binaryData, uuid, true);
 
-      this.loadingStateMachine.emit('progress', {
+      loadingStateMachine.emit('progress', {
         progress: 80,
         message: 'WASM: 解码完成，构建模型...',
       });
@@ -344,10 +439,10 @@ export class ModelHandle {
         decodeTime,
       );
 
-      this.loadingStateMachine.success(result, 'WASM加载完成');
+      loadingStateMachine.success(result, 'WASM加载完成');
       return result;
     } catch (error) {
-      this._handleError(error, 'WASM加载');
+      this._handleError(error, 'WASM加载', loadingStateMachine);
     }
   }
 
@@ -366,17 +461,19 @@ export class ModelHandle {
     console.log('⚡ 开始实时流式WASM加载...');
 
     if (!this.wasmDecoder) {
-      this.loadingStateMachine.error('WASM 解码器未初始化');
       throw new Error('WASM 解码器未初始化');
     }
     const { model = {} } = options;
 
     const { uuid, name } = model;
     if (!uuid) {
-      this.loadingStateMachine.error('无法获取模型UUID');
       throw new Error('无法获取模型UUID');
     }
 
+    // 获取模型ID和对应的状态机
+    const modelId = model.uuid || model.id || model.name;
+    const loadingStateMachine = this.getOrCreateStateMachine(modelId);
+    
     const {
       chunkSize = 0,
       enableResume = true,
@@ -385,7 +482,8 @@ export class ModelHandle {
     } = options;
 
     // 使用状态机开始加载
-    this.loadingStateMachine.startLoading('⚡ 开始实时流式WASM加载...');
+    loadingStateMachine.reset();
+    loadingStateMachine.startLoading('⚡ 开始实时流式WASM加载...');
 
     const startTime = Date.now();
     this.downloader.downloadState.downloadStartTime = startTime;
@@ -399,19 +497,19 @@ export class ModelHandle {
     const StreamDecoderClass = this.wasmDecoder.getStreamDecoder();
     if (!StreamDecoderClass) {
       const errorMsg = 'StreamDecoder 不可用，可能是因为使用了 JavaScript 备选模式';
-      this.loadingStateMachine.error(errorMsg);
+      loadingStateMachine.error(errorMsg);
       throw new Error(errorMsg);
     }
     const streamDecoder = new StreamDecoderClass();
 
     try {
-      this.loadingStateMachine.emit('progress', {
+      loadingStateMachine.emit('progress', {
         progress: 5,
         message: '⚡ 实时流式WASM: 获取文件信息...',
       });
 
       // 转换到下载状态，使暂停按钮可用
-      this.loadingStateMachine.startDownloading('⚡ 实时流式WASM: 开始下载...');
+      loadingStateMachine.startDownloading('⚡ 实时流式WASM: 开始下载...');
 
       // 使用 ModelDownloader 进行实时流式下载和解码
       const downloadResult = await this.downloader.downloadModelStreamRealtime(model, {
@@ -445,15 +543,15 @@ export class ModelHandle {
             totalProgress,
           );
 
-          this.loadingStateMachine.emit('progress', {
+          loadingStateMachine.emit('progress', {
             progress: totalProgress,
             message: `⚡ 实时流式WASM: 下载 ${((downloadedBytes / totalBytes) * 100).toFixed(1)}%, 解码 ${(decodeProgress * 100).toFixed(1)}%`,
           });
 
           // 解码完成时切换状态
           if (decodeProgress >= 1.0) {
-            this.loadingStateMachine.startBuilding('⚡ 实时流式WASM: 解码完成，构建模型...');
-            this.loadingStateMachine.emit('progress', {
+            loadingStateMachine.startBuilding('⚡ 实时流式WASM: 解码完成，构建模型...');
+            loadingStateMachine.emit('progress', {
               progress: 90,
               message: '⚡ 实时流式WASM: 解码完成，构建模型...',
             });
@@ -502,11 +600,11 @@ export class ModelHandle {
         },
       };
 
-      this.loadingStateMachine.success(result, '实时流式WASM加载完成');
+      loadingStateMachine.success(result, '实时流式WASM加载完成');
       return result;
     } catch (error) {
       console.error('实时流式WASM 模型加载失败:', error);
-      this.loadingStateMachine.error(error.message, '实时流式WASM 模型加载失败');
+      loadingStateMachine.error(error.message, '实时流式WASM 模型加载失败');
       throw error;
     } finally {
       // 清理流式解码器
@@ -558,24 +656,27 @@ export class ModelHandle {
 
     // 检查WASM解码器是否可用
     if (!this.wasmDecoder) {
-      this.loadingStateMachine.error('WASM 解码器未初始化');
       throw new Error('WASM 解码器未初始化');
     }
 
     const { model = {} } = options;
     const { uuid, name } = model;
     if (!uuid) {
-      this.loadingStateMachine.error('无法获取模型UUID');
       throw new Error('无法获取模型UUID');
     }
 
+    // 获取模型ID和对应的状态机
+    const modelId = model.uuid || model.id || model.name;
+    const loadingStateMachine = this.getOrCreateStateMachine(modelId);
+    
     const {
       smartChunkThreshold = 5242880, // 5MB阈值
       smartChunkSize = 5242880, // 5MB分块大小
       enableResume = true,
     } = options;
 
-    this.loadingStateMachine.startLoading('🧠 智能流式WASM: 检测文件大小...');
+    loadingStateMachine.reset();
+    loadingStateMachine.startLoading('🧠 智能流式WASM: 检测文件大小...');
 
     try {
       // 获取文件信息
@@ -591,7 +692,7 @@ export class ModelHandle {
       const strategy = shouldChunk ? '分块下载' : '整体下载';
       console.log(`🧠 智能决策: ${strategy} (文件${this.downloader.formatBytes(fileSize)}, ${shouldChunk ? `每块${this.downloader.formatBytes(actualChunkSize)}` : '不分块'})`);
       
-      this.loadingStateMachine.emit('progress', {
+      loadingStateMachine.emit('progress', {
         progress: 10,
         message: `🧠 智能流式WASM: ${strategy} - ${this.downloader.formatBytes(fileSize)}`,
       });
@@ -604,7 +705,7 @@ export class ModelHandle {
         onProgress: (progressData) => {
           // 更新进度消息，显示智能决策信息
           const message = progressData.message.replace('⚡ 实时流式WASM:', `🧠 智能流式WASM(${strategy}):`);
-          this.loadingStateMachine.emit('progress', {
+          loadingStateMachine.emit('progress', {
             ...progressData,
             message,
           });
@@ -614,7 +715,7 @@ export class ModelHandle {
 
     } catch (error) {
       console.error('智能流式WASM 模型加载失败:', error);
-      this.loadingStateMachine.error(error.message, '智能流式WASM 模型加载失败');
+      loadingStateMachine.error(error.message, '智能流式WASM 模型加载失败');
       throw error;
     }
   }

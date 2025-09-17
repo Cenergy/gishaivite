@@ -397,6 +397,14 @@ export class LoadingStateMachine {
   }
 
   /**
+   * 移除所有事件监听器
+   * 清空所有已注册的事件监听器，通常在状态机销毁时调用
+   */
+  removeAllListeners() {
+    this.listeners.clear()
+  }
+
+  /**
    * 触发事件
    * 安全地调用所有注册的事件监听器，捕获并记录任何错误
    * 
