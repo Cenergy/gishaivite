@@ -117,10 +117,9 @@ class TerrainLayer extends BaseLayer {
     // modelEffects.shaderAnimation('verticalFlow');
 
     // 创建动画管理器并存储引用
-    // autoStartLoop: true 会自动启动GSAP动画循环
+    // autoPlay: true 会自动启动GSAP动画循环
     this.modelAnimations = new ModelAnimations(modelData.model, {
       autoPlay: true,
-      loop:false,
     });
   }
 
