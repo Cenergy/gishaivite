@@ -11,10 +11,11 @@ class ModelAnimations {
     this.modelObj = modelObj;
     this.animationMixer = null;
     this.animationActions = [];
-    this.clock = new THREE.Clock();
     this.isPlaying = false;
     this.currentAnimationIndex = -1;
     this.animationTicker = null;
+    this.lastTime = 0;
+    this.isPaused = false;
     
     // 默认配置
     this.config = {
@@ -86,6 +87,10 @@ class ModelAnimations {
     
     const fadeDuration = crossFadeDuration !== null ? crossFadeDuration : this.config.crossFadeDuration;
     
+    // 重置时间和暂停状态
+    this.lastTime = gsap.ticker.time;
+    this.isPaused = false;
+    
     // 如果有当前播放的动画，进行交叉淡入淡出
     if (this.currentAnimationIndex >= 0 && this.currentAnimationIndex !== index) {
       const currentAction = this.animationActions[this.currentAnimationIndex];
@@ -116,7 +121,9 @@ class ModelAnimations {
     if (this.animationMixer) {
       this.animationActions.forEach(action => action.stop());
       this.isPlaying = false;
+      this.isPaused = false;
       this.currentAnimationIndex = -1;
+      this.lastTime = 0;
       console.log('⏹️ 停止动画');
     }
   }
@@ -128,8 +135,7 @@ class ModelAnimations {
     if (this.isPlaying && this.currentAnimationIndex >= 0) {
       this.animationActions[this.currentAnimationIndex].paused = true;
       this.isPlaying = false;
-      // 停止时钟以避免时间跳跃
-      this.clock.stop();
+      this.isPaused = true;
       console.log('⏸️ 暂停动画');
     }
   }
@@ -138,11 +144,12 @@ class ModelAnimations {
    * 恢复当前动画
    */
   resume() {
-    if (!this.isPlaying && this.currentAnimationIndex >= 0) {
+    if (!this.isPlaying && this.currentAnimationIndex >= 0 && this.isPaused) {
       const action = this.animationActions[this.currentAnimationIndex];
       action.paused = false;
-      // 重新启动时钟
-      this.clock.start();
+      // 重置时间基准，避免时间跳跃
+      this.lastTime = gsap.ticker.time;
+      this.isPaused = false;
       // 确保动画处于播放状态，但不重置时间
       if (!action.isRunning()) {
         action.play();
@@ -204,8 +211,11 @@ class ModelAnimations {
    * 更新动画（内部使用，由GSAP ticker自动调用）
    */
   update() {
-    if (this.animationMixer && this.isPlaying) {
-      this.animationMixer.update(this.clock.getDelta());
+    if (this.animationMixer && this.isPlaying && !this.isPaused) {
+      const currentTime = gsap.ticker.time;
+      const deltaTime = this.lastTime === 0 ? 0 : currentTime - this.lastTime;
+      this.lastTime = currentTime;
+      this.animationMixer.update(deltaTime);
     }
   }
   
@@ -217,6 +227,9 @@ class ModelAnimations {
     if (this.animationTicker) {
       this.stopAnimationLoop();
     }
+    
+    // 重置时间
+    this.lastTime = gsap.ticker.time;
     
     // 使用GSAP ticker来管理动画循环
     this.animationTicker = gsap.ticker.add(() => {
