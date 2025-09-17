@@ -21,7 +21,6 @@ class ModelAnimations {
       autoPlay: false,
       loop: true,
       crossFadeDuration: 0.3,
-      autoStartLoop: true, // 自动启动动画循环
       ...options
     };
     
@@ -34,13 +33,9 @@ class ModelAnimations {
   _init() {
     this._setupAnimations();
     
-    // 如果配置了自动启动循环，启动动画循环
-    if (this.config.autoStartLoop && this.animationMixer) {
-      this.startAnimationLoop();
-    }
-    
-    // 如果配置了自动播放，播放第一个动画
+    // 如果配置了自动播放，启动动画循环并播放第一个动画
     if (this.config.autoPlay && this.animationActions.length > 0) {
+      this.startAnimationLoop();
       this.play(0);
     }
   }
@@ -67,6 +62,8 @@ class ModelAnimations {
         // 设置循环模式
         if (this.config.loop) {
           action.setLoop(THREE.LoopRepeat, Infinity);
+        } else {
+          action.setLoop(THREE.LoopOnce, 1);
         }
         
         this.animationActions.push(action);

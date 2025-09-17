@@ -37,7 +37,7 @@ class TerrainLayer extends BaseLayer {
     let threeLayer = new ThreeLayer('three-model-layer', {
       // forceRenderOnMoving: true,
       // forceRenderOnRotating: true,
-      animation: true
+      animation: true,
     });
     threeLayer.prepareToDraw = (gl, scene, camera) => {
       let light = new THREE.DirectionalLight(0xffffff);
@@ -77,19 +77,19 @@ class TerrainLayer extends BaseLayer {
     console.log('🚀 ~ addGltf ~ threeLayer:', threeLayer);
     let baseObjectModel;
     const modelInfo = {
-    "name": "fbx",
-    "description": null,
-    "model_file_url": "/static/uploads/models/9c8f1fc795eb4d69ab1d3d4be862e2ce/model.fbx",
-    "binary_file_url": null,
-    "thumbnail_url": null,
-    "is_active": true,
-    "is_public": false,
-    "id": 19,
-    "uuid": "9c8f1fc795eb4d69ab1d3d4be862e2ce",
-    "category_id": null,
-    "created_at": "2025-09-17T02:07:19.767467Z",
-    "updated_at": "2025-09-17T02:07:20.137290Z"
-};
+      name: 'fbx',
+      description: null,
+      model_file_url: '/static/uploads/models/9c8f1fc795eb4d69ab1d3d4be862e2ce/model.fbx',
+      binary_file_url: null,
+      thumbnail_url: null,
+      is_active: true,
+      is_public: false,
+      id: 19,
+      uuid: '9c8f1fc795eb4d69ab1d3d4be862e2ce',
+      category_id: null,
+      created_at: '2025-09-17T02:07:19.767467Z',
+      updated_at: '2025-09-17T02:07:20.137290Z',
+    };
     await modelLoader.initialize();
     const modelData = await modelLoader.loadModel(modelInfo, 'smart_stream_wasm');
     modelData.model.rotation.x = Math.PI / 2;
@@ -115,12 +115,12 @@ class TerrainLayer extends BaseLayer {
     // // 应用效果
     // modelEffects.setBloom(true);
     // modelEffects.shaderAnimation('verticalFlow');
-    
+
     // 创建动画管理器并存储引用
     // autoStartLoop: true 会自动启动GSAP动画循环
     this.modelAnimations = new ModelAnimations(modelData.model, {
       autoPlay: true,
-      autoStartLoop: true
+      loop:false,
     });
   }
 
@@ -144,7 +144,7 @@ class TerrainLayer extends BaseLayer {
       this.modelAnimations.destroy();
       this.modelAnimations = null;
     }
-    
+
     const groupLayer = this.map.getLayer(LAYER_NAMES.BASIC_SCENE_GROUP);
     groupLayer.setTerrain(null);
     // 基类会自动清理事件监听器，无需手动调用
