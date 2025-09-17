@@ -128,6 +128,8 @@ class ModelAnimations {
     if (this.isPlaying && this.currentAnimationIndex >= 0) {
       this.animationActions[this.currentAnimationIndex].paused = true;
       this.isPlaying = false;
+      // 停止时钟以避免时间跳跃
+      this.clock.stop();
       console.log('⏸️ 暂停动画');
     }
   }
@@ -137,7 +139,14 @@ class ModelAnimations {
    */
   resume() {
     if (!this.isPlaying && this.currentAnimationIndex >= 0) {
-      this.animationActions[this.currentAnimationIndex].paused = false;
+      const action = this.animationActions[this.currentAnimationIndex];
+      action.paused = false;
+      // 重新启动时钟
+      this.clock.start();
+      // 确保动画处于播放状态，但不重置时间
+      if (!action.isRunning()) {
+        action.play();
+      }
       this.isPlaying = true;
       console.log('▶️ 恢复动画');
     }

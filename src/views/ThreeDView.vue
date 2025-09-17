@@ -217,12 +217,38 @@
                 animationInfo
               }}</el-descriptions-item>
             </el-descriptions>
-            <el-space wrap style="width: 100%">
+            <el-space wrap style="width: 100%" :size="5">
               <el-button type="primary" size="small" @click="playAnimation(0)">
                 ▶️ 播放
               </el-button>
-              <el-button size="small" @click="stopAnimation"> ⏹️ 停止 </el-button>
+              <el-button size="small" @click="pauseAnimation">
+                ⏸️ 暂停
+              </el-button>
+              <el-button size="small" @click="resumeAnimation">
+                ▶️ 恢复
+              </el-button>
+              <el-button size="small" @click="stopAnimation">
+                ⏹️ 停止
+              </el-button>
             </el-space>
+            <el-space wrap style="width: 100%" :size="5">
+              <el-button size="small" @click="playPreviousAnimation">
+                ⏮️ 上一个
+              </el-button>
+              <el-button size="small" @click="playNextAnimation">
+                ⏭️ 下一个
+              </el-button>
+            </el-space>
+            <el-form-item label="播放速度:">
+              <el-slider
+                :model-value="1"
+                :min="0.1"
+                :max="3"
+                :step="0.1"
+                @change="setAnimationSpeed"
+                style="width: 200px"
+              />
+            </el-form-item>
           </el-space>
         </el-card>
 
@@ -467,10 +493,8 @@ const setupLighting = () => {
 const animate = () => {
   requestAnimationFrame(animate);
 
-  // 更新动画
-  if (modelAnimations) {
-    modelAnimations.update();
-  }
+  // 动画更新现在由ModelAnimations内部的GSAP ticker自动管理
+  // 无需手动调用 modelAnimations.update()
 
   controls.update();
   renderer.render(scene, camera);
@@ -663,7 +687,8 @@ const setupAnimations = (model: THREE.Object3D) => {
   // 创建新的动画管理器
   modelAnimations = new ModelAnimations(model, {
     autoPlay: true,
-    loop: true
+    loop: true,
+    crossFadeDuration: 0.5
   });
 
   // 获取动画信息并更新UI
@@ -697,6 +722,51 @@ const stopAnimation = () => {
     modelAnimations.stop();
     isAnimationPlaying.value = false;
   }
+};
+
+const pauseAnimation = () => {
+  if (modelAnimations) {
+    modelAnimations.pause();
+    isAnimationPlaying.value = false;
+  }
+};
+
+const resumeAnimation = () => {
+  if (modelAnimations) {
+    modelAnimations.resume();
+    isAnimationPlaying.value = true;
+  }
+};
+
+const playNextAnimation = () => {
+  if (modelAnimations) {
+    const success = modelAnimations.playNext();
+    if (success) {
+      isAnimationPlaying.value = true;
+    }
+  }
+};
+
+const playPreviousAnimation = () => {
+  if (modelAnimations) {
+    const success = modelAnimations.playPrevious();
+    if (success) {
+      isAnimationPlaying.value = true;
+    }
+  }
+};
+
+const setAnimationSpeed = (speed: number) => {
+  if (modelAnimations) {
+    modelAnimations.setSpeed(speed);
+  }
+};
+
+const getAnimationPlaybackState = () => {
+  if (modelAnimations) {
+    return modelAnimations.getPlaybackState();
+  }
+  return null;
 };
 
 const pauseStream = () => {
